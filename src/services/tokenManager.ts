@@ -28,7 +28,7 @@ export class TokenManager {
 
   static async verifyToken(token: string): Promise<boolean> {
     try {
-      const response = await fetch('https://api.tarkovtracker.io/user', {
+      const response = await fetch('https://tarkovtracker.io/api/v2/token', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
