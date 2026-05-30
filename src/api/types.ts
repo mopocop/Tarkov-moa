@@ -12,6 +12,9 @@ export interface TaskProgress {
   complete: boolean;
   failed: boolean;
   invalid: boolean;
+  // True when the player has picked up the quest at a trader (EFT type-10
+  // "description" push notification). Drives the "active quest" derivation.
+  accepted?: boolean;
   objectives?: TaskObjectiveProgress[];
 }
 
@@ -20,7 +23,7 @@ export interface TarkovTrackerProgress {
   gameEdition?: number;
   pmcFaction?: 'USEC' | 'BEAR' | string;
   displayName?: string;
-  taskProgress: TaskProgress[];
+  tasksProgress: TaskProgress[];
 }
 
 // tarkov.dev GraphQL types
@@ -66,7 +69,6 @@ export interface TaskObjective {
 export interface TarkovTask {
   id: string;
   name: string;
-  description?: string;
   map?: MapRef;
   trader?: { name: string };
   wikiLink?: string;
@@ -79,6 +81,78 @@ export interface TarkovMap {
   id: string;
   name: string;
   normalizedName: string;
+}
+
+export interface MapPosition {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface MapSwitchRef {
+  id: string;
+  name?: string;
+}
+
+export interface ContainedItemRef {
+  item?: { id: string; name: string };
+  count?: number;
+}
+
+export interface MapExtractRaw {
+  id: string;
+  name: string;
+  faction?: string; // "pmc" | "scav" | "shared"
+  switches?: MapSwitchRef[];
+  transferItem?: ContainedItemRef | null;
+  position?: MapPosition;
+}
+
+export interface MapTransitRaw {
+  id: string;
+  description?: string;
+  conditions?: string;
+  map?: MapRef; // destination map
+  position?: MapPosition;
+}
+
+export interface MapSpawnRaw {
+  zoneName?: string;
+  position?: MapPosition;
+  sides?: string[];
+  categories?: string[];
+}
+
+export interface BossSpawnLocationRaw {
+  name?: string;
+  chance?: number;
+}
+
+export interface BossSpawnRaw {
+  boss?: { name: string; normalizedName?: string };
+  spawnChance?: number;
+  spawnLocations?: BossSpawnLocationRaw[];
+}
+
+export interface MapHazardRaw {
+  hazardType?: string;
+  name?: string;
+  position?: MapPosition;
+}
+
+export interface LootContainerPositionRaw {
+  lootContainer?: { id: string; name: string; normalizedName?: string };
+  position?: MapPosition;
+}
+
+export interface MapPoiData {
+  id: string;
+  extracts?: MapExtractRaw[];
+  transits?: MapTransitRaw[];
+  spawns?: MapSpawnRaw[];
+  bosses?: BossSpawnRaw[];
+  hazards?: MapHazardRaw[];
+  lootContainers?: LootContainerPositionRaw[];
 }
 
 export interface APICache<T> {

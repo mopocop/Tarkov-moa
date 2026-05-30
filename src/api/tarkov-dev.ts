@@ -1,8 +1,9 @@
-import type { APICache, TarkovMap, TarkovTask } from './types';
+import type { APICache, TarkovMap, TarkovTask, MapPoiData } from "./types";
 
 const ENDPOINT = 'https://api.tarkov.dev/graphql';
-const TASKS_CACHE_KEY = 'td_tasks_cache_v3';
+const TASKS_CACHE_KEY = 'td_tasks_cache_v4';
 const MAPS_CACHE_KEY = 'td_maps_cache_v3';
+const MAP_POIS_CACHE_KEY = "td_map_pois_cache_v1";
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24h — tarkov.dev data is largely static between patches.
 
 const TASKS_QUERY = `
@@ -10,7 +11,6 @@ const TASKS_QUERY = `
     tasks {
       id
       name
-      description
       minPlayerLevel
       wikiLink
       map { id name }
@@ -30,12 +30,24 @@ const TASKS_QUERY = `
             positions { x y z }
           }
         }
+        ... on TaskObjectiveMark {
+          zones {
+            id
+            map { id name }
+            position { x y z }
+          }
+        }
         ... on TaskObjectiveBasic {
           zones {
             id
             map { id name }
             position { x y z }
           }
+        }
+        ... on TaskObjectiveExtract {
+          exitName
+          exitStatus
+          zoneNames
         }
       }
     }
@@ -52,6 +64,20 @@ const MAPS_QUERY = `
   }
 `;
 
+const MAP_POIS_QUERY = `
+  query GetMapPois {
+    maps {
+      id
+      extracts { id name faction switches { id name } transferItem { item { id name } count } position { x y z } }
+      transits { id description conditions map { id name } position { x y z } }
+      spawns { zoneName position { x y z } sides categories }
+      bosses { boss { name normalizedName } spawnChance spawnLocations { name chance } }
+      hazards { hazardType name position { x y z } }
+      lootContainers { lootContainer { id name normalizedName } position { x y z } }
+    }
+  }
+`;
+
 async function gqlFetch<T>(query: string): Promise<T> {
   const res = await fetch(ENDPOINT, {
     method: 'POST',
@@ -62,8 +88,18 @@ async function gqlFetch<T>(query: string): Promise<T> {
     throw new Error(`tarkov.dev returned HTTP ${res.status}`);
   }
   const body = (await res.json()) as { data?: T; errors?: Array<{ message: string }> };
+  // GraphQL can return partial data alongside errors — e.g. the maps query
+  // errors on a transit whose destination map id no longer exists, yet still
+  // returns every other field. Treat data-present-with-errors as partial
+  // success (warn + use it); only throw when there is no data at all. Without
+  // this, one stale reference would discard the entire POI dataset.
   if (body.errors?.length) {
-    throw new Error(`tarkov.dev GraphQL error: ${body.errors.map((e) => e.message).join('; ')}`);
+    const msg = body.errors.map((e) => e.message).join('; ');
+    if (body.data) {
+      console.warn(`[tarkov.dev] GraphQL partial error (using partial data): ${msg}`);
+    } else {
+      throw new Error(`tarkov.dev GraphQL error: ${msg}`);
+    }
   }
   if (!body.data) throw new Error('tarkov.dev returned no data');
   return body.data;
@@ -113,8 +149,19 @@ export class TarkovDevClient {
     return data.maps;
   }
 
+  async getMapPois(force = false): Promise<MapPoiData[]> {
+    if (!force) {
+      const cached = loadCache<MapPoiData[]>(MAP_POIS_CACHE_KEY);
+      if (cached) return cached.data;
+    }
+    const data = await gqlFetch<{ maps: MapPoiData[] }>(MAP_POIS_QUERY);
+    saveCache(MAP_POIS_CACHE_KEY, data.maps);
+    return data.maps;
+  }
+
   clearCache(): void {
     localStorage.removeItem(TASKS_CACHE_KEY);
     localStorage.removeItem(MAPS_CACHE_KEY);
+    localStorage.removeItem(MAP_POIS_CACHE_KEY);
   }
 }

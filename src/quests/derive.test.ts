@@ -4,12 +4,19 @@ import type { TarkovTask, TarkovTrackerProgress } from '../api/types';
 
 function progress(
   playerLevel: number,
-  entries: Array<{ id: string; complete?: boolean; failed?: boolean; invalid?: boolean }>,
+  entries: Array<{
+    id: string;
+    accepted?: boolean;
+    complete?: boolean;
+    failed?: boolean;
+    invalid?: boolean;
+  }>,
 ): TarkovTrackerProgress {
   return {
     playerLevel,
-    taskProgress: entries.map((e) => ({
+    tasksProgress: entries.map((e) => ({
       id: e.id,
+      accepted: !!e.accepted,
       complete: !!e.complete,
       failed: !!e.failed,
       invalid: !!e.invalid,
@@ -28,12 +35,6 @@ const followUp: TarkovTask = {
   name: 'Follow Up',
   minPlayerLevel: 1,
   taskRequirements: [{ task: { id: 't-debut-a', name: 'Debut A' }, status: ['complete'] }],
-};
-
-const levelGated: TarkovTask = {
-  id: 't-level',
-  name: 'Level Gated',
-  minPlayerLevel: 20,
 };
 
 const woodsKill: TarkovTask = {
@@ -84,22 +85,49 @@ const positionlessKill: TarkovTask = {
   ],
 };
 
-describe('deriveQuestState', () => {
-  it('puts an incomplete, requirement-free, level-met task into available', () => {
+const handover: TarkovTask = {
+  id: 't-handover',
+  name: 'Shortage-like handover',
+  minPlayerLevel: 1,
+  // No task.map, and objectives carry no map/zone/possibleLocation info.
+  objectives: [
+    { id: 'o-h', type: 'giveItem', description: 'Hand over 3 salewa kits' },
+  ],
+};
+
+describe('deriveQuestState (accepted-based active model)', () => {
+  it('treats an unaccepted task as locked, not active', () => {
     const state = deriveQuestState(progress(5, []), [debutA]);
+    expect(state.available).toEqual([]);
+    expect(state.locked.map((t) => t.id)).toEqual(['t-debut-a']);
+  });
+
+  it('puts an accepted, incomplete task into available', () => {
+    const state = deriveQuestState(
+      progress(5, [{ id: 't-debut-a', accepted: true }]),
+      [debutA],
+    );
     expect(state.available.map((t) => t.id)).toEqual(['t-debut-a']);
     expect(state.locked).toEqual([]);
   });
 
-  it('puts an incomplete task with unmet prerequisite into locked', () => {
-    const state = deriveQuestState(progress(5, []), [followUp]);
+  it('does NOT surface a prerequisite-satisfied but unaccepted follow-up', () => {
+    // The core bug: completing the prereq must NOT make the follow-up active
+    // until the player actually accepts it at the trader.
+    const state = deriveQuestState(
+      progress(5, [{ id: 't-debut-a', accepted: true, complete: true }]),
+      [debutA, followUp],
+    );
     expect(state.available).toEqual([]);
     expect(state.locked.map((t) => t.id)).toEqual(['t-follow']);
   });
 
-  it('unlocks a task once its prerequisite is complete', () => {
+  it('surfaces the follow-up once it has been accepted', () => {
     const state = deriveQuestState(
-      progress(5, [{ id: 't-debut-a', complete: true }]),
+      progress(5, [
+        { id: 't-debut-a', accepted: true, complete: true },
+        { id: 't-follow', accepted: true },
+      ]),
       [debutA, followUp],
     );
     expect(state.available.map((t) => t.id)).toEqual(['t-follow']);
@@ -108,7 +136,7 @@ describe('deriveQuestState', () => {
 
   it('excludes completed tasks from both buckets', () => {
     const state = deriveQuestState(
-      progress(5, [{ id: 't-debut-a', complete: true }]),
+      progress(5, [{ id: 't-debut-a', accepted: true, complete: true }]),
       [debutA],
     );
     expect(state.available).toEqual([]);
@@ -118,8 +146,8 @@ describe('deriveQuestState', () => {
   it('excludes failed and invalid tasks from both buckets', () => {
     const state = deriveQuestState(
       progress(5, [
-        { id: 't-debut-a', failed: true },
-        { id: 't-follow', invalid: true },
+        { id: 't-debut-a', accepted: true, failed: true },
+        { id: 't-follow', accepted: true, invalid: true },
       ]),
       [debutA, followUp],
     );
@@ -127,35 +155,58 @@ describe('deriveQuestState', () => {
     expect(state.locked).toEqual([]);
   });
 
-  it('treats a level-gated task as locked when player level is too low', () => {
-    const state = deriveQuestState(progress(5, []), [levelGated]);
-    expect(state.locked.map((t) => t.id)).toEqual(['t-level']);
-    expect(state.available).toEqual([]);
-  });
-
-  it('moves a level-gated task to available once player level is met', () => {
-    const state = deriveQuestState(progress(25, []), [levelGated]);
-    expect(state.available.map((t) => t.id)).toEqual(['t-level']);
-  });
-
-  it('groups available tasks by their primary map', () => {
-    const state = deriveQuestState(progress(5, []), [woodsKill]);
+  it('groups accepted tasks by their primary map', () => {
+    const state = deriveQuestState(
+      progress(5, [{ id: 't-woods-kill', accepted: true }]),
+      [woodsKill],
+    );
     expect(state.availableTasksByMap['map-woods']?.map((t) => t.id)).toEqual(['t-woods-kill']);
   });
 
   it('falls back to objective maps when task has no primary map', () => {
-    const state = deriveQuestState(progress(5, []), [customsFind]);
+    const state = deriveQuestState(
+      progress(5, [{ id: 't-customs-find', accepted: true }]),
+      [customsFind],
+    );
     expect(state.availableTasksByMap['map-customs']?.map((t) => t.id)).toEqual(['t-customs-find']);
   });
 
-  it('emits objectives with positions into availableObjectivesByMap', () => {
-    const state = deriveQuestState(progress(5, []), [woodsKill, customsFind]);
+  it('emits accepted objectives with positions into availableObjectivesByMap', () => {
+    const state = deriveQuestState(
+      progress(5, [
+        { id: 't-woods-kill', accepted: true },
+        { id: 't-customs-find', accepted: true },
+      ]),
+      [woodsKill, customsFind],
+    );
     expect(state.availableObjectivesByMap['map-woods']).toHaveLength(1);
     expect(state.availableObjectivesByMap['map-customs']).toHaveLength(1);
   });
 
+  it('routes a location-less accepted task into anyLocation, not any map bucket', () => {
+    const state = deriveQuestState(
+      progress(5, [{ id: 't-handover', accepted: true }]),
+      [handover],
+    );
+    expect(state.available.map((t) => t.id)).toEqual(['t-handover']);
+    expect(state.anyLocation.map((t) => t.id)).toEqual(['t-handover']);
+    expect(Object.keys(state.availableTasksByMap)).toEqual([]);
+  });
+
+  it('keeps a map-bound accepted task out of anyLocation', () => {
+    const state = deriveQuestState(
+      progress(5, [{ id: 't-woods-kill', accepted: true }]),
+      [woodsKill],
+    );
+    expect(state.anyLocation).toEqual([]);
+    expect(state.availableTasksByMap['map-woods']?.map((t) => t.id)).toEqual(['t-woods-kill']);
+  });
+
   it('omits objectives that have no position info from the marker bucket', () => {
-    const state = deriveQuestState(progress(5, []), [positionlessKill]);
+    const state = deriveQuestState(
+      progress(5, [{ id: 't-positionless', accepted: true }]),
+      [positionlessKill],
+    );
     // The task itself can still be in availableTasksByMap (sidebar list), but no markers.
     expect(state.availableObjectivesByMap['map-customs']).toBeUndefined();
     expect(state.availableTasksByMap['map-customs']?.map((t) => t.id)).toEqual(['t-positionless']);

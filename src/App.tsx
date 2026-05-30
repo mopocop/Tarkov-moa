@@ -1,149 +1,577 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import './App.css';
-import { TokenManager } from './services/tokenManager';
-import { TarkovTrackerClient, UnauthorizedError } from './api/tarkovtracker';
 import { TarkovDevClient } from './api/tarkov-dev';
 import { deriveQuestState, type DerivedQuestState } from './quests/derive';
+import {
+  loadProgress,
+  saveProgress,
+  toTrackerProgress,
+  type LocalProgress,
+} from './state/localProgress';
+import MapView, { getMapDef, SUPPORTED_MAP_NAMES } from './map/MapView';
+import MarkerLayer from './map/MarkerLayer';
+import PlayerMarker from './map/PlayerMarker';
+import FloorSwitcher, { ALL_FLOORS } from './map/FloorSwitcher';
+import MapPicker from './components/MapPicker';
+import QuestSidebar from './components/QuestSidebar';
+import Spinner from './components/Spinner';
+import Toast from './components/Toast';
+import { useRelativeTime } from './hooks/useRelativeTime';
+import { resolveMapName } from './quests/mapNames';
+import {
+  subscribeRaidEnded,
+  subscribeQuestEvent,
+  subscribeRaidStarted,
+  subscribePlayerPosition,
+  replayPastLogs,
+  type UnlistenFn,
+} from './services/tauriEvents';
+import { mapIdFromLogLocation } from './map/logLocationMap';
+import { markQuestAccepted, markQuestComplete, markQuestFailed } from './state/localProgress';
+import SettingsModal from './components/SettingsModal';
+import HowToUseModal from './components/HowToUseModal';
+import PatchNotesModal from './components/PatchNotesModal';
+import { checkForUpdate, applyUpdate, type AvailableUpdate } from './services/updater';
+import { getVersion } from '@tauri-apps/api/app';
+import PoiLayer from './map/PoiLayer';
+import PoiFilterPanel from './map/PoiFilterPanel';
+import GridOverlay from './map/GridOverlay';
+import CustomMarkerLayer, { MapClickPlacer } from './map/CustomMarkerLayer';
+import {
+  loadCustomPois,
+  saveCustomPois,
+  addCustomPoi,
+  removeCustomPoi,
+} from './poi/customPoi';
+import { poisByMap } from './poi/fromTarkovDev';
+import {
+  loadFilterState,
+  saveFilterState,
+  isPoiVisible,
+  type PoiFilterState,
+} from './poi/filterState';
+import { facetDefaultOn } from './poi/facets';
+import type { Poi } from './poi/types';
+
+const SELECTED_MAP_KEY = 'tc_selected_map';
+
+// Stable empty array for the `objectives` prop fallback. A fresh `[]` literal
+// would change identity every render, invalidating MarkerLayer's classified/
+// counts memos and re-firing its onCounts effect → setFloorCounts → re-render
+// → infinite loop. A shared frozen constant keeps the prop reference stable
+// when the selected map has no objectives entry.
+const EMPTY_OBJECTIVES: never[] = [];
 
 function App() {
-  const [token, setToken] = useState<string>('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [progress, setProgress] = useState<LocalProgress>(() => loadProgress());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [questState, setQuestState] = useState<DerivedQuestState | null>(null);
-  const [playerLevel, setPlayerLevel] = useState<number | null>(null);
   const [lastSynced, setLastSynced] = useState<number | null>(null);
+  const [selectedMapId, setSelectedMapId] = useState<string | null>(() =>
+    localStorage.getItem(SELECTED_MAP_KEY),
+  );
+  const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
+  const [hoveredObjectiveId, setHoveredObjectiveId] = useState<string | null>(null);
+  const [pinned, setPinned] = useState<{ kind: 'task' | 'objective'; id: string } | null>(null);
+  const [activeFloorId, setActiveFloorId] = useState<string>(ALL_FLOORS);
+  const [floorCounts, setFloorCounts] = useState<Record<string, number>>({});
+  const [toast, setToast] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  // "How to use" guide opens on every launch (per design); also reopenable from
+  // the top bar.
+  const [howToOpen, setHowToOpen] = useState(true);
+  const [patchNotesOpen, setPatchNotesOpen] = useState(false);
+  const [replayingLogs, setReplayingLogs] = useState(false);
+  const [availableUpdate, setAvailableUpdate] = useState<AvailableUpdate | null>(null);
+  const [updating, setUpdating] = useState(false);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+  const [playerPos, setPlayerPos] = useState<
+    { x: number; y: number; z: number; rotation: number } | null
+  >(null);
+  // v0.5 POIs: tarkov.dev POI data indexed by map id, filter prefs, current
+  // selection, and custom-marker placement mode.
+  const [poisByMapId, setPoisByMapId] = useState<Record<string, Poi[]>>({});
+  const [filterState, setFilterState] = useState<PoiFilterState>(() => loadFilterState());
+  const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
+  const [sidebarTab, setSidebarTab] = useState<'quests' | 'pois'>('quests');
+  const [customPois, setCustomPois] = useState<Poi[]>(() => loadCustomPois());
+  const relativeSynced = useRelativeTime(lastSynced);
 
-  const loadQuestState = useCallback(async (activeToken: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const trackerClient = new TarkovTrackerClient(activeToken);
-      const devClient = new TarkovDevClient();
-      const [progress, tasks] = await Promise.all([
-        trackerClient.getProgress(),
-        devClient.getTasks(),
-      ]);
-      setPlayerLevel(progress.playerLevel);
-      setQuestState(deriveQuestState(progress, tasks));
-      setLastSynced(trackerClient.getLastSynced());
-    } catch (err) {
-      if (err instanceof UnauthorizedError) {
-        TokenManager.clearToken();
-        setIsAuthenticated(false);
-        setToken('');
-        setError('Token rejected. Please paste it again.');
-      } else {
-        setError(err instanceof Error ? err.message : 'Failed to load quest state');
+  const togglePin = useCallback(
+    (kind: 'task' | 'objective', id: string) => {
+      setPinned((cur) => (cur && cur.kind === kind && cur.id === id ? null : { kind, id }));
+    },
+    [],
+  );
+
+  const pruneStaleSelections = useCallback((state: DerivedQuestState) => {
+    const taskIds = new Set<string>();
+    const objectiveIds = new Set<string>();
+    for (const list of Object.values(state.availableObjectivesByMap)) {
+      for (const { task, objective } of list) {
+        taskIds.add(task.id);
+        objectiveIds.add(objective.id);
       }
-    } finally {
-      setLoading(false);
     }
+    for (const list of Object.values(state.availableTasksByMap)) {
+      for (const t of list) taskIds.add(t.id);
+    }
+    setPinned((cur) => {
+      if (!cur) return cur;
+      const present = cur.kind === 'task' ? taskIds.has(cur.id) : objectiveIds.has(cur.id);
+      return present ? cur : null;
+    });
+    setHoveredTaskId((cur) => (cur && taskIds.has(cur) ? cur : null));
+    setHoveredObjectiveId((cur) => (cur && objectiveIds.has(cur) ? cur : null));
   }, []);
 
-  useEffect(() => {
-    const saved = TokenManager.getToken();
-    if (saved) {
-      setToken(saved);
-      setIsAuthenticated(true);
-      loadQuestState(saved);
-    }
-  }, [loadQuestState]);
+  const loadQuestData = useCallback(
+    async (current: LocalProgress) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const devClient = new TarkovDevClient();
+        const tasks = await devClient.getTasks();
+        const next = deriveQuestState(toTrackerProgress(current), tasks);
+        setQuestState(next);
+        pruneStaleSelections(next);
+        setLastSynced(Date.now());
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load quest data');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [pruneStaleSelections],
+  );
 
-  const handleTokenSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  // Initial load.
+  useEffect(() => {
+    loadQuestData(progress);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist progress whenever it changes.
+  useEffect(() => {
+    saveProgress(progress);
+  }, [progress]);
+
+  // Check for an app update once on launch. No-ops outside Tauri / when offline.
+  useEffect(() => {
+    void checkForUpdate().then((u) => {
+      if (u) setAvailableUpdate(u);
+    });
+  }, []);
+
+  // App version for the header badge. No-ops outside Tauri.
+  useEffect(() => {
+    void getVersion().then(setAppVersion).catch(() => {});
+  }, []);
+
+  // Load tarkov.dev POI data once, in the background (non-blocking; 24h cached).
+  // Swallow errors offline — quest data + map still work without POIs.
+  useEffect(() => {
+    void new TarkovDevClient()
+      .getMapPois()
+      .then((maps) => setPoisByMapId(poisByMap(maps)))
+      .catch((e) => console.warn('[POIs] load failed (offline?):', e));
+  }, []);
+
+  // POI filters are NOT auto-persisted — the user saves the current set as the
+  // default explicitly (see handleSaveDefault / the "Save as default" button), so
+  // they can explore freely without clobbering their saved layout.
+
+  // Persist custom markers whenever they change.
+  useEffect(() => {
+    saveCustomPois(customPois);
+  }, [customPois]);
+
+  // Subscribe to Tauri log-watcher events.
+  useEffect(() => {
+    const unlistens: UnlistenFn[] = [];
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const u1 = await subscribeQuestEvent((ev) => {
+          setProgress((cur) => {
+            switch (ev.status) {
+              case 'Started':
+                return markQuestAccepted(cur, ev.templateId);
+              case 'Finished':
+                return markQuestComplete(cur, ev.templateId);
+              case 'Failed':
+                return markQuestFailed(cur, ev.templateId);
+              default:
+                return cur;
+            }
+          });
+        });
+        const u2 = await subscribeRaidEnded((ev) => {
+          const target = mapIdFromLogLocation(ev.location);
+          if (target) setSelectedMapId(target);
+        });
+        const u3 = await subscribeRaidStarted(() => {
+          setPlayerPos(null);
+        });
+        const u4 = await subscribePlayerPosition((ev) => {
+          setPlayerPos(ev);
+        });
+        if (cancelled) {
+          u1(); u2(); u3(); u4();
+        } else {
+          unlistens.push(u1, u2, u3, u4);
+        }
+      } catch (e) {
+        // Running outside Tauri (e.g. plain `vite dev`) — listen() throws. Swallow.
+        console.warn('[tauriEvents] subscribe failed (running outside Tauri?):', e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      for (const u of unlistens) u();
+    };
+  }, []);
+
+  // Re-derive quest state when progress changes (e.g. quest-event from log watcher).
+  useEffect(() => {
+    if (!questState) return; // initial load handles first derive
+    loadQuestData(progress);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progress]);
+
+  // Resolve default selected map once questState arrives.
+  useEffect(() => {
+    if (!questState) return;
+    const objsByMap = questState.availableObjectivesByMap;
+    const tasksByMap = questState.availableTasksByMap;
+    const allMapIds = Array.from(
+      new Set([...Object.keys(objsByMap), ...Object.keys(tasksByMap)]),
+    );
+    const stored = selectedMapId;
+    // Keep the user's pick if it's any supported map (QA may select a map with
+    // zero active quests) or a map that currently has quests.
+    if (stored && (allMapIds.includes(stored) || stored in SUPPORTED_MAP_NAMES)) return;
+    if (allMapIds.length === 0) {
+      // No active-quest map and nothing valid selected — leave whatever the
+      // user picked (a supported map), else clear.
+      if (!stored || !(stored in SUPPORTED_MAP_NAMES)) setSelectedMapId(null);
+      return;
+    }
+    const best = allMapIds
+      .map((id) => ({
+        id,
+        score: (objsByMap[id]?.length ?? 0) + (tasksByMap[id]?.length ?? 0),
+      }))
+      .sort((a, b) => b.score - a.score)[0];
+    setSelectedMapId(best.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questState]);
+
+  useEffect(() => {
+    if (selectedMapId) localStorage.setItem(SELECTED_MAP_KEY, selectedMapId);
+    setHoveredTaskId(null);
+    setHoveredObjectiveId(null);
+    setActiveFloorId(ALL_FLOORS);
+    setSelectedPoiId(null);
+  }, [selectedMapId]);
+
+  const selectedMapDef = useMemo(
+    () => (selectedMapId ? getMapDef(selectedMapId) : undefined),
+    [selectedMapId],
+  );
+
+  const selectedMapName = useMemo(() => {
+    if (!questState || !selectedMapId) return '';
+    return resolveMapName(
+      selectedMapId,
+      questState.availableTasksByMap,
+      questState.availableObjectivesByMap,
+    );
+  }, [questState, selectedMapId]);
+
+  // ---- POI derived state + filter handlers (v0.6 faceted) ----
+  const currentPois = useMemo<Poi[]>(
+    () => (selectedMapId ? poisByMapId[selectedMapId] ?? [] : []),
+    [poisByMapId, selectedMapId],
+  );
+
+  const currentCustomPois = useMemo(
+    () => customPois.filter((p) => p.mapId === selectedMapId),
+    [customPois, selectedMapId],
+  );
+
+  // The panel builds its grouped facet tree from tarkov-dev POIs + custom
+  // markers so the "My markers" count is accurate.
+  const panelPois = useMemo(
+    () => [...currentPois, ...currentCustomPois],
+    [currentPois, currentCustomPois],
+  );
+
+  const poiVisible = useCallback(
+    (poi: Poi) => isPoiVisible(poi, filterState),
+    [filterState],
+  );
+
+  const customEnabled = filterState.enabled.custom ?? facetDefaultOn('custom');
+
+  const toggleFacet = useCallback((key: string) => {
+    setFilterState((s) => ({
+      ...s,
+      enabled: { ...s.enabled, [key]: !(s.enabled[key] ?? facetDefaultOn(key)) },
+    }));
+  }, []);
+
+  const setAllFacets = useCallback((keys: string[], on: boolean) => {
+    setFilterState((s) => {
+      const enabled = { ...s.enabled };
+      for (const k of keys) enabled[k] = on;
+      return { ...s, enabled };
+    });
+  }, []);
+
+  const toggleGrid = useCallback(
+    () => setFilterState((s) => ({ ...s, gridVisible: !s.gridVisible })),
+    [],
+  );
+
+  // Persist the current filter set as the saved default (explicit — see button).
+  const handleSaveDefault = useCallback(() => {
+    saveFilterState(filterState);
+    setToast('Filters saved as default.');
+  }, [filterState]);
+
+  // ---- Custom markers ----
+  const handleAddCustom = useCallback((poi: Poi) => {
+    setCustomPois((cur) => addCustomPoi(cur, poi));
+    // Ensure "My markers" is on so a just-placed marker is actually visible.
+    setFilterState((s) =>
+      s.enabled.custom ? s : { ...s, enabled: { ...s.enabled, custom: true } },
+    );
+  }, []);
+  const handleRemoveCustom = useCallback(
+    (id: string) => setCustomPois((cur) => removeCustomPoi(cur, id)),
+    [],
+  );
+
+  const handleRefresh = async () => {
     setError(null);
+    setLoading(true);
     try {
-      if (!TokenManager.validateToken(token)) throw new Error('Invalid token format');
-      const ok = await TokenManager.verifyToken(token);
-      if (!ok) throw new Error('Token rejected by TarkovTracker');
-      TokenManager.saveToken(token);
-      setIsAuthenticated(true);
-      await loadQuestState(token);
+      const devClient = new TarkovDevClient();
+      const tasks = await devClient.getTasks();
+      const next = deriveQuestState(toTrackerProgress(progress), tasks);
+      setQuestState(next);
+      pruneStaleSelections(next);
+      setLastSynced(Date.now());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+      setToast(err instanceof Error ? err.message : 'Refresh failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    TokenManager.clearToken();
-    setToken('');
-    setIsAuthenticated(false);
-    setQuestState(null);
-    setPlayerLevel(null);
-    setLastSynced(null);
-  };
+  const handleApplyUpdate = useCallback(async () => {
+    if (!availableUpdate) return;
+    setUpdating(true);
+    setToast(`Downloading update v${availableUpdate.version}…`);
+    try {
+      await applyUpdate(availableUpdate.update, ({ downloaded, total }) => {
+        if (total) {
+          const pct = Math.round((downloaded / total) * 100);
+          setToast(`Downloading update v${availableUpdate.version}… ${pct}%`);
+        }
+      });
+      // relaunch() inside applyUpdate restarts the app; code below only runs on failure.
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : 'Update failed');
+      setUpdating(false);
+    }
+  }, [availableUpdate]);
 
-  const handleRefresh = () => {
-    if (token) loadQuestState(token);
+  const handleReplayPastLogs = async () => {
+    setReplayingLogs(true);
+    try {
+      const count = await replayPastLogs();
+      setToast(`Replayed ${count} log file${count === 1 ? '' : 's'}. Quest list updating…`);
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : 'Replay failed');
+    } finally {
+      setReplayingLogs(false);
+    }
   };
 
   return (
     <div className="app-container">
-      <h1>Tarkov Companion</h1>
-
-      {!isAuthenticated ? (
-        <div className="auth-section">
-          <h2>Enter TarkovTracker Token</h2>
-          <form onSubmit={handleTokenSubmit}>
-            <input
-              type="password"
-              placeholder="Paste your TarkovTracker API token"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              disabled={loading}
-            />
-            <button type="submit" disabled={loading}>
-              {loading ? 'Validating…' : 'Validate Token'}
+      <Toast message={toast} onDismiss={() => setToast(null)} />
+      <div className="main-section">
+        <div className="header">
+          <h1>Tarkov MoA{appVersion ? ` v${appVersion}` : ''}</h1>
+          <div className="header-meta">
+            {relativeSynced && (
+              <span className="synced">Synced {relativeSynced}</span>
+            )}
+            {availableUpdate && (
+              <button
+                className="update-btn"
+                onClick={handleApplyUpdate}
+                disabled={updating}
+                title={availableUpdate.notes ?? `Update to v${availableUpdate.version}`}
+              >
+                {updating ? 'Updating…' : `⬆ Update to v${availableUpdate.version}`}
+              </button>
+            )}
+            <button
+              className="btn-tertiary"
+              onClick={() => setPatchNotesOpen(true)}
+              title="What's new in this version"
+            >
+              Patch notes
             </button>
-          </form>
-          {error && <div className="error">{error}</div>}
-        </div>
-      ) : (
-        <div className="main-section">
-          <div className="header">
-            <h2>Player level: {playerLevel ?? '—'}</h2>
-            <div>
-              <button onClick={handleRefresh} disabled={loading}>
-                {loading ? 'Refreshing…' : 'Refresh'}
-              </button>
-              <button onClick={handleLogout} className="logout-btn">
-                Logout
-              </button>
-            </div>
+            <button
+              className="btn-tertiary"
+              onClick={() => setHowToOpen(true)}
+              title="How to use Tarkov MoA"
+            >
+              How to use
+            </button>
+            <button
+              className="btn-tertiary"
+              onClick={() => setSettingsOpen(true)}
+              title="Settings (EFT install folder, etc.)"
+            >
+              ⚙
+            </button>
+            <button
+              className="btn-tertiary"
+              onClick={handleReplayPastLogs}
+              disabled={loading || replayingLogs}
+              title="Re-process every EFT log file ever recorded. Useful on first launch."
+            >
+              {replayingLogs ? 'Syncing…' : 'Sync past logs'}
+            </button>
+            <button className="btn-primary" onClick={handleRefresh} disabled={loading}>
+              {loading && <Spinner />}
+              {loading ? 'Refreshing…' : 'Refresh'}
+            </button>
           </div>
-          {lastSynced && (
-            <p className="synced">
-              Synced {new Date(lastSynced).toLocaleTimeString()}
-            </p>
-          )}
-
-          {questState && (
-            <>
-              <h3>Available ({questState.available.length})</h3>
-              <ul>
-                {questState.available.slice(0, 50).map((t) => (
-                  <li key={t.id}>
-                    <strong>{t.name}</strong>
-                    {t.map && <span className="map"> — {t.map.name}</span>}
-                    {t.trader && <span className="trader"> ({t.trader.name})</span>}
-                  </li>
-                ))}
-              </ul>
-              <h3>Locked ({questState.locked.length})</h3>
-              <ul className="locked">
-                {questState.locked.slice(0, 20).map((t) => (
-                  <li key={t.id}>{t.name}</li>
-                ))}
-              </ul>
-            </>
-          )}
-
-          {error && <div className="error">{error}</div>}
         </div>
+
+        {error && <div className="error">{error}</div>}
+
+        {questState && (
+          <div className="workspace">
+            <aside className="sidebar">
+              <h3>Maps</h3>
+              <MapPicker
+                availableObjectivesByMap={questState.availableObjectivesByMap}
+                availableTasksByMap={questState.availableTasksByMap}
+                selectedMapId={selectedMapId}
+                onSelect={setSelectedMapId}
+              />
+              <div className="sidebar-tabs">
+                <button
+                  className={sidebarTab === 'quests' ? 'active' : ''}
+                  onClick={() => setSidebarTab('quests')}
+                >
+                  Quests
+                </button>
+                <button
+                  className={sidebarTab === 'pois' ? 'active' : ''}
+                  onClick={() => setSidebarTab('pois')}
+                >
+                  Others
+                </button>
+              </div>
+              {sidebarTab === 'quests' ? (
+                <>
+                  <h3>On this map</h3>
+                  <QuestSidebar
+                    selectedMapId={selectedMapId}
+                    availableTasksByMap={questState.availableTasksByMap}
+                    availableObjectivesByMap={questState.availableObjectivesByMap}
+                    anyLocation={questState.anyLocation}
+                    locked={questState.locked}
+                    hoveredTaskId={hoveredTaskId}
+                    onHoverTask={setHoveredTaskId}
+                    hoveredObjectiveId={hoveredObjectiveId}
+                    onHoverObjective={setHoveredObjectiveId}
+                    pinned={pinned}
+                    onTogglePin={togglePin}
+                  />
+                </>
+              ) : (
+                <PoiFilterPanel
+                  pois={panelPois}
+                  state={filterState}
+                  onToggleFacet={toggleFacet}
+                  onSetAllFacets={setAllFacets}
+                  onToggleGrid={toggleGrid}
+                  onSaveDefault={handleSaveDefault}
+                />
+              )}
+            </aside>
+            <section className="map-area">
+              {selectedMapId ? (
+                <>
+                  <MapView mapId={selectedMapId} mapName={selectedMapName}>
+                    <MarkerLayer
+                      mapId={selectedMapId}
+                      objectives={questState.availableObjectivesByMap[selectedMapId] ?? EMPTY_OBJECTIVES}
+                      highlightedTaskId={hoveredTaskId ?? (pinned?.kind === 'task' ? pinned.id : null)}
+                      highlightedObjectiveId={hoveredObjectiveId ?? (pinned?.kind === 'objective' ? pinned.id : null)}
+                      floors={selectedMapDef?.floors}
+                      activeFloorId={activeFloorId}
+                      onCounts={setFloorCounts}
+                      onHoverObjective={setHoveredObjectiveId}
+                      onTogglePin={togglePin}
+                    />
+                    <PlayerMarker position={playerPos} mapId={selectedMapId} />
+                    <PoiLayer
+                      mapId={selectedMapId}
+                      pois={currentPois}
+                      isVisible={poiVisible}
+                      selectedPoiId={selectedPoiId}
+                      onSelect={(poi) =>
+                        setSelectedPoiId((cur) => (cur === poi.id ? null : poi.id))
+                      }
+                    />
+                    <GridOverlay mapId={selectedMapId} visible={filterState.gridVisible} />
+                    <MapClickPlacer mapId={selectedMapId} onAdd={handleAddCustom} />
+                    {customEnabled && (
+                      <CustomMarkerLayer
+                        mapId={selectedMapId}
+                        pois={currentCustomPois}
+                        onRemove={handleRemoveCustom}
+                      />
+                    )}
+                  </MapView>
+                  {selectedMapDef?.floors && selectedMapDef.floors.length > 0 && (
+                    <FloorSwitcher
+                      floors={selectedMapDef.floors}
+                      activeFloorId={activeFloorId}
+                      counts={floorCounts}
+                      onSelect={setActiveFloorId}
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="map-placeholder">Select a map</div>
+              )}
+            </section>
+          </div>
+        )}
+      </div>
+      {settingsOpen && (
+        <SettingsModal onClose={() => setSettingsOpen(false)} />
+      )}
+      {howToOpen && (
+        <HowToUseModal onClose={() => setHowToOpen(false)} />
+      )}
+      {patchNotesOpen && (
+        <PatchNotesModal onClose={() => setPatchNotesOpen(false)} />
       )}
     </div>
   );

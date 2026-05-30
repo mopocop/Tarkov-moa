@@ -3,7 +3,7 @@ import type { AxiosInstance } from 'axios';
 import type { TarkovTrackerProgress } from './types';
 
 const BASE_URL = 'https://tarkovtracker.io/api/v2';
-const PROGRESS_CACHE_KEY = 'tt_progress_cache';
+const PROGRESS_CACHE_KEY = 'tt_progress_cache_v2';
 
 export class UnauthorizedError extends Error {
   constructor() {
@@ -47,9 +47,9 @@ export class TarkovTrackerClient {
   async getProgress(): Promise<TarkovTrackerProgress> {
     if (!this.token) throw new Error('Token not set');
     try {
-      const response = await this.client.get<TarkovTrackerProgress>('/progress');
-      this.saveCachedProgress(response.data);
-      return response.data;
+      const response = await this.client.get<{ data: TarkovTrackerProgress }>('/progress');
+      this.saveCachedProgress(response.data.data);
+      return response.data.data;
     } catch (error) {
       const status = (error as AxiosError).response?.status;
       if (status === 401) throw new UnauthorizedError();

@@ -1,26 +1,115 @@
-.app-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 h1 {
-  color: #333;
-  margin-bottom: 30px;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--text-strong);
 }
 
 h2, h3 {
-  color: #555;
+  color: var(--text);
 }
 
+/* ------- Buttons (neutral by default; accent reserved for CTAs/active) ------- */
+
+button {
+  padding: 8px 14px;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+button:hover:not(:disabled) {
+  background: var(--border-strong);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Binance button hierarchy: Primary / Secondary / Tertiary --------------
+   Primary  — the signature yellow CTA (black text). Used scarcely (Refresh).
+   Secondary— surface-filled, low-emphasis (the sidebar tabs; the default button).
+   Tertiary — transparent text button, no chrome (gear, Sync logs, panel actions).
+   Spec: docs/DESIGN.md → button-primary / button-secondary-on-dark / button-tertiary-text. */
+button.accent,
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-2); /* on-primary #181a20 — black on yellow, the DS signature */
+}
+
+button.accent:hover:not(:disabled),
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-active);
+  border-color: var(--accent-active);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.btn-tertiary {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+.btn-tertiary:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.logout-btn {
+  background: transparent;
+  border-color: var(--down);
+  color: var(--down);
+}
+
+.logout-btn:hover:not(:disabled) {
+  background: var(--down);
+  color: var(--text-strong);
+}
+
+/* ------- Auth screen ------- */
+
 .auth-section {
-  background: #f5f5f5;
-  padding: 20px;
-  border-radius: 8px;
-  margin: 20px 0;
+  max-width: 480px;
+  margin: 80px auto;
+  padding: var(--sp-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
 }
 
 .auth-section form {
@@ -32,107 +121,706 @@ h2, h3 {
 .auth-section input {
   flex: 1;
   padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text-strong);
+  border-radius: var(--r-md);
   font-size: 14px;
 }
 
-.auth-section button {
-  padding: 10px 20px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
+.auth-section input:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
-.auth-section button:hover:not(:disabled) {
-  background: #0056b3;
-}
-
-.auth-section button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+/* ------- Main shell ------- */
 
 .main-section {
-  background: #f5f5f5;
-  padding: 20px;
-  border-radius: 8px;
-  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
 
-.logout-btn {
-  padding: 8px 16px;
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
-.logout-btn:hover {
-  background: #c82333;
-}
-
-.tasks-list {
-  background: white;
-  padding: 15px;
-  border-radius: 4px;
-  margin: 15px 0;
-}
-
-.tasks-list ul {
-  list-style: none;
-  padding: 0;
-  margin: 10px 0 0 0;
-}
-
-.tasks-list li {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  color: #333;
-}
-
-.tasks-list li:last-child {
-  border-bottom: none;
-}
-
-.map {
-  color: #666;
-  font-size: 14px;
-}
-
-.source {
-  color: #999;
-  font-size: 12px;
-}
-
-.loading {
-  color: #666;
+.synced {
   font-style: italic;
 }
 
-.no-tasks {
-  color: #999;
-  text-align: center;
-  padding: 20px;
+.update-btn {
+  background: var(--accent);
+  color: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-md);
+  padding: 3px 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.update-btn:hover:not(:disabled) {
+  background: var(--accent-active);
+  border-color: var(--accent-active);
+}
+
+.update-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.faction-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--text);
+}
+
+/* ------- Workspace: sidebar + map ------- */
+
+.workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.sidebar {
+  width: 340px;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  overflow-y: auto;
+  padding: var(--sp-sm) var(--sp-md);
+}
+
+.sidebar h3 {
+  margin: 14px 0 6px 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.sidebar h3:first-of-type {
+  margin-top: 0;
+}
+
+.map-area {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  background: var(--bg);
+}
+
+.map-area .leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: var(--bg);
+}
+
+/* Quick eased zoom: the overlay/tile/marker panes ease their transform on each
+   fractional zoom step. zoomAnimation stays OFF (rotated CRS drifts under
+   Leaflet's animated zoom — see MapView.tsx), so this only smooths the discrete
+   reflows produced by zoomSnap/zoomDelta — no interpolation, no drift. */
+/* Quick eased zoom, fully decoupled from pan. We deliberately DON'T transition
+   the map-pane (it's what moves on drag — transitioning it smears panning). Only
+   the image overlay (which scales on zoom) and the markers (which reposition on
+   zoom) ease. Neither changes its own transform on a pan, so dragging stays 1:1
+   instant. Inertia is also off (MapView) so there's no post-drag glide. */
+.map-area .leaflet-image-layer {
+  transition: transform 0.12s ease-in-out, width 0.12s ease-in-out, height 0.12s ease-in-out;
+}
+.map-area .leaflet-marker-pane > * {
+  transition: transform 0.12s ease-in-out;
+}
+
+.map-placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ------- Map picker ------- */
+
+.map-picker-select {
+  width: 100%;
+  /* Extra right padding so the chevron isn't crammed against the border. */
+  padding: 8px 32px 8px 10px;
+  background-color: var(--bg-2);
+  color: var(--text-strong);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  cursor: pointer;
+  /* Replace the native chevron with our own, positioned with breathing room. */
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23707a8a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.map-picker-select:hover {
+  border-color: var(--border-strong);
+}
+
+/* ------- Quest sidebar ------- */
+
+.quest-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quest-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.quest-row {
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  cursor: default;
+  border: 1px solid transparent;
+  margin-bottom: 4px;
+  background: var(--bg-2);
+}
+
+.quest-row.hovered {
+  background: var(--surface-2);
+  border-color: var(--accent);
+}
+
+.quest-row.pinned {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.quest-head.clickable {
+  cursor: pointer;
+}
+
+.pin-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: var(--r-sm);
+  vertical-align: middle;
+}
+
+.quest-head {
+  font-size: 13px;
+  color: var(--text-strong);
+}
+
+.trader {
+  color: var(--text-muted);
+  font-weight: normal;
+}
+
+.no-poi {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 12px;
+}
+
+.objectives {
+  list-style: disc;
+  padding-left: 18px;
+  margin: 4px 0 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.objective-row {
+  margin: 1px 0;
+  padding: 1px 4px;
+  border-radius: var(--r-sm);
+  cursor: default;
+}
+
+.objective-row.no-pos {
+  color: var(--text-muted);
+}
+
+.objective-row:not(.no-pos):hover,
+.objective-row.hovered {
+  background: var(--surface-2);
+  color: var(--text-strong);
+  cursor: pointer;
+}
+
+.objective-row.pinned {
+  background: var(--accent-soft);
+  color: var(--text-strong);
+}
+
+/* ------- Locked section ------- */
+
+.locked-section {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.locked-toggle {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.locked-toggle:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.locked-list {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0 0;
+  pointer-events: none;
+}
+
+.locked-row {
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ------- Misc ------- */
+
+.muted {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 13px;
+  padding: 4px 0;
 }
 
 .error {
-  background: #f8d7da;
-  color: #721c24;
-  padding: 12px;
-  border-radius: 4px;
-  margin: 10px 0;
-  border: 1px solid #f5c6cb;
+  background: rgba(246, 70, 93, 0.15);
+  border: 1px solid var(--down);
+  color: #fecaca;
+  padding: 10px 14px;
+  margin: 8px 16px;
+  border-radius: var(--r-md);
+  font-size: 13px;
 }
+
+/* ------- Spinner ------- */
+
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ------- Toast ------- */
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--down);
+  color: var(--text);
+  padding: 12px 16px;
+  border-radius: var(--r-lg);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  font-size: 13px;
+  max-width: 360px;
+  z-index: 1000;
+  animation: toast-in 0.2s ease-out;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.toast-message {
+  flex: 1;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.toast-close:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ------- Quest markers (yellow scroll glyph; shares .tc-poi-glyph) ------- */
+/* The glyph styling itself comes from .tc-poi-glyph (below). Only the highlight
+   needs a quest-specific selector since quest markers use .tc-marker, not
+   .tc-poi-marker. */
+.tc-marker.tc-hl .tc-poi-glyph {
+  transform: scale(1.4);
+  filter: drop-shadow(0 0 6px rgba(252, 213, 53, 0.9));
+}
+
+/* ------- Floor switcher ------- */
+
+.floor-switcher {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(30, 35, 41, 0.9);
+  padding: 6px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+}
+
+.floor-switcher-btn {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid transparent;
+  padding: 6px 10px;
+  border-radius: var(--r-md);
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: left;
+  min-width: 110px;
+}
+
+.floor-switcher-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.floor-switcher-btn.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
+.floor-switcher-btn.active:hover {
+  background: var(--accent-active);
+}
+
+/* ------- Player position marker ------- */
+
+.tc-player-marker {
+  pointer-events: none;
+}
+.tc-player-arrow {
+  width: 22px;
+  height: 22px;
+  background: var(--up);
+  clip-path: polygon(50% 0%, 100% 100%, 50% 75%, 0% 100%);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  filter: drop-shadow(0 0 4px rgba(14, 203, 129, 0.7));
+  transform-origin: 50% 50%;
+  transition: transform 80ms linear;
+}
+
+/* ------- Settings modal ------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  max-width: 520px;
+  width: 90%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 18px;
+  border-radius: var(--r-xl);
+  color: var(--text);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-strong);
+}
+
+.modal-body h3 {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.modal-body code {
+  background: var(--bg-2);
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+  font-size: 0.85em;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ===== How-to-use guide modal ===== */
+.howto-card { max-width: 560px; }
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+/* ===== Patch notes modal ===== */
+.patchnotes-card { max-width: 560px; }
+.patchnote { margin-bottom: 22px; }
+.patchnote:last-child { margin-bottom: 0; }
+.patchnote-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.patchnote-head h3 { margin: 0; color: var(--text-strong); }
+.patchnote-date { font-size: 0.8rem; color: var(--text-muted); }
+.patchnote-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.patchnote-list li { font-size: 0.88rem; line-height: 1.4; color: var(--text); }
+.patchnote-thanks {
+  margin: 12px 0 0 0;
+  padding: 8px 12px;
+  background: var(--bg-2);
+  border-radius: var(--r-sm);
+  font-size: 0.88rem;
+  color: var(--text-strong);
+}
+
+.howto-step { margin-bottom: 22px; }
+.howto-step:last-child { margin-bottom: 0; }
+.howto-step-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.howto-step-head h3 { margin: 0; font-size: 0.95rem; color: var(--text-strong); }
+.howto-num {
+  flex: 0 0 auto;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent); color: var(--bg-2);
+  border-radius: 999px;
+  font-size: 0.8rem; font-weight: 700;
+}
+.howto-step p { margin: 6px 0; line-height: 1.45; font-size: 0.88rem; }
+.howto-status {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.howto-badge { font-weight: 700; font-size: 0.8rem; white-space: nowrap; }
+.howto-badge.ok { color: #0ecb81; }
+.howto-badge.bad { color: #f6465d; }
+.howto-status-msg { color: var(--text-muted); font-size: 0.82rem; }
+.howto-actions { display: flex; gap: 8px; margin-bottom: 6px; }
+.howto-note { font-size: 0.82rem; margin: 4px 0; }
+.howto-note.ok { color: #0ecb81; }
+.howto-info {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  border-left: 2px solid var(--border);
+  padding-left: 10px;
+  margin-top: 8px;
+}
+.howto-info a { color: var(--accent); }
+.modal-body kbd {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: var(--r-sm);
+  padding: 1px 6px;
+  font-size: 0.85em;
+  font-family: inherit;
+  font-weight: 700;
+}
+
+/* ===== POIs / filter panel / grid / custom markers ===== */
+.tc-poi-marker { background: transparent; border: none; overflow: visible; }
+/* Marker = a colored FA-solid glyph with a dark outline (Moacir's spec). The
+   fill color is set inline per facet; the 3px outline is the DS ink (#1E2329)
+   drawn behind the fill via paint-order so it reads as an external stroke.
+   NOTE: -webkit-text-stroke joints are mitered (CSS can't round them) — the
+   "soft joints" land when Figma-designed icons replace the FA stand-ins. */
+.tc-poi-glyph {
+  position: relative;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+  transition: transform 0.08s ease;
+}
+.tc-poi-glyph i {
+  font-size: 18px; line-height: 1; color: inherit;
+  -webkit-text-stroke: 8px #1e2329;
+  paint-order: stroke fill;
+}
+/* Always-on extraction/transit name: all-caps white text, 2px dark outline,
+   floated right of the glyph so it never shifts the marker's anchor. */
+.tc-poi-label {
+  position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
+  white-space: nowrap; pointer-events: none;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
+  color: #ffffff;
+  -webkit-text-stroke: 2px #1e2329;
+  paint-order: stroke fill;
+}
+.tc-poi-marker.tc-hl .tc-poi-glyph {
+  transform: scale(1.4);
+  filter: drop-shadow(0 0 6px rgba(252, 213, 53, 0.9));
+}
+.tc-poi-tip {
+  background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 4px 8px; font-size: 12px; opacity: 1 !important;
+}
+.tc-poi-tip small { color: var(--text-muted); }
+
+/* Sidebar Quests/Map-POIs tab switcher */
+/* Sidebar tab switcher — Secondary buttons; the active tab gets the yellow. */
+.sidebar-tabs { display: flex; gap: 4px; margin: 12px 0 8px; }
+.sidebar-tabs button {
+  flex: 1; font-size: 12px; padding: 6px 8px; border-radius: var(--r-md);
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  cursor: pointer; font-weight: 600;
+}
+.sidebar-tabs button:hover:not(.active) { background: var(--surface-2); }
+.sidebar-tabs button.active {
+  background: var(--accent); border-color: var(--accent); color: var(--bg-2);
+}
+
+/* Faceted POI filter panel (lives inside the sidebar) */
+.poi-panel { font-size: 12px; color: var(--text); }
+/* Show all / Hide all — Tertiary (transparent text buttons). */
+.poi-bulk-actions { display: flex; gap: 6px; margin-bottom: 6px; }
+.poi-bulk-actions button {
+  flex: 1; font-size: 11px; padding: 4px 6px; border-radius: var(--r-sm);
+  border: 1px solid transparent; background: transparent; color: var(--text-muted);
+  cursor: pointer;
+}
+.poi-bulk-actions button:hover { background: var(--surface-2); color: var(--text); }
+.poi-facet-group { border-top: 1px solid var(--border); }
+.poi-facet-group-header {
+  display: flex; align-items: center; gap: 6px; padding: 7px 0;
+  cursor: pointer; user-select: none;
+}
+.poi-facet-group-header:hover .poi-facet-group-title { color: var(--text-strong); }
+.poi-facet-caret { color: var(--text-muted); font-size: 10px; width: 10px; flex: 0 0 auto; }
+.poi-facet-group-title { font-weight: 600; color: var(--text); }
+.poi-group-bulk {
+  margin-left: auto; font-size: 11px; min-width: 22px; padding: 1px 8px;
+  border-radius: var(--r-pill); border: 1px solid transparent; background: transparent;
+  color: var(--text-muted); cursor: pointer; font-weight: 600;
+}
+.poi-group-bulk:hover { background: var(--surface-2); color: var(--text); }
+.poi-facet-rows { padding: 0 0 6px 16px; display: flex; flex-direction: column; gap: 1px; }
+.poi-facet-row {
+  display: flex; align-items: center; gap: 8px; padding: 3px 6px;
+  border-radius: var(--r-sm); cursor: pointer;
+}
+.poi-facet-row:hover { background: var(--bg-2); }
+.poi-facet-row input { margin: 0; flex: 0 0 auto; accent-color: var(--accent); }
+.poi-facet-label { flex: 1; }
+.poi-swatch {
+  width: 16px; height: 16px;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+}
+/* Colored glyph (color set inline per facet) with a thin dark outline, mirroring
+   the on-map marker so the legend and the map read the same. */
+.poi-swatch i { font-size: 12px; line-height: 1; -webkit-text-stroke: 1px #1e2329; paint-order: stroke fill; }
+.poi-filter-count { margin-left: auto; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* Map options (reference-grid toggle + placement hint) */
+.poi-map-options { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+/* Explicit persist control — accent-outlined so it reads as "the save action"
+   without flooding the panel with yellow fill. */
+.poi-save-default {
+  width: 100%; font-size: 12px; padding: 7px 8px; margin-bottom: 8px;
+  border-radius: var(--r-md); border: 1px solid var(--accent);
+  background: transparent; color: var(--accent); cursor: pointer; font-weight: 600;
+}
+.poi-save-default:hover:not(:disabled) { background: var(--accent-soft); }
+.poi-toggle-btn {
+  width: 100%; font-size: 12px; padding: 7px 8px; border-radius: var(--r-md);
+  border: 1px solid var(--border); background: var(--bg-2); color: var(--text);
+  cursor: pointer; font-weight: 600;
+}
+.poi-toggle-btn:hover { background: var(--surface-2); }
+.poi-toggle-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.poi-hint { margin: 8px 0 0; font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+.tc-grid-svg { pointer-events: none; }
+.tc-grid-line { stroke: rgba(250, 250, 250, 0.18); stroke-width: 1; }
+.tc-grid-label { fill: rgba(250, 250, 250, 0.55); font-size: 11px; font-family: monospace; }

@@ -22,3 +22,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code local settings
+.claude/
+
+# Tauri updater signing keys — never commit
+*.key
+*.key.pub
+
+# FontAwesome Pro web kit — commercial license forbids redistributing the raw
+# kit in a public repo. Vendored locally for dev/build (the compiled exe embeds
+# the glyphs, which IS permitted). Each build machine drops the FA web zip into
+# src/vendor/fontawesome/ — see docs/design-notes.md.
+src/vendor/fontawesome/
