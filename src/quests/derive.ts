@@ -4,6 +4,7 @@ import type {
   TarkovTrackerProgress,
   TaskProgress,
 } from '../api/types';
+import { canonicalMapId } from '../map/canonicalMap';
 
 export interface DerivedQuestState {
   // "Active" quests: accepted by the player and not yet completed/failed.
@@ -109,12 +110,15 @@ export function deriveQuestState(
       // No location at all (e.g. hand-over quests) — surface in "Any Location".
       anyLocation.push(task);
     } else {
-      // Sidebar bucket — only maps the player can currently access.
+      // Sidebar bucket — only maps the player can currently access. Gate on the
+      // ORIGINAL id (the level gate is per-variant), THEN collapse variants to
+      // their canonical map and dedup, so a task referencing both a base map and
+      // its variant (e.g. Ground Zero + Ground Zero 21+) lands once.
+      const canonicalIds = new Set<string>();
       mapIds.forEach((id) => {
-        if (isMapVisible(id, playerLevel)) {
-          pushByMap(availableTasksByMap, id, task);
-        }
+        if (isMapVisible(id, playerLevel)) canonicalIds.add(canonicalMapId(id));
       });
+      canonicalIds.forEach((id) => pushByMap(availableTasksByMap, id, task));
     }
 
     // Marker bucket — every objective that has any positional info.
@@ -123,11 +127,13 @@ export function deriveQuestState(
         (obj.zones?.some((z) => z.position) ?? false) ||
         (obj.possibleLocations?.some((l) => l.positions && l.positions.length > 0) ?? false);
       if (!hasPosition) return;
+      const canonicalIds = new Set<string>();
       collectObjectiveMaps(obj).forEach((mapId) => {
-        if (isMapVisible(mapId, playerLevel)) {
-          pushByMap(availableObjectivesByMap, mapId, { task, objective: obj });
-        }
+        if (isMapVisible(mapId, playerLevel)) canonicalIds.add(canonicalMapId(mapId));
       });
+      canonicalIds.forEach((mapId) =>
+        pushByMap(availableObjectivesByMap, mapId, { task, objective: obj }),
+      );
     });
   }
 

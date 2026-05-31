@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { MapFloor } from "./floorClassify";
 import { normalizeBounds } from "./floorClassify";
+import { canonicalMapId } from "./canonicalMap";
 
 export type { MapFloor } from "./floorClassify";
 
@@ -214,17 +215,87 @@ export const MAPS: Record<string, MapDef> = {
     transform: [0.265, 150.6, 0.265, 134.6],
     rotation: 180,
   },
-  // Ground Zero (1-20) and Ground Zero 21+ share the same physical map and
-  // visual asset; tarkov.dev exposes them as separate UUIDs only because BSG
-  // split the quest pool by level. tarkov-dev's maps.json marks them as
-  // altMaps siblings — we point both UUIDs at the same MapDef.
-  // The picker hides GZ 21+ for players below level 21 via derive.ts.
+  // Factory — values verbatim from tarkov-dev maps.json. NOTE rotation 90 (not
+  // 180 like the others). Night Factory shares this map; canonicalMap.ts routes
+  // its UUID here.
+  "55f2d3fd4bdc2d5f408b4567": {
+    svgUrl: "https://assets.tarkov.dev/maps/svg/Factory.svg",
+    boundsRaw: [
+      [77, -64.5],
+      [-65.5, 67.4],
+    ],
+    transform: [1.629, 119.9, 1.629, 139.3],
+    rotation: 90,
+  },
+  // Lighthouse.
+  "5704e4dad2720bb55b8b4567": {
+    svgUrl: "https://assets.tarkov.dev/maps/svg/Lighthouse.svg",
+    boundsRaw: [
+      [515, -998],
+      [-545, 725],
+    ],
+    transform: [0.2, 0, 0.2, 0],
+    rotation: 180,
+  },
+  // Shoreline.
+  "5704e554d2720bac5b8b456e": {
+    svgUrl: "https://assets.tarkov.dev/maps/svg/Shoreline.svg",
+    boundsRaw: [
+      [504, -415],
+      [-1056, 618],
+    ],
+    transform: [0.16, 83.2, 0.16, 111.1],
+    rotation: 180,
+  },
+  // Reserve.
+  "5704e5fad2720bac5b8b4567": {
+    svgUrl: "https://assets.tarkov.dev/maps/svg/Reserve.svg",
+    boundsRaw: [
+      [289, -293],
+      [-303, 244],
+    ],
+    transform: [0.395, 122.0, 0.395, 137.65],
+    rotation: 180,
+  },
+  // Streets of Tarkov.
+  "5714dc692459777137212e12": {
+    svgUrl: "https://assets.tarkov.dev/maps/svg/StreetsOfTarkov.svg",
+    boundsRaw: [
+      [323, -295],
+      [-280, 532],
+    ],
+    transform: [0.38, 0, 0.38, 0],
+    rotation: 180,
+  },
+  // The Lab. NOTE rotation 270. maps.json carries no svgPath for Labs, but the
+  // asset exists at the standard path (Labs.svg).
+  "5b0fc42d86f7744a585f9105": {
+    svgUrl: "https://assets.tarkov.dev/maps/svg/Labs.svg",
+    boundsRaw: [
+      [-80, -477],
+      [-287, -193],
+    ],
+    transform: [0.575, 281.2, 0.575, 193.7],
+    rotation: 270,
+  },
+  // Terminal (newer location).
+  "6925a2c38bdebd9e2302692e": {
+    svgUrl: "https://assets.tarkov.dev/maps/svg/Terminal.svg",
+    boundsRaw: [
+      [463, -580],
+      [-433, 475],
+    ],
+    transform: [0.2, 0, 0.2, 0],
+    rotation: 180,
+  },
+  // Ground Zero — single canonical entry. Ground Zero 21+ and Ground Zero
+  // Tutorial are the same physical map (split only by quest pool / level gate);
+  // canonicalMap.ts routes their UUIDs here, so they need no separate key.
   "653e6760052c01c1c805532f": GROUND_ZERO_DEF,
-  "65b8d6f5cdde2479cb2a3125": GROUND_ZERO_DEF,
 };
 
 export function getMapDef(mapId: string): MapDef | undefined {
-  return MAPS[mapId];
+  return MAPS[canonicalMapId(mapId)];
 }
 
 // Display names for every map the app can render. Used by the map picker so QA
@@ -232,12 +303,20 @@ export function getMapDef(mapId: string): MapDef | undefined {
 // data carries names, but empty maps have none). Order here is the picker's
 // fallback order. Ground Zero 21+ shares the base GZ visual but a different
 // quest pool, so it's listed separately.
+// Keyed by CANONICAL map id only — one row per physical map. Variant UUIDs
+// (GZ 21+, GZ Tutorial, Night Factory) resolve here via canonicalMap.ts.
 export const SUPPORTED_MAP_NAMES: Record<string, string> = {
   "56f40101d2720b2a4d8b45d6": "Customs",
   "5704e3c2d2720bac5b8b4567": "Woods",
   "5714dbc024597771384a510d": "Interchange",
+  "55f2d3fd4bdc2d5f408b4567": "Factory",
+  "5704e4dad2720bb55b8b4567": "Lighthouse",
+  "5704e554d2720bac5b8b456e": "Shoreline",
+  "5704e5fad2720bac5b8b4567": "Reserve",
+  "5714dc692459777137212e12": "Streets of Tarkov",
+  "5b0fc42d86f7744a585f9105": "The Lab",
+  "6925a2c38bdebd9e2302692e": "Terminal",
   "653e6760052c01c1c805532f": "Ground Zero",
-  "65b8d6f5cdde2479cb2a3125": "Ground Zero 21+",
 };
 
 function leafletBounds(def: MapDef): L.LatLngBoundsLiteral {
@@ -285,7 +364,7 @@ function makeCRS(def: MapDef): L.CRS {
 export function getGameToLatLng(
   mapId: string,
 ): ((x: number, z: number) => [number, number]) | null {
-  if (!MAPS[mapId]) return null;
+  if (!MAPS[canonicalMapId(mapId)]) return null;
   return (gx, gz) => [gz, gx];
 }
 
@@ -296,7 +375,7 @@ export function getGameToLatLng(
 export function getLatLngToGame(
   mapId: string,
 ): ((lat: number, lng: number) => { x: number; z: number }) | null {
-  if (!MAPS[mapId]) return null;
+  if (!MAPS[canonicalMapId(mapId)]) return null;
   return (lat, lng) => ({ x: lng, z: lat });
 }
 
@@ -311,7 +390,7 @@ export default function MapView({
   mapName,
   children,
 }: MapViewProps): React.JSX.Element {
-  const def = MAPS[mapId];
+  const def = MAPS[canonicalMapId(mapId)];
   const crs = useMemo(() => (def ? makeCRS(def) : null), [def]);
 
   if (!def || !crs) {

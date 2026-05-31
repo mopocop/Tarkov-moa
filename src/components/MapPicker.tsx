@@ -2,6 +2,7 @@ import React from "react";
 import type { DerivedQuestState } from "../quests/derive";
 import { resolveMapName } from "../quests/mapNames";
 import { SUPPORTED_MAP_NAMES } from "../map/MapView";
+import { canonicalMapId } from "../map/canonicalMap";
 
 interface MapPickerProps {
   availableObjectivesByMap: DerivedQuestState["availableObjectivesByMap"];
@@ -18,12 +19,17 @@ export default function MapPicker({
 }: MapPickerProps): React.JSX.Element {
   // Always offer every supported map for QA, plus any map that happens to have
   // active quests but isn't in the static list (defensive — shouldn't happen).
+  // Collapse any variant UUIDs to canonical so each physical map is one row.
+  // (derive.ts already buckets under canonical ids; this guards the static list
+  // and any defensive extras.)
   const mapIds = Array.from(
-    new Set([
-      ...Object.keys(SUPPORTED_MAP_NAMES),
-      ...Object.keys(availableObjectivesByMap),
-      ...Object.keys(availableTasksByMap),
-    ]),
+    new Set(
+      [
+        ...Object.keys(SUPPORTED_MAP_NAMES),
+        ...Object.keys(availableObjectivesByMap),
+        ...Object.keys(availableTasksByMap),
+      ].map(canonicalMapId),
+    ),
   );
 
   const rows = mapIds
