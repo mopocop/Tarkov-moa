@@ -75,23 +75,26 @@ interface ClassifiedMarker {
 function ObjectiveMarker({
   m,
   highlighted,
+  offFloor,
   onHoverObjective,
   onTogglePin,
 }: {
   m: ClassifiedMarker;
   highlighted: boolean;
+  offFloor: boolean;
   onHoverObjective?: (id: string | null) => void;
   onTogglePin?: (kind: "task" | "objective", id: string) => void;
 }): React.JSX.Element {
   const markerRef = useRef<L.Marker | null>(null);
 
-  // Apply highlight as a class on the live DOM — no setIcon, no DOM swap.
+  // Apply highlight + off-floor state as classes on the live DOM — no setIcon,
+  // no DOM swap (which would drop clicks landing between mousedown/mouseup).
   useEffect(() => {
     const el = markerRef.current?.getElement();
     if (!el) return;
-    if (highlighted) el.classList.add("tc-hl");
-    else el.classList.remove("tc-hl");
-  }, [highlighted]);
+    el.classList.toggle("tc-hl", highlighted);
+    el.classList.toggle("tc-marker-offfloor", offFloor);
+  }, [highlighted, offFloor]);
 
   return (
     <Marker
@@ -162,9 +165,10 @@ export default function MarkerLayer({
   return (
     <>
       {classified.map((m) => {
-        if (activeFloorId !== ALL_FLOORS && m.floorId !== activeFloorId) {
-          return null;
-        }
+        // Off-floor markers are dimmed (not hidden) so cross-floor objectives
+        // still read as "there, but on another level". "All" = nothing dimmed.
+        const offFloor =
+          activeFloorId !== ALL_FLOORS && m.floorId !== activeFloorId;
         const highlighted = highlightedObjectiveId
           ? highlightedObjectiveId === m.objective.id
           : highlightedTaskId === m.task.id;
@@ -174,6 +178,7 @@ export default function MarkerLayer({
             key={`${m.task.id}-${m.objective.id}`}
             m={m}
             highlighted={highlighted}
+            offFloor={offFloor}
             onHoverObjective={onHoverObjective}
             onTogglePin={onTogglePin}
           />

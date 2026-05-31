@@ -506,6 +506,18 @@ button.accent:hover:not(:disabled),
   filter: drop-shadow(0 0 6px rgba(252, 213, 53, 0.9));
 }
 
+/* Markers on a floor other than the active one are dimmed (not hidden) to show
+   they're on a different Z level. Highlighting (sidebar hover/pin) overrides the
+   dim so a cross-floor objective can still be located. */
+.tc-marker.tc-marker-offfloor {
+  opacity: 0.3;
+  transition: opacity 200ms ease;
+}
+
+.tc-marker.tc-marker-offfloor.tc-hl {
+  opacity: 1;
+}
+
 /* ------- Floor switcher ------- */
 
 .floor-switcher {
@@ -546,6 +558,15 @@ button.accent:hover:not(:disabled),
 
 .floor-switcher-btn.active:hover {
   background: var(--accent-active);
+}
+
+/* "Auto" button: when active it's following the player's live floor. Slightly
+   narrower than the floor rows and centered. */
+.floor-switcher-auto {
+  min-width: 0;
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 /* ------- Player position marker ------- */

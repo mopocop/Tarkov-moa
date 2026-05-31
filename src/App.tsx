@@ -12,6 +12,7 @@ import MapView, { getMapDef, SUPPORTED_MAP_NAMES } from './map/MapView';
 import MarkerLayer from './map/MarkerLayer';
 import PlayerMarker from './map/PlayerMarker';
 import FloorSwitcher, { ALL_FLOORS } from './map/FloorSwitcher';
+import { classifyMarker } from './map/floorClassify';
 import MapPicker from './components/MapPicker';
 import QuestSidebar from './components/QuestSidebar';
 import Spinner from './components/Spinner';
@@ -75,6 +76,9 @@ function App() {
   const [hoveredObjectiveId, setHoveredObjectiveId] = useState<string | null>(null);
   const [pinned, setPinned] = useState<{ kind: 'task' | 'objective'; id: string } | null>(null);
   const [activeFloorId, setActiveFloorId] = useState<string>(ALL_FLOORS);
+  // When true, the active floor tracks the player's live position. A manual
+  // FloorSwitcher click turns it off; the "Auto" button turns it back on.
+  const [autoFollowFloor, setAutoFollowFloor] = useState<boolean>(true);
   const [floorCounts, setFloorCounts] = useState<Record<string, number>>({});
   const [toast, setToast] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -275,6 +279,7 @@ function App() {
     setHoveredTaskId(null);
     setHoveredObjectiveId(null);
     setActiveFloorId(ALL_FLOORS);
+    setAutoFollowFloor(true);
     setSelectedPoiId(null);
   }, [selectedMapId]);
 
@@ -282,6 +287,25 @@ function App() {
     () => (selectedMapId ? getMapDef(selectedMapId) : undefined),
     [selectedMapId],
   );
+
+  // Auto-follow: while enabled, drive the active floor from the player's live
+  // position. Manual floor selection pauses this (see handleSelectFloor); the
+  // "Auto" button resumes it. No-op on maps without floor data.
+  useEffect(() => {
+    if (!autoFollowFloor) return;
+    const floors = selectedMapDef?.floors;
+    if (!floors || floors.length === 0 || !playerPos) return;
+    setActiveFloorId(classifyMarker(playerPos.x, playerPos.y, playerPos.z, floors));
+  }, [autoFollowFloor, selectedMapDef, playerPos]);
+
+  const handleSelectFloor = useCallback((id: string) => {
+    setAutoFollowFloor(false);
+    setActiveFloorId(id);
+  }, []);
+
+  const handleEnableAutoFloor = useCallback(() => {
+    setAutoFollowFloor(true);
+  }, []);
 
   const selectedMapName = useMemo(() => {
     if (!questState || !selectedMapId) return '';
@@ -516,7 +540,7 @@ function App() {
             <section className="map-area">
               {selectedMapId ? (
                 <>
-                  <MapView mapId={selectedMapId} mapName={selectedMapName}>
+                  <MapView mapId={selectedMapId} mapName={selectedMapName} activeFloorId={activeFloorId}>
                     <MarkerLayer
                       mapId={selectedMapId}
                       objectives={questState.availableObjectivesByMap[selectedMapId] ?? EMPTY_OBJECTIVES}
@@ -553,7 +577,9 @@ function App() {
                       floors={selectedMapDef.floors}
                       activeFloorId={activeFloorId}
                       counts={floorCounts}
-                      onSelect={setActiveFloorId}
+                      autoFollow={autoFollowFloor}
+                      onSelect={handleSelectFloor}
+                      onAuto={handleEnableAutoFloor}
                     />
                   )}
                 </>

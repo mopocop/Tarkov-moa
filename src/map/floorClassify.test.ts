@@ -111,4 +111,38 @@ describe("floorClassify", () => {
       zMax: 190,
     });
   });
+
+  // Interchange-style: floors defined by height alone (no per-extent bounds).
+  const heightOnlyFloors: MapFloor[] = [
+    {
+      id: "3f",
+      name: "3rd Floor",
+      svgLayerId: "Second_Floor",
+      extents: [{ heightMin: 34, heightMax: 1000 }],
+    },
+    {
+      id: "2f",
+      name: "2nd Floor",
+      svgLayerId: "First_Floor",
+      extents: [{ heightMin: 25, heightMax: 34 }],
+    },
+    { id: GROUND_FLOOR_ID, name: "Ground" },
+  ];
+
+  it("matches height-only extents anywhere on the map (x/z ignored)", () => {
+    // Any x/z at height 28 → 2F; at 40 → 3F; below the bands → ground.
+    expect(classifyMarker(0, 28, 0, heightOnlyFloors)).toBe("2f");
+    expect(classifyMarker(9999, 28, -9999, heightOnlyFloors)).toBe("2f");
+    expect(classifyMarker(0, 40, 0, heightOnlyFloors)).toBe("3f");
+    expect(classifyMarker(0, 10, 0, heightOnlyFloors)).toBe(GROUND_FLOOR_ID);
+  });
+
+  it("treats an empty bounds array as height-only", () => {
+    const f: MapFloor[] = [
+      { id: "x", name: "X", extents: [{ heightMin: 0, heightMax: 5, bounds: [] }] },
+      { id: GROUND_FLOOR_ID, name: "Ground" },
+    ];
+    expect(classifyMarker(123, 3, -456, f)).toBe("x");
+    expect(classifyMarker(123, 9, -456, f)).toBe(GROUND_FLOOR_ID);
+  });
 });

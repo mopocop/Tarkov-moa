@@ -5,6 +5,8 @@ import "leaflet/dist/leaflet.css";
 import type { MapFloor } from "./floorClassify";
 import { normalizeBounds } from "./floorClassify";
 import { canonicalMapId } from "./canonicalMap";
+import FloorVisualOverlay from "./FloorVisualOverlay";
+import { ALL_FLOORS } from "./FloorSwitcher";
 
 export type { MapFloor } from "./floorClassify";
 
@@ -45,6 +47,7 @@ const CUSTOMS_FLOORS: MapFloor[] = [
   {
     id: "3f",
     name: "3F",
+    svgLayerId: "Third_Floor",
     extents: [
       {
         heightMin: 5.7,
@@ -75,6 +78,7 @@ const CUSTOMS_FLOORS: MapFloor[] = [
   {
     id: "2f",
     name: "2F",
+    svgLayerId: "Second_Floor",
     extents: [
       {
         heightMin: 2.7,
@@ -147,6 +151,7 @@ const CUSTOMS_FLOORS: MapFloor[] = [
   {
     id: "underground",
     name: "Underground",
+    svgLayerId: "Underground_Level",
     extents: [
       {
         heightMin: -1000,
@@ -168,6 +173,91 @@ const CUSTOMS_FLOORS: MapFloor[] = [
           "boiler room",
         ],
       },
+    ],
+  },
+  { id: "ground", name: "Ground" },
+];
+
+// Interchange — height-only floors (no per-extent bounds in tarkov-dev data).
+// Upper floors first (first-match-wins); Ground has no svgLayerId so the base
+// is never dimmed.
+const INTERCHANGE_FLOORS: MapFloor[] = [
+  {
+    id: "3f",
+    name: "3rd Floor",
+    svgLayerId: "Second_Floor",
+    extents: [
+      { heightMin: 34, heightMax: 1000, bounds: [normalizeBounds([120, 218], [-222, -327])], regions: ["mall"] },
+    ],
+  },
+  {
+    id: "2f",
+    name: "2nd Floor",
+    svgLayerId: "First_Floor",
+    extents: [
+      { heightMin: 25, heightMax: 34, bounds: [normalizeBounds([120, 218], [-222, -327])], regions: ["mall"] },
+    ],
+  },
+  { id: "ground", name: "Ground" },
+];
+
+// Reserve — only "Bunkers" has an SVG group; the upper floors (2F–5F) classify
+// markers by (x,y,z) but have no visual overlay (svgLayer: None in source).
+const RESERVE_FLOORS: MapFloor[] = [
+  {
+    id: "bunkers",
+    name: "Bunkers",
+    svgLayerId: "Bunkers",
+    extents: [
+      { heightMin: -10000, heightMax: -7.27, bounds: [normalizeBounds([128, -208], [18, -33]), normalizeBounds([-46, -42], [-176, 127])], regions: ["storage bunker", "command bunkers"] },
+      { heightMin: -10000, heightMax: -12, bounds: [normalizeBounds([-40, 124], [-124, 189])], regions: ["D2"] },
+      { heightMin: -10000, heightMax: 18, bounds: [normalizeBounds([23, 173], [-65, 189])], regions: ["dome tunnels"] },
+      { heightMin: -7.27, heightMax: -3.2, bounds: [normalizeBounds([74, -196], [19, -149])], regions: ["bunker hermetic door bunkers"] },
+      { heightMin: -11, heightMax: -4.6, bounds: [normalizeBounds([-246, -79], [-274, -53]), normalizeBounds([238, -26], [126, 45])], regions: ["E1 bunkers", "bunkers"] },
+    ],
+  },
+  {
+    id: "2f",
+    name: "2nd Floor",
+    extents: [
+      { heightMin: 22.1, heightMax: 25.7, bounds: [normalizeBounds([1, 164], [-17, 199])], regions: ["dome"] },
+      { heightMin: -3.5, heightMax: -0.64, bounds: [normalizeBounds([-77, 26], [-177, 106]), normalizeBounds([62, 59], [51, 108])], regions: ["pawns", "checkpoint fence tower"] },
+      { heightMin: -3.5, heightMax: -0.64, bounds: [normalizeBounds([-104, -37], [-177, 5])], regions: ["black bishop"] },
+      { heightMin: -3.9, heightMax: -0.6, bounds: [normalizeBounds([-47, -47], [-85, -18])], regions: ["white bishop"] },
+      { heightMin: -4.3, heightMax: -2.2, bounds: [normalizeBounds([-19.91, -13], [-78, 39])], regions: ["white king"] },
+      { heightMin: -3.8, heightMax: -1.1, bounds: [normalizeBounds([99, -50], [-2, 7])], regions: ["knights"] },
+      { heightMin: -1.9, heightMax: 11.3, bounds: [normalizeBounds([191, -175], [137, -120])], regions: ["train depot"] },
+      { heightMin: 1, heightMax: 8, bounds: [normalizeBounds([-109, -156], [-119, -147]), normalizeBounds([289, -92], [299, -82]), normalizeBounds([3, -210], [-7, -200]), normalizeBounds([195, -260], [185, -250]), normalizeBounds([276, 17], [266, 27])], regions: ["towers", "towers", "towers", "towers", "towers"] },
+      { heightMin: -4.1, heightMax: -1.2, bounds: [normalizeBounds([-128, -139], [-146, -120])], regions: ["scav lands"] },
+    ],
+  },
+  {
+    id: "3f",
+    name: "3rd Floor",
+    extents: [
+      { heightMin: 25.7, heightMax: 29.3, bounds: [normalizeBounds([1, 164], [-17, 199])], regions: ["dome"] },
+      { heightMin: -0.64, heightMax: 2.23, bounds: [normalizeBounds([-77, 26], [-177, 106])], regions: ["pawns"] },
+      { heightMin: -0.64, heightMax: 2.23, bounds: [normalizeBounds([-104, -37], [-177, 5])], regions: ["black bishop"] },
+      { heightMin: -0.6, heightMax: 10, bounds: [normalizeBounds([-47, -47], [-85, -18])], regions: ["white bishop"] },
+      { heightMin: -2.2, heightMax: 2.14, bounds: [normalizeBounds([-19.91, -13], [-78, 39])], regions: ["white king"] },
+      { heightMin: -1.1, heightMax: 1.6, bounds: [normalizeBounds([99, -50], [-2, 7])], regions: ["knights"] },
+    ],
+  },
+  {
+    id: "4f",
+    name: "4th Floor",
+    extents: [
+      { heightMin: 29.3, heightMax: 36, bounds: [normalizeBounds([1, 164], [-17, 199])], regions: ["dome"] },
+      { heightMin: 2.23, heightMax: 5, bounds: [normalizeBounds([-77, 26], [-177, 106])], regions: ["pawns"] },
+      { heightMin: 2.15, heightMax: 6.6, bounds: [normalizeBounds([-19.91, -13], [-78, 39])], regions: ["white king"] },
+      { heightMin: 1.6, heightMax: 4.7, bounds: [normalizeBounds([99, -50], [-2, 7])], regions: ["knights"] },
+    ],
+  },
+  {
+    id: "5f",
+    name: "5th Floor",
+    extents: [
+      { heightMin: 5, heightMax: 9.5, bounds: [normalizeBounds([-77, 26], [-177, 106])], regions: ["pawns"] },
     ],
   },
   { id: "ground", name: "Ground" },
@@ -214,6 +304,7 @@ export const MAPS: Record<string, MapDef> = {
     ],
     transform: [0.265, 150.6, 0.265, 134.6],
     rotation: 180,
+    floors: INTERCHANGE_FLOORS,
   },
   // Factory — values verbatim from tarkov-dev maps.json. NOTE rotation 90 (not
   // 180 like the others). Night Factory shares this map; canonicalMap.ts routes
@@ -256,6 +347,7 @@ export const MAPS: Record<string, MapDef> = {
     ],
     transform: [0.395, 122.0, 0.395, 137.65],
     rotation: 180,
+    floors: RESERVE_FLOORS,
   },
   // Streets of Tarkov.
   "5714dc692459777137212e12": {
@@ -382,12 +474,16 @@ export function getLatLngToGame(
 interface MapViewProps {
   mapId: string;
   mapName: string;
+  // Current floor (from FloorSwitcher / player auto-follow). Drives which SVG
+  // floor group is raised vs dimmed. Defaults to ALL_FLOORS (show everything).
+  activeFloorId?: string;
   children?: React.ReactNode;
 }
 
 export default function MapView({
   mapId,
   mapName,
+  activeFloorId = ALL_FLOORS,
   children,
 }: MapViewProps): React.JSX.Element {
   const def = MAPS[canonicalMapId(mapId)];
@@ -431,7 +527,16 @@ export default function MapView({
       zoomAnimation={false}
       markerZoomAnimation={false}
     >
-      <ImageOverlay url={def.svgUrl} bounds={bounds} />
+      {def.floors?.some((f) => f.svgLayerId) ? (
+        <FloorVisualOverlay
+          svgUrl={def.svgUrl}
+          bounds={bounds}
+          floors={def.floors}
+          activeFloorId={activeFloorId}
+        />
+      ) : (
+        <ImageOverlay url={def.svgUrl} bounds={bounds} />
+      )}
       {children}
     </MapContainer>
   );

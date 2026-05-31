@@ -11,6 +11,17 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "0.6.0",
+    date: "2026-05-31",
+    changes: [
+      "New: 7 more maps — Factory, Lighthouse, Shoreline, Reserve, Streets of Tarkov, The Lab, and Terminal.",
+      "Fixed: Ground Zero no longer shows up multiple times in the map list (the 1-20, 21+, and tutorial versions are now one entry).",
+      "New: multi-floor maps! On Interchange, Reserve, and Customs the map now knows about upper floors, tunnels, and bunkers.",
+      "New: the map auto-follows your floor — take a screenshot underground and the map highlights that level, dimming the others. Markers on other floors fade so you can tell what's on your level.",
+      "New: a floor switcher (top-right) with an “Auto” button — tap a floor to look around manually, tap “Auto” to snap back to following you.",
+    ],
+  },
+  {
     version: "0.5.1",
     date: "2026-05-30",
     changes: [

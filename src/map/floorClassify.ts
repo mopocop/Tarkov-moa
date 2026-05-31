@@ -3,7 +3,10 @@ export type BoundsBox = { xMin: number; xMax: number; zMin: number; zMax: number
 export interface MapExtent {
   heightMin: number;
   heightMax: number;
-  bounds: BoundsBox[];
+  // Optional. When absent or empty, the extent matches on HEIGHT ALONE across
+  // the whole map (used by maps whose tarkov-dev data gives only height bands,
+  // e.g. Interchange). When present, the marker must also fall inside one box.
+  bounds?: BoundsBox[];
   regions?: string[];
 }
 
@@ -11,6 +14,11 @@ export interface MapFloor {
   id: string;
   name: string;
   extents?: MapExtent[];
+  // Optional. The `<g id>` of this floor's group inside the map SVG (from
+  // tarkov-dev maps.json `svgLayer`). When set, FloorVisualOverlay can dim/raise
+  // this floor's visual independently. Floors with no addressable SVG group
+  // (svgLayer: None) omit this — they still classify markers, just no visual.
+  svgLayerId?: string;
 }
 
 export const GROUND_FLOOR_ID = "ground";
@@ -21,6 +29,8 @@ export function isInBounds(x: number, z: number, b: BoundsBox): boolean {
 
 function matchesExtent(x: number, y: number, z: number, e: MapExtent): boolean {
   if (y < e.heightMin || y >= e.heightMax) return false;
+  // No bounds → match on height alone (whole map).
+  if (!e.bounds || e.bounds.length === 0) return true;
   return e.bounds.some((b) => isInBounds(x, z, b));
 }
 
