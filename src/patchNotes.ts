@@ -11,6 +11,17 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "0.7.0",
+    date: "2026-06-01",
+    changes: [
+      "New: multi-floor maps now cover Factory, Shoreline, Streets of Tarkov, Ground Zero, and The Lab — the map knows their upper floors, basements, tunnels, and garages too.",
+      "New: stairs and ramps you can use to change floors are highlighted in gold on every multi-floor map.",
+      "Improved: picking a floor now shows just the ground level plus that floor, cleanly — no more see-through layers stacking up and muddying the view.",
+      "Improved: markers and quest points on a floor you're not viewing now fade out, so it's clearer what's actually on your level.",
+      "Changed: the floor switcher reads top-to-bottom (highest floor down to basements) and drops the repeated “Floor” word for a cleaner list.",
+    ],
+  },
+  {
     version: "0.6.0",
     date: "2026-05-31",
     changes: [

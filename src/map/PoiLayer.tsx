@@ -5,6 +5,12 @@ import type { Poi } from "../poi/types";
 import { iconForFacet, colorForFacet } from "../poi/registry";
 import { facetKeyOf } from "../poi/facets";
 import { getGameToLatLng } from "./MapView";
+import {
+  classifyMarker,
+  GROUND_FLOOR_ID,
+  type MapFloor,
+} from "./floorClassify";
+import { ALL_FLOORS } from "./FloorSwitcher";
 
 // Extraction-type facets render with an always-visible name label (extracts +
 // transits) so the player can read the exit without hovering.
@@ -27,6 +33,11 @@ export interface PoiLayerProps {
   selectedPoiId?: string | null;
   onSelect?: (poi: Poi) => void;
   onHover?: (poiId: string | null) => void;
+  // Floor data + the active floor. When a specific floor is selected, POIs that
+  // classify to a different floor are dimmed (tc-marker-offfloor), matching the
+  // quest-marker behavior — so only POIs on the visible floor read as present.
+  floors?: MapFloor[];
+  activeFloorId?: string;
 }
 
 // One stable icon per color+FA-glyph combo. Highlight is applied via a ".tc-hl"
@@ -67,6 +78,7 @@ function resolvePoiIcon(poi: Poi): L.DivIcon {
 interface PoiMarkerProps {
   poi: Poi;
   highlighted: boolean;
+  offFloor: boolean;
   latLng: [number, number];
   onHover?: (poiId: string | null) => void;
   onSelect?: (poi: Poi) => void;
@@ -75,19 +87,21 @@ interface PoiMarkerProps {
 function PoiMarker({
   poi,
   highlighted,
+  offFloor,
   latLng,
   onHover,
   onSelect,
 }: PoiMarkerProps): React.JSX.Element {
   const markerRef = useRef<L.Marker | null>(null);
 
-  // Apply highlight as a class on the live DOM — no setIcon, no DOM swap.
+  // Apply highlight + off-floor state as classes on the live DOM — no setIcon,
+  // no DOM swap (which would drop clicks landing between mousedown/mouseup).
   useEffect(() => {
     const el = markerRef.current?.getElement();
     if (!el) return;
-    if (highlighted) el.classList.add("tc-hl");
-    else el.classList.remove("tc-hl");
-  }, [highlighted]);
+    el.classList.toggle("tc-hl", highlighted);
+    el.classList.toggle("tc-marker-offfloor", offFloor);
+  }, [highlighted, offFloor]);
 
   return (
     <Marker
@@ -120,22 +134,34 @@ export default function PoiLayer({
   selectedPoiId,
   onSelect,
   onHover,
+  floors,
+  activeFloorId = ALL_FLOORS,
 }: PoiLayerProps): React.JSX.Element {
   const toLatLng = getGameToLatLng(mapId);
   if (!toLatLng) return <></>;
 
+  const hasFloors = !!floors && floors.length > 0;
+
   return (
     <>
-      {pois.filter(isVisible).map((poi) => (
-        <PoiMarker
-          key={poi.id}
-          poi={poi}
-          highlighted={selectedPoiId === poi.id}
-          latLng={toLatLng(poi.position.x, poi.position.z)}
-          onHover={onHover}
-          onSelect={onSelect}
-        />
-      ))}
+      {pois.filter(isVisible).map((poi) => {
+        const floorId = hasFloors
+          ? classifyMarker(poi.position.x, poi.position.y, poi.position.z, floors!)
+          : GROUND_FLOOR_ID;
+        const offFloor =
+          activeFloorId !== ALL_FLOORS && floorId !== activeFloorId;
+        return (
+          <PoiMarker
+            key={poi.id}
+            poi={poi}
+            highlighted={selectedPoiId === poi.id}
+            offFloor={offFloor}
+            latLng={toLatLng(poi.position.x, poi.position.z)}
+            onHover={onHover}
+            onSelect={onSelect}
+          />
+        );
+      })}
     </>
   );
 }

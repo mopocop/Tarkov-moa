@@ -19,6 +19,15 @@ export interface MapFloor {
   // this floor's visual independently. Floors with no addressable SVG group
   // (svgLayer: None) omit this — they still classify markers, just no visual.
   svgLayerId?: string;
+  // Optional ids of opaque "footprint slab" sub-elements inside this floor's
+  // group (e.g. Interchange's Structure-2). Their fill is softened so the base
+  // layer shows through the gaps between rooms — fixes upper floors that paint a
+  // solid building-shaped fill over the whole map. Room/wall plans stay crisp.
+  softenIds?: string[];
+  // Optional ids of stair/ramp sub-elements to recolor gold (#FFD700), matching
+  // the `.stairs` styling that ships in some source SVGs (Customs, Factory,
+  // Shoreline). Used where the source SVG has the geometry but didn't color it.
+  highlightIds?: string[];
 }
 
 export const GROUND_FLOOR_ID = "ground";

@@ -3,6 +3,12 @@ import type { MapFloor } from "./floorClassify";
 
 export const ALL_FLOORS = "all";
 
+// Switcher labels drop the redundant "Floor" word: "3rd Floor" -> "3rd". Names
+// without it (Ground, Bunkers, Customs' "4F"/"3F") pass through unchanged.
+function shortLabel(name: string): string {
+  return name.replace(/\s*Floor$/i, "");
+}
+
 interface FloorSwitcherProps {
   floors: MapFloor[];
   activeFloorId: string;
@@ -53,7 +59,7 @@ export default function FloorSwitcher({
             className={`floor-switcher-btn${active ? " active" : ""}`}
             onClick={() => onSelect(f.id)}
           >
-            {f.name} ({n})
+            {shortLabel(f.name)} ({n})
           </button>
         );
       })}

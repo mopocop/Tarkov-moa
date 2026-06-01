@@ -25,6 +25,9 @@ interface MapDef {
   // visual SVG is NOT swapped per floor in v0.2 (tarkov-dev's per-floor visuals
   // require tile pyramids — see plan delegated-twirling-lighthouse.md).
   floors?: MapFloor[];
+  // Optional extra SVG overlays (our own bundled assets, e.g. hand-drawn Reserve
+  // stairs) layered on top at the same bounds; shapes are recolored gold.
+  extraSvgUrls?: string[];
 }
 
 // Customs floor data sourced verbatim from:
@@ -186,6 +189,7 @@ const INTERCHANGE_FLOORS: MapFloor[] = [
     id: "3f",
     name: "3rd Floor",
     svgLayerId: "Second_Floor",
+    highlightIds: ["Ramps-2"],
     extents: [
       { heightMin: 34, heightMax: 1000, bounds: [normalizeBounds([120, 218], [-222, -327])], regions: ["mall"] },
     ],
@@ -194,26 +198,51 @@ const INTERCHANGE_FLOORS: MapFloor[] = [
     id: "2f",
     name: "2nd Floor",
     svgLayerId: "First_Floor",
+    highlightIds: ["Ramps-1"],
     extents: [
       { heightMin: 25, heightMax: 34, bounds: [normalizeBounds([120, 218], [-222, -327])], regions: ["mall"] },
     ],
   },
-  { id: "ground", name: "Ground" },
+  // Ground has no svgLayerId (it's the always-on base). The ground-level ramps
+  // (`Ramps`, incl. nested `Big_Ramps`) connect ground <-> upper levels — gold
+  // them so the inter-floor connectors stay visible on the base layer.
+  { id: "ground", name: "Ground", highlightIds: ["Ramps"] },
 ];
 
 // Reserve — only "Bunkers" has an SVG group; the upper floors (2F–5F) classify
 // markers by (x,y,z) but have no visual overlay (svgLayer: None in source).
+// Array order = switcher DISPLAY order (top-to-bottom: highest floor → Ground →
+// below-ground Bunkers). Classification is height-banded and order-independent
+// here: the inter-floor height bands don't overlap, and Bunkers' extents are
+// height/bounds-disjoint from 2F–5F, so display order doesn't change results.
 const RESERVE_FLOORS: MapFloor[] = [
   {
-    id: "bunkers",
-    name: "Bunkers",
-    svgLayerId: "Bunkers",
+    id: "5f",
+    name: "5th Floor",
     extents: [
-      { heightMin: -10000, heightMax: -7.27, bounds: [normalizeBounds([128, -208], [18, -33]), normalizeBounds([-46, -42], [-176, 127])], regions: ["storage bunker", "command bunkers"] },
-      { heightMin: -10000, heightMax: -12, bounds: [normalizeBounds([-40, 124], [-124, 189])], regions: ["D2"] },
-      { heightMin: -10000, heightMax: 18, bounds: [normalizeBounds([23, 173], [-65, 189])], regions: ["dome tunnels"] },
-      { heightMin: -7.27, heightMax: -3.2, bounds: [normalizeBounds([74, -196], [19, -149])], regions: ["bunker hermetic door bunkers"] },
-      { heightMin: -11, heightMax: -4.6, bounds: [normalizeBounds([-246, -79], [-274, -53]), normalizeBounds([238, -26], [126, 45])], regions: ["E1 bunkers", "bunkers"] },
+      { heightMin: 5, heightMax: 9.5, bounds: [normalizeBounds([-77, 26], [-177, 106])], regions: ["pawns"] },
+    ],
+  },
+  {
+    id: "4f",
+    name: "4th Floor",
+    extents: [
+      { heightMin: 29.3, heightMax: 36, bounds: [normalizeBounds([1, 164], [-17, 199])], regions: ["dome"] },
+      { heightMin: 2.23, heightMax: 5, bounds: [normalizeBounds([-77, 26], [-177, 106])], regions: ["pawns"] },
+      { heightMin: 2.15, heightMax: 6.6, bounds: [normalizeBounds([-19.91, -13], [-78, 39])], regions: ["white king"] },
+      { heightMin: 1.6, heightMax: 4.7, bounds: [normalizeBounds([99, -50], [-2, 7])], regions: ["knights"] },
+    ],
+  },
+  {
+    id: "3f",
+    name: "3rd Floor",
+    extents: [
+      { heightMin: 25.7, heightMax: 29.3, bounds: [normalizeBounds([1, 164], [-17, 199])], regions: ["dome"] },
+      { heightMin: -0.64, heightMax: 2.23, bounds: [normalizeBounds([-77, 26], [-177, 106])], regions: ["pawns"] },
+      { heightMin: -0.64, heightMax: 2.23, bounds: [normalizeBounds([-104, -37], [-177, 5])], regions: ["black bishop"] },
+      { heightMin: -0.6, heightMax: 10, bounds: [normalizeBounds([-47, -47], [-85, -18])], regions: ["white bishop"] },
+      { heightMin: -2.2, heightMax: 2.14, bounds: [normalizeBounds([-19.91, -13], [-78, 39])], regions: ["white king"] },
+      { heightMin: -1.1, heightMax: 1.6, bounds: [normalizeBounds([99, -50], [-2, 7])], regions: ["knights"] },
     ],
   },
   {
@@ -231,36 +260,181 @@ const RESERVE_FLOORS: MapFloor[] = [
       { heightMin: -4.1, heightMax: -1.2, bounds: [normalizeBounds([-128, -139], [-146, -120])], regions: ["scav lands"] },
     ],
   },
+  { id: "ground", name: "Ground" },
+  {
+    id: "bunkers",
+    name: "Bunkers",
+    svgLayerId: "Bunkers",
+    extents: [
+      { heightMin: -10000, heightMax: -7.27, bounds: [normalizeBounds([128, -208], [18, -33]), normalizeBounds([-46, -42], [-176, 127])], regions: ["storage bunker", "command bunkers"] },
+      { heightMin: -10000, heightMax: -12, bounds: [normalizeBounds([-40, 124], [-124, 189])], regions: ["D2"] },
+      { heightMin: -10000, heightMax: 18, bounds: [normalizeBounds([23, 173], [-65, 189])], regions: ["dome tunnels"] },
+      { heightMin: -7.27, heightMax: -3.2, bounds: [normalizeBounds([74, -196], [19, -149])], regions: ["bunker hermetic door bunkers"] },
+      { heightMin: -11, heightMax: -4.6, bounds: [normalizeBounds([-246, -79], [-274, -53]), normalizeBounds([238, -26], [126, 45])], regions: ["E1 bunkers", "bunkers"] },
+    ],
+  },
+];
+
+// Factory — height-only floors (no per-extent bounds in tarkov-dev data).
+// Source SVG already ships `.stairs{fill:#FFD700}` so stairs are gold natively.
+// Display order top-to-bottom: 3rd → 2nd → Ground → Tunnels (below ground).
+const FACTORY_FLOORS: MapFloor[] = [
   {
     id: "3f",
     name: "3rd Floor",
+    svgLayerId: "Third_Floor",
+    extents: [{ heightMin: 6, heightMax: 10000 }],
+  },
+  {
+    id: "2f",
+    name: "2nd Floor",
+    svgLayerId: "Second_Floor",
+    extents: [{ heightMin: 3, heightMax: 6 }],
+  },
+  { id: "ground", name: "Ground" },
+  {
+    id: "tunnels",
+    name: "Tunnels",
+    svgLayerId: "Basement",
+    extents: [{ heightMin: -10000, heightMax: -1 }],
+  },
+];
+
+// Shoreline — Underground is bounds-gated (west wing / admin only); upper floors
+// are height-only. `.stairs` gold is native. Display: 3rd → 2nd → Ground → Under.
+const SHORELINE_FLOORS: MapFloor[] = [
+  {
+    id: "3f",
+    name: "3rd Floor",
+    svgLayerId: "Third_Floor",
+    extents: [{ heightMin: 2, heightMax: 1000 }],
+  },
+  {
+    id: "2f",
+    name: "2nd Floor",
+    svgLayerId: "Second_Floor",
+    extents: [{ heightMin: -1, heightMax: 2 }],
+  },
+  { id: "ground", name: "Ground" },
+  {
+    id: "underground",
+    name: "Underground",
+    svgLayerId: "Underground_Level",
     extents: [
-      { heightMin: 25.7, heightMax: 29.3, bounds: [normalizeBounds([1, 164], [-17, 199])], regions: ["dome"] },
-      { heightMin: -0.64, heightMax: 2.23, bounds: [normalizeBounds([-77, 26], [-177, 106])], regions: ["pawns"] },
-      { heightMin: -0.64, heightMax: 2.23, bounds: [normalizeBounds([-104, -37], [-177, 5])], regions: ["black bishop"] },
-      { heightMin: -0.6, heightMax: 10, bounds: [normalizeBounds([-47, -47], [-85, -18])], regions: ["white bishop"] },
-      { heightMin: -2.2, heightMax: 2.14, bounds: [normalizeBounds([-19.91, -13], [-78, 39])], regions: ["white king"] },
-      { heightMin: -1.1, heightMax: 1.6, bounds: [normalizeBounds([99, -50], [-2, 7])], regions: ["knights"] },
+      {
+        heightMin: -1000,
+        heightMax: -5,
+        bounds: [
+          normalizeBounds([-137, -68], [-237, -104]),
+          normalizeBounds([-234, -134], [-268, -163]),
+        ],
+        regions: ["west wing", "admin"],
+      },
     ],
+  },
+];
+
+// Streets of Tarkov — five stacked floors, all height-only banded. `.stairs`
+// gold is native. Display: 5th → 4th → 3rd → 2nd → Ground → Underground.
+const STREETS_FLOORS: MapFloor[] = [
+  {
+    id: "5f",
+    name: "5th Floor",
+    svgLayerId: "Fifth_Floor",
+    extents: [{ heightMin: 25, heightMax: 10000 }],
   },
   {
     id: "4f",
     name: "4th Floor",
-    extents: [
-      { heightMin: 29.3, heightMax: 36, bounds: [normalizeBounds([1, 164], [-17, 199])], regions: ["dome"] },
-      { heightMin: 2.23, heightMax: 5, bounds: [normalizeBounds([-77, 26], [-177, 106])], regions: ["pawns"] },
-      { heightMin: 2.15, heightMax: 6.6, bounds: [normalizeBounds([-19.91, -13], [-78, 39])], regions: ["white king"] },
-      { heightMin: 1.6, heightMax: 4.7, bounds: [normalizeBounds([99, -50], [-2, 7])], regions: ["knights"] },
-    ],
+    svgLayerId: "Fourth_Floor",
+    extents: [{ heightMin: 20, heightMax: 25 }],
   },
   {
-    id: "5f",
-    name: "5th Floor",
+    id: "3f",
+    name: "3rd Floor",
+    svgLayerId: "Third_Floor",
+    extents: [{ heightMin: 15, heightMax: 20 }],
+  },
+  {
+    id: "2f",
+    name: "2nd Floor",
+    svgLayerId: "Second_Floor",
+    extents: [{ heightMin: 10, heightMax: 15 }],
+  },
+  { id: "ground", name: "Ground" },
+  {
+    id: "underground",
+    name: "Underground",
+    svgLayerId: "Underground_Level",
+    extents: [{ heightMin: -10000, heightMax: -6 }],
+  },
+];
+
+// Ground Zero — Garage is bounds-gated (garage / underpass); 2nd floor has an
+// extra bounds-gated "M showroom" band. `.stairs` gold is native. Display:
+// 3rd → 2nd → Ground → Garage (below ground).
+const GROUND_ZERO_FLOORS: MapFloor[] = [
+  {
+    id: "3f",
+    name: "3rd Floor",
+    svgLayerId: "Third_Floor",
+    extents: [{ heightMin: 32.3, heightMax: 1000 }],
+  },
+  {
+    id: "2f",
+    name: "2nd Floor",
+    svgLayerId: "Second_Floor",
     extents: [
-      { heightMin: 5, heightMax: 9.5, bounds: [normalizeBounds([-77, 26], [-177, 106])], regions: ["pawns"] },
+      { heightMin: 28, heightMax: 32.3 },
+      {
+        heightMin: 26,
+        heightMax: 31,
+        bounds: [normalizeBounds([98, 216], [91, 228])],
+        regions: ["m showroom"],
+      },
     ],
   },
   { id: "ground", name: "Ground" },
+  {
+    id: "garage",
+    name: "Garage",
+    svgLayerId: "Underground_Level",
+    extents: [
+      {
+        heightMin: -1000,
+        heightMax: 21,
+        bounds: [
+          normalizeBounds([117, -100], [43, 190]),
+          normalizeBounds([143, 49], [117, 80]),
+        ],
+        regions: ["garage", "underpass"],
+      },
+    ],
+  },
+];
+
+// The Lab — two levels in tarkov-dev data but NO addressable SVG groups
+// (svgLayer: None), so these classify markers (off-level markers fade) without a
+// per-floor visual raise/dim, matching Reserve's upper floors. Second Level is
+// bounds-gated. Display: Second Level → Ground → Technical (below ground).
+const LAB_FLOORS: MapFloor[] = [
+  {
+    id: "second",
+    name: "Second Level",
+    extents: [
+      {
+        heightMin: 3,
+        heightMax: 10000,
+        bounds: [normalizeBounds([-101, -422], [-271, -270])],
+      },
+    ],
+  },
+  { id: "ground", name: "Ground" },
+  {
+    id: "technical",
+    name: "Technical",
+    extents: [{ heightMin: -10000, heightMax: -0.9 }],
+  },
 ];
 
 const GROUND_ZERO_DEF: MapDef = {
@@ -271,6 +445,7 @@ const GROUND_ZERO_DEF: MapDef = {
   ],
   transform: [0.524, 167.3, 0.524, 65.1],
   rotation: 180,
+  floors: GROUND_ZERO_FLOORS,
 };
 
 export const MAPS: Record<string, MapDef> = {
@@ -317,6 +492,7 @@ export const MAPS: Record<string, MapDef> = {
     ],
     transform: [1.629, 119.9, 1.629, 139.3],
     rotation: 90,
+    floors: FACTORY_FLOORS,
   },
   // Lighthouse.
   "5704e4dad2720bb55b8b4567": {
@@ -337,6 +513,7 @@ export const MAPS: Record<string, MapDef> = {
     ],
     transform: [0.16, 83.2, 0.16, 111.1],
     rotation: 180,
+    floors: SHORELINE_FLOORS,
   },
   // Reserve.
   "5704e5fad2720bac5b8b4567": {
@@ -348,6 +525,9 @@ export const MAPS: Record<string, MapDef> = {
     transform: [0.395, 122.0, 0.395, 137.65],
     rotation: 180,
     floors: RESERVE_FLOORS,
+    // Hand-drawn stair markers (authored later in Figma, same viewBox). File may
+    // not exist yet — FloorVisualOverlay skips a missing overlay gracefully.
+    extraSvgUrls: ["/overlays/Reserve-stairs.svg"],
   },
   // Streets of Tarkov.
   "5714dc692459777137212e12": {
@@ -358,6 +538,7 @@ export const MAPS: Record<string, MapDef> = {
     ],
     transform: [0.38, 0, 0.38, 0],
     rotation: 180,
+    floors: STREETS_FLOORS,
   },
   // The Lab. NOTE rotation 270. maps.json carries no svgPath for Labs, but the
   // asset exists at the standard path (Labs.svg).
@@ -369,6 +550,7 @@ export const MAPS: Record<string, MapDef> = {
     ],
     transform: [0.575, 281.2, 0.575, 193.7],
     rotation: 270,
+    floors: LAB_FLOORS,
   },
   // Terminal (newer location).
   "6925a2c38bdebd9e2302692e": {
@@ -527,12 +709,13 @@ export default function MapView({
       zoomAnimation={false}
       markerZoomAnimation={false}
     >
-      {def.floors?.some((f) => f.svgLayerId) ? (
+      {def.svgUrl.endsWith(".svg") ? (
         <FloorVisualOverlay
           svgUrl={def.svgUrl}
           bounds={bounds}
           floors={def.floors}
           activeFloorId={activeFloorId}
+          extraSvgUrls={def.extraSvgUrls}
         />
       ) : (
         <ImageOverlay url={def.svgUrl} bounds={bounds} />

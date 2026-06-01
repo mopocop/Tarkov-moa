@@ -558,6 +558,8 @@ function App() {
                       pois={currentPois}
                       isVisible={poiVisible}
                       selectedPoiId={selectedPoiId}
+                      floors={selectedMapDef?.floors}
+                      activeFloorId={activeFloorId}
                       onSelect={(poi) =>
                         setSelectedPoiId((cur) => (cur === poi.id ? null : poi.id))
                       }

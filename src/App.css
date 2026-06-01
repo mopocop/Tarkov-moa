@@ -506,15 +506,17 @@ button.accent:hover:not(:disabled),
   filter: drop-shadow(0 0 6px rgba(252, 213, 53, 0.9));
 }
 
-/* Markers on a floor other than the active one are dimmed (not hidden) to show
-   they're on a different Z level. Highlighting (sidebar hover/pin) overrides the
-   dim so a cross-floor objective can still be located. */
-.tc-marker.tc-marker-offfloor {
+/* Markers/POIs on a floor other than the active one are dimmed (not hidden) to
+   show they're on a different Z level. Targets the bare .tc-marker-offfloor
+   class so it covers BOTH quest markers (.tc-marker) and POIs (.tc-poi-marker).
+   Highlighting (sidebar hover/pin) overrides the dim so a cross-floor item can
+   still be located. */
+.tc-marker-offfloor {
   opacity: 0.3;
   transition: opacity 200ms ease;
 }
 
-.tc-marker.tc-marker-offfloor.tc-hl {
+.tc-marker-offfloor.tc-hl {
   opacity: 1;
 }
 
