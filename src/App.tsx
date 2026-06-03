@@ -32,6 +32,9 @@ import { markQuestAccepted, markQuestComplete, markQuestFailed } from './state/l
 import SettingsModal from './components/SettingsModal';
 import HowToUseModal from './components/HowToUseModal';
 import PatchNotesModal from './components/PatchNotesModal';
+import SquadPanel from './squad/SquadPanel';
+import SquadmateLayer from './map/SquadmateLayer';
+import { useSquad } from './squad/SquadContext';
 import { checkForUpdate, applyUpdate, type AvailableUpdate } from './services/updater';
 import { getVersion } from '@tauri-apps/api/app';
 import PoiLayer from './map/PoiLayer';
@@ -101,6 +104,9 @@ function App() {
   const [sidebarTab, setSidebarTab] = useState<'quests' | 'pois'>('quests');
   const [customPois, setCustomPois] = useState<Poi[]>(() => loadCustomPois());
   const relativeSynced = useRelativeTime(lastSynced);
+  const squad = useSquad();
+  const [squadOpen, setSquadOpen] = useState(false);
+  const { inSquad: squadInSquad, broadcastPosition: squadBroadcastPosition } = squad;
 
   const togglePin = useCallback(
     (kind: 'task' | 'objective', id: string) => {
@@ -307,6 +313,19 @@ function App() {
     setAutoFollowFloor(true);
   }, []);
 
+  // Share our position with the squad on each screenshot-driven update.
+  useEffect(() => {
+    if (squadInSquad && playerPos && selectedMapId) {
+      squadBroadcastPosition({
+        mapId: selectedMapId,
+        x: playerPos.x,
+        y: playerPos.y,
+        z: playerPos.z,
+        rotation: playerPos.rotation,
+      });
+    }
+  }, [squadInSquad, squadBroadcastPosition, playerPos, selectedMapId]);
+
   const selectedMapName = useMemo(() => {
     if (!questState || !selectedMapId) return '';
     return resolveMapName(
@@ -448,6 +467,16 @@ function App() {
               </button>
             )}
             <button
+              className="btn-tertiary squad-toolbar-btn"
+              onClick={() => setSquadOpen(true)}
+              title="Squad Mode — share location with teammates"
+            >
+              <i className="fa-solid fa-user-group" /> Squad
+              {squad.inSquad && (
+                <span className="squad-toolbar-badge">{squad.members.length}</span>
+              )}
+            </button>
+            <button
               className="btn-tertiary"
               onClick={() => setPatchNotesOpen(true)}
               title="What's new in this version"
@@ -553,6 +582,7 @@ function App() {
                       onTogglePin={togglePin}
                     />
                     <PlayerMarker position={playerPos} mapId={selectedMapId} />
+                    <SquadmateLayer mapId={selectedMapId} />
                     <PoiLayer
                       mapId={selectedMapId}
                       pois={currentPois}
@@ -601,6 +631,7 @@ function App() {
       {patchNotesOpen && (
         <PatchNotesModal onClose={() => setPatchNotesOpen(false)} />
       )}
+      {squadOpen && <SquadPanel onClose={() => setSquadOpen(false)} />}
     </div>
   );
 }

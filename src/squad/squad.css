@@ -1,0 +1,157 @@
+/* ===== Squad Mode ===== */
+.squad-modal { max-width: 420px; }
+
+.squad-section { margin-bottom: 16px; }
+.squad-section:last-child { margin-bottom: 0; }
+
+.squad-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text);
+  opacity: 0.8;
+  margin: 0 0 6px;
+}
+
+.squad-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-strong);
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+.squad-input:focus { outline: 1px solid var(--up, #0ecb81); }
+
+.squad-swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.squad-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.squad-swatch.selected {
+  border-color: var(--text-strong, #fff);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.squad-hint { font-size: 0.75rem; color: var(--text); opacity: 0.6; margin: 6px 0 0; }
+
+.squad-block-btn { width: 100%; }
+
+.squad-join-row { display: flex; gap: 8px; }
+.squad-code-input {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-family: monospace;
+}
+
+.squad-code-display { display: flex; align-items: center; gap: 8px; }
+.squad-code {
+  flex: 1;
+  font-size: 1.3rem;
+  letter-spacing: 4px;
+  font-family: monospace;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  color: var(--text-strong);
+  text-align: center;
+}
+
+.squad-error {
+  background: rgba(246, 70, 93, 0.12);
+  border: 1px solid rgba(246, 70, 93, 0.4);
+  color: #f6465d;
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+}
+
+.squad-status, .squad-conn { font-size: 0.8rem; opacity: 0.75; }
+.squad-conn-connected { color: #0ecb81; }
+.squad-conn-connecting, .squad-conn-reconnecting { color: #d38e2d; }
+.squad-conn-error { color: #f6465d; }
+
+.squad-roster { display: flex; flex-direction: column; gap: 4px; }
+.squad-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  border-radius: var(--r-sm);
+  background: var(--bg-2);
+  border: 1px solid transparent;
+}
+.squad-member.flash { animation: squad-flash 1.5s ease-out; }
+@keyframes squad-flash {
+  0% {
+    border-color: var(--text-strong, #fff);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  }
+  100% {
+    border-color: transparent;
+    box-shadow: none;
+  }
+}
+.squad-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.squad-name { flex: 1; color: var(--text-strong); font-size: 0.9rem; }
+.squad-you { font-size: 0.7rem; opacity: 0.55; font-weight: 600; }
+.squad-seen { font-size: 0.72rem; opacity: 0.6; }
+
+.squad-footer-row { display: flex; align-items: center; justify-content: space-between; }
+.squad-leave { color: #f6465d; }
+
+.squad-toolbar-btn { display: inline-flex; align-items: center; gap: 6px; }
+.squad-toolbar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #0ecb81;
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* ----- Map: squadmate dots ----- */
+.tc-squadmate-marker { pointer-events: none; }
+.tc-squadmate { position: relative; width: 20px; height: 20px; transition: opacity 300ms; }
+.tc-squadmate.stale { opacity: 0.4; }
+.tc-squadmate-arrow {
+  width: 18px;
+  height: 18px;
+  background: var(--c, #888);
+  clip-path: polygon(50% 0%, 100% 100%, 50% 75%, 0% 100%);
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  transform-origin: 50% 50%;
+  transition: transform 80ms linear;
+}
+.tc-squadmate-name {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 3px #000, 0 0 3px #000;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 0 4px;
+  border-radius: 3px;
+}
