@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Squad relay runtime output (analytics JSON-Lines, etc.)
+server/data/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
