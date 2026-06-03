@@ -12,10 +12,14 @@ function MemberRow({
   member,
   isSelf,
   pos,
+  hidden,
+  onToggleQuests,
 }: {
   member: SquadMember;
   isSelf: boolean;
   pos: MemberPosition | undefined;
+  hidden: boolean;
+  onToggleQuests: () => void;
 }) {
   const lastSeen = useRelativeTime(pos?.ts ?? null);
   const [flash, setFlash] = useState(false);
@@ -40,6 +44,16 @@ function MemberRow({
       <span className="squad-seen">
         {isSelf ? "" : pos ? lastSeen : "no position yet"}
       </span>
+      <button
+        type="button"
+        className={`squad-eye${hidden ? " off" : ""}`}
+        onClick={onToggleQuests}
+        title={hidden ? "Show quest pins" : "Hide quest pins"}
+        aria-label={hidden ? "Show quest pins" : "Hide quest pins"}
+        aria-pressed={!hidden}
+      >
+        <i className={`fa-solid ${hidden ? "fa-eye-slash" : "fa-eye"}`} />
+      </button>
     </div>
   );
 }
@@ -62,6 +76,8 @@ export default function SquadCard() {
           member={m}
           isSelf={m.id === squad.selfId}
           pos={squad.positions[m.id]}
+          hidden={squad.hiddenQuests[m.id] ?? false}
+          onToggleQuests={() => squad.toggleQuestVisibility(m.id)}
         />
       ))}
     </section>

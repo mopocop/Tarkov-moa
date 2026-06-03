@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import './App.css';
 import { TarkovDevClient } from './api/tarkov-dev';
 import { deriveQuestState, type DerivedQuestState } from './quests/derive';
+import type { TarkovTask } from './api/types';
 import {
   loadProgress,
   saveProgress,
@@ -51,6 +52,9 @@ import {
   poiToWireMarker,
 } from './poi/customPoi';
 import { hexForColorId, type DrawPayload } from '../shared/squadProtocol';
+import SquadQuestLayer from './map/SquadQuestLayer';
+import SquadQuestSummary from './components/SquadQuestSummary';
+import { deriveMemberQuestState } from './squad/squadQuests';
 import { poisByMap } from './poi/fromTarkovDev';
 import {
   loadFilterState,
@@ -75,6 +79,9 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [questState, setQuestState] = useState<DerivedQuestState | null>(null);
+  // Full task list retained so squadmates' pins can be re-derived from the quest
+  // IDs they broadcast (every client already has the same list).
+  const [tasks, setTasks] = useState<TarkovTask[]>([]);
   const [lastSynced, setLastSynced] = useState<number | null>(null);
   const [selectedMapId, setSelectedMapId] = useState<string | null>(() =>
     localStorage.getItem(SELECTED_MAP_KEY),
@@ -110,7 +117,11 @@ function App() {
   const relativeSynced = useRelativeTime(lastSynced);
   const squad = useSquad();
   const [squadOpen, setSquadOpen] = useState(false);
-  const { inSquad: squadInSquad, broadcastPosition: squadBroadcastPosition } = squad;
+  const {
+    inSquad: squadInSquad,
+    broadcastPosition: squadBroadcastPosition,
+    broadcastQuests: squadBroadcastQuests,
+  } = squad;
 
   // ---- Drawing (Phase D) ----
   const [drawTool, setDrawTool] = useState<DrawTool>(null);
@@ -163,6 +174,7 @@ function App() {
         const tasks = await devClient.getTasks();
         const next = deriveQuestState(toTrackerProgress(current), tasks);
         setQuestState(next);
+        setTasks(tasks);
         pruneStaleSelections(next);
         setLastSynced(Date.now());
       } catch (err) {
@@ -344,6 +356,30 @@ function App() {
     }
   }, [squadInSquad, squadBroadcastPosition, playerPos, selectedMapId]);
 
+  // Share our active quest IDs with the squad — re-sent whenever they change or
+  // we (re)join. Teammates re-derive the objective pins locally from the IDs.
+  useEffect(() => {
+    if (squadInSquad && questState) {
+      squadBroadcastQuests(questState.available.map((t) => t.id));
+    }
+  }, [squadInSquad, squadBroadcastQuests, questState]);
+
+  // Re-derive each squadmate's quest state from the IDs they broadcast (others
+  // only; our own pins come from `questState`). Recomputes only when someone's
+  // quests change or the task list reloads.
+  const squadQuestStates = useMemo<Record<string, DerivedQuestState>>(() => {
+    if (tasks.length === 0) return {};
+    const out: Record<string, DerivedQuestState> = {};
+    for (const [memberId, ids] of Object.entries(squad.quests)) {
+      if (memberId === squad.selfId) continue;
+      out[memberId] = deriveMemberQuestState(ids, tasks);
+    }
+    return out;
+  }, [squad.quests, squad.selfId, tasks]);
+
+  // Our own quest markers can be toggled off via the squad card (self eye).
+  const showOwnQuests = !(squad.selfId && squad.hiddenQuests[squad.selfId]);
+
   const selectedMapName = useMemo(() => {
     if (!questState || !selectedMapId) return '';
     return resolveMapName(
@@ -455,6 +491,7 @@ function App() {
       const tasks = await devClient.getTasks();
       const next = deriveQuestState(toTrackerProgress(progress), tasks);
       setQuestState(next);
+      setTasks(tasks);
       pruneStaleSelections(next);
       setLastSynced(Date.now());
     } catch (err) {
@@ -603,6 +640,12 @@ function App() {
                 selectedMapId={selectedMapId}
                 onSelect={setSelectedMapId}
               />
+              <SquadQuestSummary
+                selfQuestState={questState}
+                questStates={squadQuestStates}
+                selectedMapId={selectedMapId}
+                onSelect={setSelectedMapId}
+              />
               <div className="sidebar-tabs">
                 <button
                   className={sidebarTab === 'quests' ? 'active' : ''}
@@ -649,17 +692,20 @@ function App() {
               {selectedMapId ? (
                 <>
                   <MapView mapId={selectedMapId} mapName={selectedMapName} activeFloorId={activeFloorId}>
-                    <MarkerLayer
-                      mapId={selectedMapId}
-                      objectives={questState.availableObjectivesByMap[selectedMapId] ?? EMPTY_OBJECTIVES}
-                      highlightedTaskId={hoveredTaskId ?? (pinned?.kind === 'task' ? pinned.id : null)}
-                      highlightedObjectiveId={hoveredObjectiveId ?? (pinned?.kind === 'objective' ? pinned.id : null)}
-                      floors={selectedMapDef?.floors}
-                      activeFloorId={activeFloorId}
-                      onCounts={setFloorCounts}
-                      onHoverObjective={setHoveredObjectiveId}
-                      onTogglePin={togglePin}
-                    />
+                    {showOwnQuests && (
+                      <MarkerLayer
+                        mapId={selectedMapId}
+                        objectives={questState.availableObjectivesByMap[selectedMapId] ?? EMPTY_OBJECTIVES}
+                        highlightedTaskId={hoveredTaskId ?? (pinned?.kind === 'task' ? pinned.id : null)}
+                        highlightedObjectiveId={hoveredObjectiveId ?? (pinned?.kind === 'objective' ? pinned.id : null)}
+                        floors={selectedMapDef?.floors}
+                        activeFloorId={activeFloorId}
+                        onCounts={setFloorCounts}
+                        onHoverObjective={setHoveredObjectiveId}
+                        onTogglePin={togglePin}
+                      />
+                    )}
+                    <SquadQuestLayer mapId={selectedMapId} questStates={squadQuestStates} />
                     <PlayerMarker position={playerPos} mapId={selectedMapId} />
                     <SquadmateLayer mapId={selectedMapId} />
                     <PoiLayer

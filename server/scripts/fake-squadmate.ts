@@ -52,6 +52,59 @@ let t = 0;
 const markerId = `bot-marker-${clientId}`;
 const drawId = `bot-draw-${clientId}`;
 
+// ---- Shared quests: fetch the real task list and share IDs that resolve to
+// objective pins on this map, so the app renders them in the bot's color. ----
+let questIds: string[] = [];
+
+interface BotTask {
+  id: string;
+  objectives?: Array<{
+    zones?: Array<{ map?: { id: string }; position?: unknown }>;
+    possibleLocations?: Array<{ map?: { id: string }; positions?: unknown[] }>;
+  }>;
+}
+
+const TASKS_QUERY = `
+  query { tasks { id objectives {
+    ... on TaskObjectiveQuestItem { possibleLocations { map { id } positions { x } } }
+    ... on TaskObjectiveMark { zones { map { id } position { x } } }
+    ... on TaskObjectiveBasic { zones { map { id } position { x } } }
+  } } }`;
+
+const hasPositionalObjectiveOnMap = (task: BotTask): boolean =>
+  (task.objectives ?? []).some(
+    (o) =>
+      (o.zones ?? []).some((z) => z.map?.id === mapId && z.position) ||
+      (o.possibleLocations ?? []).some(
+        (l) => l.map?.id === mapId && (l.positions?.length ?? 0) > 0,
+      ),
+  );
+
+const broadcastQuests = (): void => {
+  if (questIds.length) {
+    ws.send(JSON.stringify(makeEnvelope("quests", selfId, { activeQuestIds: questIds })));
+  }
+};
+
+async function fetchQuestIds(): Promise<void> {
+  try {
+    const res = await fetch("https://api.tarkov.dev/graphql", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: TASKS_QUERY }),
+    });
+    const body = (await res.json()) as { data?: { tasks: BotTask[] } };
+    questIds = (body.data?.tasks ?? [])
+      .filter(hasPositionalObjectiveOnMap)
+      .slice(0, 6)
+      .map((task) => task.id);
+    console.log(`[${name}] sharing ${questIds.length} quests with pins on this map`);
+    broadcastQuests();
+  } catch (e) {
+    console.error(`[${name}] quest fetch failed:`, (e as Error).message);
+  }
+}
+
 const sendAnnotations = (): void => {
   // A shared custom marker — the app tints it with the bot's squad color.
   ws.send(
@@ -75,6 +128,7 @@ const sendAnnotations = (): void => {
   ws.send(
     JSON.stringify(makeEnvelope("draw-add", selfId, { id: drawId, mapId, color: colorHex, points })),
   );
+  broadcastQuests(); // re-share quest ids too (once fetched)
 };
 
 ws.on("message", (data) => {
@@ -90,6 +144,7 @@ ws.on("message", (data) => {
       );
       console.log(`[${name}] >>> JOIN CODE for the app: ${env.payload.code}`);
       sendAnnotations(); // marker + drawing (in case a peer is already here)
+      void fetchQuestIds(); // then share quest ids that have pins on this map
       // Circle around the map origin, one step every 4s.
       setInterval(() => {
         t += 0.3;

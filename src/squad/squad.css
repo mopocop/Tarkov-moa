@@ -142,6 +142,51 @@
   stroke-width: 5;
 }
 
+/* ----- Roster: quest-visibility eye ----- */
+.squad-eye {
+  background: none;
+  border: none;
+  color: var(--text, #ddd);
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 0.8rem;
+  flex: 0 0 auto;
+}
+.squad-eye:hover { opacity: 1; }
+.squad-eye.off { opacity: 0.35; }
+
+/* ----- Sidebar: squad quests-by-map ----- */
+.squad-quest-summary {
+  margin: 8px 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sqs-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  background: var(--bg-2);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  padding: 5px 8px;
+  cursor: pointer;
+  color: var(--text-strong);
+}
+.sqs-row:hover { border-color: var(--border); }
+.sqs-row.active { border-color: var(--up, #0ecb81); }
+.sqs-map { font-size: 0.82rem; font-weight: 600; }
+.sqs-chips { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+.sqs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  opacity: 0.9;
+}
+
 /* ----- Map: squadmate dots ----- */
 .tc-squadmate-marker { pointer-events: none; }
 .tc-squadmate { position: relative; width: 20px; height: 20px; transition: opacity 300ms; }

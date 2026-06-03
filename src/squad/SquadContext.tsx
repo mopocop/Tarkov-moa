@@ -68,6 +68,10 @@ export interface SquadApi extends SquadState {
   removeMarker: (id: string) => void;
   addDraw: (d: DrawPayload) => void;
   removeDraw: (id: string) => void;
+  // Local view pref (NOT synced): hide a member's quest pins on the map. Keyed
+  // by member id; self id is allowed too (hides your own quest markers).
+  hiddenQuests: Record<string, boolean>;
+  toggleQuestVisibility: (memberId: string) => void;
 }
 
 const Ctx = createContext<SquadApi | null>(null);
@@ -98,6 +102,7 @@ function omit<T>(rec: Record<string, T>, key: string): Record<string, T> {
 export function SquadProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<SquadState>(EMPTY);
   const [identity, setIdentityState] = useState<SquadIdentity>(() => loadIdentity());
+  const [hiddenQuests, setHiddenQuests] = useState<Record<string, boolean>>({});
 
   const transportRef = useRef<SquadTransport | null>(null);
   const identityRef = useRef<SquadIdentity>(identity);
@@ -214,6 +219,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
           if (FATAL.has(code)) {
             transportRef.current?.close();
             resetSelf();
+            setHiddenQuests({});
             setState({ ...EMPTY, error: message });
           } else {
             setState((s) => ({ ...s, error: message }));
@@ -273,8 +279,13 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   const leaveSquad = useCallback(() => {
     transportRef.current?.close();
     resetSelf();
+    setHiddenQuests({});
     setState(EMPTY);
   }, [resetSelf]);
+
+  const toggleQuestVisibility = useCallback((memberId: string) => {
+    setHiddenQuests((h) => ({ ...h, [memberId]: !h[memberId] }));
+  }, []);
 
   const saveProfile = useCallback(
     (name: string, colorId: string | null) => persist(name, colorId),
@@ -326,6 +337,8 @@ export function SquadProvider({ children }: { children: ReactNode }) {
       removeMarker,
       addDraw,
       removeDraw,
+      hiddenQuests,
+      toggleQuestVisibility,
     }),
     [
       state,
@@ -340,6 +353,8 @@ export function SquadProvider({ children }: { children: ReactNode }) {
       removeMarker,
       addDraw,
       removeDraw,
+      hiddenQuests,
+      toggleQuestVisibility,
     ],
   );
 
