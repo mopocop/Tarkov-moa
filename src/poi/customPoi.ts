@@ -1,4 +1,5 @@
 import type { Poi } from "./types";
+import type { WireMarker } from "../../shared/squadProtocol";
 
 const STORAGE_KEY = "tc_custom_pois_v1";
 export const CUSTOM_POI_SCHEMA_VERSION = 1;
@@ -54,6 +55,23 @@ export function updateCustomPoi(
 
 export function removeCustomPoi(pois: Poi[], id: string): Poi[] {
   return pois.filter((p) => p.id !== id);
+}
+
+// Edge mapper: project a local Poi onto the import-free wire shape (drops
+// `source`; the receiver re-tags it as a squad marker). Keeps squadProtocol.ts
+// from ever importing client types.
+export function poiToWireMarker(p: Poi): WireMarker {
+  return {
+    id: p.id,
+    mapId: p.mapId,
+    category: p.category,
+    subtype: p.subtype,
+    position: p.position,
+    label: p.label,
+    note: p.note,
+    color: p.color,
+    meta: p.meta,
+  };
 }
 
 export function newCustomPoi(

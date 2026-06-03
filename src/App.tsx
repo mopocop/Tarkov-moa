@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import './App.css';
 import { TarkovDevClient } from './api/tarkov-dev';
 import { deriveQuestState, type DerivedQuestState } from './quests/derive';
@@ -41,12 +41,16 @@ import PoiLayer from './map/PoiLayer';
 import PoiFilterPanel from './map/PoiFilterPanel';
 import GridOverlay from './map/GridOverlay';
 import CustomMarkerLayer, { MapClickPlacer } from './map/CustomMarkerLayer';
+import SquadMarkerLayer from './map/SquadMarkerLayer';
+import DrawLayer, { type DrawTool, newDrawId } from './map/DrawLayer';
 import {
   loadCustomPois,
   saveCustomPois,
   addCustomPoi,
   removeCustomPoi,
+  poiToWireMarker,
 } from './poi/customPoi';
+import { hexForColorId, type DrawPayload } from '../shared/squadProtocol';
 import { poisByMap } from './poi/fromTarkovDev';
 import {
   loadFilterState,
@@ -107,6 +111,20 @@ function App() {
   const squad = useSquad();
   const [squadOpen, setSquadOpen] = useState(false);
   const { inSquad: squadInSquad, broadcastPosition: squadBroadcastPosition } = squad;
+
+  // ---- Drawing (Phase D) ----
+  const [drawTool, setDrawTool] = useState<DrawTool>(null);
+  const [ownDraws, setOwnDraws] = useState<DrawPayload[]>([]); // in-memory, session-only
+  // Local ink: your squad color if seated, else your saved pick, else neutral.
+  const myDrawHex = hexForColorId(squad.selfColorId ?? squad.identity.colorId ?? '');
+  // Refs let the stable marker/draw callbacks read fresh state without being
+  // recreated — MapClickPlacer and DrawLayer bind their map handlers once.
+  const squadRef = useRef(squad);
+  squadRef.current = squad;
+  const selectedMapIdRef = useRef<string | null>(selectedMapId);
+  selectedMapIdRef.current = selectedMapId;
+  const myDrawHexRef = useRef(myDrawHex);
+  myDrawHexRef.current = myDrawHex;
 
   const togglePin = useCallback(
     (kind: 'task' | 'objective', id: string) => {
@@ -393,11 +411,41 @@ function App() {
     setFilterState((s) =>
       s.enabled.custom ? s : { ...s, enabled: { ...s.enabled, custom: true } },
     );
+    // Share with the squad if we're in one. Markers placed WHILE squadded are
+    // shared; joining doesn't retroactively broadcast your back-catalog.
+    if (squadRef.current.inSquad) squadRef.current.addMarker(poiToWireMarker(poi));
   }, []);
-  const handleRemoveCustom = useCallback(
-    (id: string) => setCustomPois((cur) => removeCustomPoi(cur, id)),
-    [],
-  );
+  const handleRemoveCustom = useCallback((id: string) => {
+    setCustomPois((cur) => removeCustomPoi(cur, id));
+    if (squadRef.current.inSquad) squadRef.current.removeMarker(id);
+  }, []);
+
+  // ---- Drawing actions (stable; read fresh map/color/squad via refs) ----
+  const commitStroke = useCallback((points: { x: number; z: number }[]) => {
+    const mid = selectedMapIdRef.current;
+    if (!mid || points.length < 2) return;
+    const payload: DrawPayload = {
+      id: newDrawId(),
+      mapId: mid,
+      color: myDrawHexRef.current,
+      points,
+    };
+    setOwnDraws((cur) => [...cur, payload]);
+    if (squadRef.current.inSquad) squadRef.current.addDraw(payload);
+  }, []);
+  const eraseStroke = useCallback((id: string) => {
+    setOwnDraws((cur) => cur.filter((d) => d.id !== id));
+    if (squadRef.current.inSquad) squadRef.current.removeDraw(id);
+  }, []);
+  const clearOwnDraws = useCallback(() => {
+    const mid = selectedMapIdRef.current;
+    setOwnDraws((cur) => {
+      if (squadRef.current.inSquad) {
+        for (const d of cur) if (d.mapId === mid) squadRef.current.removeDraw(d.id);
+      }
+      return cur.filter((d) => d.mapId !== mid);
+    });
+  }, []);
 
   const handleRefresh = async () => {
     setError(null);
@@ -476,6 +524,37 @@ function App() {
                 <span className="squad-toolbar-badge">{squad.members.length}</span>
               )}
             </button>
+            <button
+              className={`btn-tertiary tc-tool-btn${drawTool === 'pen' ? ' active' : ''}`}
+              style={drawTool === 'pen' ? { color: myDrawHex } : undefined}
+              onClick={() => setDrawTool((t) => (t === 'pen' ? null : 'pen'))}
+              disabled={!selectedMapId}
+              title="Draw on the map — shared live with your squad"
+              aria-label="Draw"
+              aria-pressed={drawTool === 'pen'}
+            >
+              <i className="fa-solid fa-pen" />
+            </button>
+            <button
+              className={`btn-tertiary tc-tool-btn${drawTool === 'eraser' ? ' active' : ''}`}
+              onClick={() => setDrawTool((t) => (t === 'eraser' ? null : 'eraser'))}
+              disabled={!selectedMapId}
+              title="Eraser — click one of your drawings to delete it"
+              aria-label="Eraser"
+              aria-pressed={drawTool === 'eraser'}
+            >
+              <i className="fa-solid fa-eraser" />
+            </button>
+            {selectedMapId && ownDraws.some((d) => d.mapId === selectedMapId) && (
+              <button
+                className="btn-tertiary tc-tool-btn"
+                onClick={clearOwnDraws}
+                title="Clear your drawings on this map"
+                aria-label="Clear drawings"
+              >
+                <i className="fa-solid fa-trash-can" />
+              </button>
+            )}
             <button
               className="btn-tertiary"
               onClick={() => setPatchNotesOpen(true)}
@@ -595,7 +674,9 @@ function App() {
                       }
                     />
                     <GridOverlay mapId={selectedMapId} visible={filterState.gridVisible} />
-                    <MapClickPlacer mapId={selectedMapId} onAdd={handleAddCustom} />
+                    {drawTool === null && (
+                      <MapClickPlacer mapId={selectedMapId} onAdd={handleAddCustom} />
+                    )}
                     {customEnabled && (
                       <CustomMarkerLayer
                         mapId={selectedMapId}
@@ -603,6 +684,15 @@ function App() {
                         onRemove={handleRemoveCustom}
                       />
                     )}
+                    <SquadMarkerLayer mapId={selectedMapId} />
+                    <DrawLayer
+                      mapId={selectedMapId}
+                      tool={drawTool}
+                      color={myDrawHex}
+                      ownDraws={ownDraws}
+                      onCommit={commitStroke}
+                      onErase={eraseStroke}
+                    />
                   </MapView>
                   {selectedMapDef?.floors && selectedMapDef.floors.length > 0 && (
                     <FloorSwitcher

@@ -17,6 +17,7 @@ import { WebSocket } from "ws";
 import {
   makeEnvelope,
   decode,
+  hexForColorId,
   type AnyEnvelope,
 } from "../../shared/squadProtocol.ts";
 
@@ -42,7 +43,39 @@ ws.on("open", () => {
 });
 
 let selfId = "";
+let colorHex = "#ffffff";
 let t = 0;
+
+// Stable ids so re-sends upsert (the app keys markers/draws by id) instead of
+// duplicating. Re-emitted on every peer-join so they show up no matter who
+// joined first — the relay never replays anything sent before you arrived.
+const markerId = `bot-marker-${clientId}`;
+const drawId = `bot-draw-${clientId}`;
+
+const sendAnnotations = (): void => {
+  // A shared custom marker — the app tints it with the bot's squad color.
+  ws.send(
+    JSON.stringify(
+      makeEnvelope("marker-add", selfId, {
+        id: markerId,
+        mapId,
+        category: "custom",
+        position: { x: 70, y: 0, z: 0 },
+        label: `${name}'s stash`,
+      }),
+    ),
+  );
+  // A circle of shared "ink" so you can see drawing sync (the app renders peer
+  // strokes in the author's squad color, ignoring this payload color).
+  const points: Array<{ x: number; z: number }> = [];
+  for (let i = 0; i <= 16; i++) {
+    const a = (i / 16) * Math.PI * 2;
+    points.push({ x: -70 + Math.cos(a) * 35, z: -70 + Math.sin(a) * 35 });
+  }
+  ws.send(
+    JSON.stringify(makeEnvelope("draw-add", selfId, { id: drawId, mapId, color: colorHex, points })),
+  );
+};
 
 ws.on("message", (data) => {
   const env = decode(String(data)) as AnyEnvelope | null;
@@ -51,10 +84,12 @@ ws.on("message", (data) => {
   switch (env.kind) {
     case "joined": {
       selfId = env.payload.selfId;
+      colorHex = hexForColorId(env.payload.colorId);
       console.log(
         `[${name}] joined squad ${env.payload.code} as color "${env.payload.colorId}" (${selfId})`,
       );
       console.log(`[${name}] >>> JOIN CODE for the app: ${env.payload.code}`);
+      sendAnnotations(); // marker + drawing (in case a peer is already here)
       // Circle around the map origin, one step every 4s.
       setInterval(() => {
         t += 0.3;
@@ -81,6 +116,7 @@ ws.on("message", (data) => {
     }
     case "peer-join":
       console.log(`[${name}] peer joined: ${env.payload.member.name}`);
+      sendAnnotations(); // re-emit so the newcomer sees the marker + drawing
       break;
     case "peer-leave":
       console.log(`[${name}] peer left: ${env.payload.id}`);
