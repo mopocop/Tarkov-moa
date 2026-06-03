@@ -6,5 +6,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    // Client tests only; the relay (server/) has its own vitest project.
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
 })
