@@ -39,6 +39,7 @@ export default function SquadMarkerLayer({ mapId }: { mapId: string }) {
     <>
       {squad.members.map((member) => {
         if (member.id === squad.selfId) return null; // own markers: CustomMarkerLayer
+        if (squad.hiddenQuests[member.id]) return null; // eye toggle hides markers + quests
         const list = squad.markers[member.id];
         if (!list || list.length === 0) return null;
         const hex = hexForColorId(member.colorId);

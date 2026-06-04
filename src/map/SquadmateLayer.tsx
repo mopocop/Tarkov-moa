@@ -20,8 +20,8 @@ function makeIcon(name: string, hex: string, stale: boolean): L.DivIcon {
       `<div class="tc-squadmate-arrow"></div>` +
       `<div class="tc-squadmate-name">${safe}</div>` +
       `</div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
   });
 }
 

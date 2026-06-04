@@ -12,7 +12,7 @@
 // getLatLngToGame expose. Points are sampled by SCREEN distance so density is
 // even regardless of zoom, and capped so a runaway drag can't bloat a payload.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import { getGameToLatLng, getLatLngToGame } from "./MapView";
@@ -25,6 +25,12 @@ type Pt = { x: number; z: number };
 
 const MIN_SCREEN_STEP = 4; // px between sampled points
 const MAX_POINTS = 4000; // hard cap per stroke
+
+// Dedicated pane so strokes paint ABOVE the map's SVG image (overlayPane z=400,
+// where the map graphic lives) but BELOW markers (markerPane z=600). Without
+// this, polylines share overlayPane with the map image and get covered by it.
+const DRAW_PANE = "tc-draw-pane";
+const DRAW_PANE_Z = "450";
 
 export function newDrawId(): string {
   return typeof crypto !== "undefined" && crypto.randomUUID
@@ -49,8 +55,12 @@ export default function DrawLayer({
 }) {
   const map = useMap();
   const squad = useSquad();
-  const toLatLng = getGameToLatLng(mapId);
-  const toGame = getLatLngToGame(mapId);
+  // Memoize per-map: the factories return a FRESH closure each call, and the pen
+  // effect depends on `toGame` — without this, every setDraft re-render would
+  // tear down the effect mid-stroke (re-enabling panning, wiping the points), so
+  // dragging produced nothing. Stable identity keeps one capture alive per drag.
+  const toLatLng = useMemo(() => getGameToLatLng(mapId), [mapId]);
+  const toGame = useMemo(() => getLatLngToGame(mapId), [mapId]);
 
   const [draft, setDraft] = useState<Pt[] | null>(null);
 
@@ -121,6 +131,11 @@ export default function DrawLayer({
     };
   }, [tool, map, toGame, onCommit]);
 
+  // Ensure the draw pane exists (idempotent; created once on the map instance).
+  if (!map.getPane(DRAW_PANE)) {
+    map.createPane(DRAW_PANE).style.zIndex = DRAW_PANE_Z;
+  }
+
   if (!toLatLng) return null;
 
   const eraserOn = tool === "eraser";
@@ -141,6 +156,7 @@ export default function DrawLayer({
               key={`peer:${memberId}:${d.id}`}
               positions={render(d.points)}
               interactive={false}
+              pane={DRAW_PANE}
               pathOptions={{ color: hex, weight: 3, opacity: 0.85 }}
             />
           ));
@@ -155,6 +171,7 @@ export default function DrawLayer({
             key={`own:${d.id}:${eraserOn ? "e" : "n"}`}
             positions={render(d.points)}
             interactive={eraserOn}
+            pane={DRAW_PANE}
             eventHandlers={eraserOn ? { click: () => onErase(d.id) } : undefined}
             pathOptions={{
               color,
@@ -170,6 +187,7 @@ export default function DrawLayer({
         <Polyline
           positions={render(draft)}
           interactive={false}
+          pane={DRAW_PANE}
           pathOptions={{ color, weight: 3, opacity: 0.6, dashArray: "5 5" }}
         />
       )}

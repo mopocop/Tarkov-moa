@@ -377,8 +377,9 @@ function App() {
     return out;
   }, [squad.quests, squad.selfId, tasks]);
 
-  // Our own quest markers can be toggled off via the squad card (self eye).
-  const showOwnQuests = !(squad.selfId && squad.hiddenQuests[squad.selfId]);
+  // The self eye-toggle (squad card) hides our own on-map shares: quest pins
+  // (MarkerLayer) and custom markers (CustomMarkerLayer).
+  const showOwnOnMap = !(squad.selfId && squad.hiddenQuests[squad.selfId]);
 
   const selectedMapName = useMemo(() => {
     if (!questState || !selectedMapId) return '';
@@ -692,7 +693,7 @@ function App() {
               {selectedMapId ? (
                 <>
                   <MapView mapId={selectedMapId} mapName={selectedMapName} activeFloorId={activeFloorId}>
-                    {showOwnQuests && (
+                    {showOwnOnMap && (
                       <MarkerLayer
                         mapId={selectedMapId}
                         objectives={questState.availableObjectivesByMap[selectedMapId] ?? EMPTY_OBJECTIVES}
@@ -723,7 +724,7 @@ function App() {
                     {drawTool === null && (
                       <MapClickPlacer mapId={selectedMapId} onAdd={handleAddCustom} />
                     )}
-                    {customEnabled && (
+                    {customEnabled && showOwnOnMap && (
                       <CustomMarkerLayer
                         mapId={selectedMapId}
                         pois={currentCustomPois}

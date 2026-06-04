@@ -577,8 +577,8 @@ button.accent:hover:not(:disabled),
   pointer-events: none;
 }
 .tc-player-arrow {
-  width: 22px;
-  height: 22px;
+  width: 44px;
+  height: 44px;
   background: var(--up);
   clip-path: polygon(50% 0%, 100% 100%, 50% 75%, 0% 100%);
   border: 1px solid rgba(0, 0, 0, 0.5);

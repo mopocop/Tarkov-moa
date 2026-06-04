@@ -189,11 +189,11 @@
 
 /* ----- Map: squadmate dots ----- */
 .tc-squadmate-marker { pointer-events: none; }
-.tc-squadmate { position: relative; width: 20px; height: 20px; transition: opacity 300ms; }
+.tc-squadmate { position: relative; width: 40px; height: 40px; transition: opacity 300ms; }
 .tc-squadmate.stale { opacity: 0.4; }
 .tc-squadmate-arrow {
-  width: 18px;
-  height: 18px;
+  width: 36px;
+  height: 36px;
   background: var(--c, #888);
   clip-path: polygon(50% 0%, 100% 100%, 50% 75%, 0% 100%);
   border: 1px solid rgba(0, 0, 0, 0.55);
@@ -202,7 +202,7 @@
 }
 .tc-squadmate-name {
   position: absolute;
-  top: 20px;
+  top: 40px;
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;

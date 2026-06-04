@@ -11,8 +11,8 @@ export interface PlayerMarkerProps {
 const PLAYER_ICON = L.divIcon({
   className: 'tc-player-marker',
   html: '<div class="tc-player-arrow"></div>',
-  iconSize: [22, 22],
-  iconAnchor: [11, 11],
+  iconSize: [44, 44],
+  iconAnchor: [22, 22],
 });
 
 export default function PlayerMarker({ position, mapId }: PlayerMarkerProps) {

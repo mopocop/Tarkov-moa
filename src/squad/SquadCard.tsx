@@ -48,8 +48,8 @@ function MemberRow({
         type="button"
         className={`squad-eye${hidden ? " off" : ""}`}
         onClick={onToggleQuests}
-        title={hidden ? "Show quest pins" : "Hide quest pins"}
-        aria-label={hidden ? "Show quest pins" : "Hide quest pins"}
+        title={hidden ? "Show their markers & quests" : "Hide their markers & quests"}
+        aria-label={hidden ? "Show on map" : "Hide on map"}
         aria-pressed={!hidden}
       >
         <i className={`fa-solid ${hidden ? "fa-eye-slash" : "fa-eye"}`} />
