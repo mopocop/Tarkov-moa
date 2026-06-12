@@ -21,6 +21,8 @@ interface MarkerLayerProps {
   onCounts?: (counts: Record<string, number>) => void;
   onHoverObjective?: (objectiveId: string | null) => void;
   onTogglePin?: (kind: "task" | "objective", id: string) => void;
+  /** Quest ids ≥2 squadmates (incl. you) have active — pins get the shared-objective ring. */
+  sharedQuestIds?: Set<string>;
 }
 
 function resolvePosition(
@@ -76,25 +78,29 @@ function ObjectiveMarker({
   m,
   highlighted,
   offFloor,
+  shared,
   onHoverObjective,
   onTogglePin,
 }: {
   m: ClassifiedMarker;
   highlighted: boolean;
   offFloor: boolean;
+  shared: boolean;
   onHoverObjective?: (id: string | null) => void;
   onTogglePin?: (kind: "task" | "objective", id: string) => void;
 }): React.JSX.Element {
   const markerRef = useRef<L.Marker | null>(null);
 
-  // Apply highlight + off-floor state as classes on the live DOM — no setIcon,
-  // no DOM swap (which would drop clicks landing between mousedown/mouseup).
+  // Apply highlight + off-floor + shared state as classes on the live DOM — no
+  // setIcon, no DOM swap (which would drop clicks landing between
+  // mousedown/mouseup).
   useEffect(() => {
     const el = markerRef.current?.getElement();
     if (!el) return;
     el.classList.toggle("tc-hl", highlighted);
     el.classList.toggle("tc-marker-offfloor", offFloor);
-  }, [highlighted, offFloor]);
+    el.classList.toggle("tc-shared", shared);
+  }, [highlighted, offFloor, shared]);
 
   return (
     <Marker
@@ -120,6 +126,7 @@ export default function MarkerLayer({
   onCounts,
   onHoverObjective,
   onTogglePin,
+  sharedQuestIds,
 }: MarkerLayerProps): React.JSX.Element {
   // getGameToLatLng returns a fresh closure each call; memoize per-map so it
   // doesn't invalidate the `classified`/`counts` memos every render, which
@@ -179,6 +186,7 @@ export default function MarkerLayer({
             m={m}
             highlighted={highlighted}
             offFloor={offFloor}
+            shared={sharedQuestIds?.has(m.task.id) ?? false}
             onHoverObjective={onHoverObjective}
             onTogglePin={onTogglePin}
           />

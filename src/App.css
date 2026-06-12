@@ -503,7 +503,7 @@ button.accent:hover:not(:disabled),
    .tc-poi-marker. */
 .tc-marker.tc-hl .tc-poi-glyph {
   transform: scale(1.4);
-  filter: drop-shadow(0 0 6px rgba(252, 213, 53, 0.9));
+  filter: drop-shadow(0 0 6px var(--accent-glow));
 }
 
 /* Markers/POIs on a floor other than the active one are dimmed (not hidden) to
@@ -520,71 +520,170 @@ button.accent:hover:not(:disabled),
   opacity: 1;
 }
 
-/* ------- Floor switcher ------- */
+/* ------- Floor switcher (floating dock, rail side) ------- */
 
 .floor-switcher {
   position: absolute;
   top: 12px;
   right: 12px;
-  z-index: 1000;
+  z-index: var(--z-map-ui);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: rgba(30, 35, 41, 0.9);
-  padding: 6px;
+  gap: 2px;
+  min-width: 128px;
+  padding: 4px;
+  background: rgba(26, 28, 23, 0.92);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border-strong);
   border-radius: var(--r-lg);
-  border: 1px solid var(--border);
+  box-shadow: var(--edge), var(--elev-2);
 }
 
 .floor-switcher-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   background: transparent;
-  color: var(--text);
-  border: 1px solid transparent;
-  padding: 6px 10px;
+  color: var(--text-dim);
+  border: none;
+  padding: 6px 9px;
   border-radius: var(--r-md);
-  font-size: 0.85rem;
+  font-size: var(--fs-caption);
+  font-weight: 600;
   cursor: pointer;
   text-align: left;
-  min-width: 110px;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.floor-switcher-btn:hover { background: var(--surface-3); color: var(--text); }
+.floor-switcher-btn.active { background: var(--accent); color: var(--accent-ink); }
+.floor-switcher-btn.active .floor-count { color: var(--accent-ink); opacity: 0.7; }
+.floor-switcher-btn.empty:not(.active) { color: var(--text-faint); }
+
+.floor-name { flex: 1; }
+.floor-count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
 }
 
-.floor-switcher-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+/* AUTO = live tracking — phosphor green, with a breathing dot. */
+.floor-switcher-auto.live {
+  background: var(--live-soft);
+  color: var(--live);
+}
+.floor-live-dot {
+  margin-left: auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--live);
+  animation: floor-live-breathe 2s var(--ease-in-out) infinite;
+}
+@keyframes floor-live-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
-.floor-switcher-btn.active {
-  background: var(--accent);
-  color: var(--bg);
-  border-color: var(--accent);
-}
+.floor-switcher__rule { height: 1px; margin: 2px 4px; background: var(--border); }
 
-.floor-switcher-btn.active:hover {
-  background: var(--accent-active);
-}
+/* ------- Zoom dock (replaces Leaflet's control; rail side via shell.css) ---- */
 
-/* "Auto" button: when active it's following the player's live floor. Slightly
-   narrower than the floor rows and centered. */
-.floor-switcher-auto {
-  min-width: 0;
-  text-align: center;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+.tc-zoom-dock {
+  position: absolute;
+  bottom: 14px;
+  right: 12px;
+  z-index: var(--z-map-ui);
+  display: flex;
+  flex-direction: column;
+  padding: 3px;
+  gap: 2px;
+  background: rgba(26, 28, 23, 0.92);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--edge), var(--elev-2);
 }
+.tc-zoom-dock button {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--r-md);
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 0;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.tc-zoom-dock button:hover { background: var(--surface-3); color: var(--text); }
+.tc-zoom-dock button:active { transform: scale(0.9); }
 
-/* ------- Player position marker ------- */
+/* ------- Player position marker (live signal) ------- */
 
 .tc-player-marker {
   pointer-events: none;
 }
+.tc-player { position: relative; width: 44px; height: 44px; }
 .tc-player-arrow {
-  width: 44px;
-  height: 44px;
-  background: var(--up);
-  clip-path: polygon(50% 0%, 100% 100%, 50% 75%, 0% 100%);
-  border: 1px solid rgba(0, 0, 0, 0.5);
-  filter: drop-shadow(0 0 4px rgba(14, 203, 129, 0.7));
+  position: absolute;
+  inset: 0;
   transform-origin: 50% 50%;
   transition: transform 80ms linear;
+  filter: drop-shadow(0 0 5px rgba(61, 220, 151, 0.55));
+}
+.tc-player-arrow svg { width: 100%; height: 100%; display: block; }
+.tc-player-arrow path {
+  fill: var(--live);
+  stroke: #0a0b09;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+/* Radar ping — the "you are live" signature. Transform/opacity only. */
+.tc-player-ring {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 2px solid var(--live);
+  opacity: 0;
+  animation: tc-ping 2.6s var(--ease-out) infinite;
+}
+@keyframes tc-ping {
+  0% { transform: scale(0.3); opacity: 0.7; }
+  70% { transform: scale(1); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* ------- Shared objective (≥2 squadmates on the same quest) ------- */
+
+.tc-shared .tc-poi-glyph svg { transform: scale(1.12); }
+.tc-shared .tc-poi-glyph::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: tc-shared-ping 1.8s var(--ease-in-out) infinite;
+  pointer-events: none;
+}
+@keyframes tc-shared-ping {
+  0% { transform: scale(0.55); opacity: 0.95; }
+  75% { transform: scale(1.18); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-player-ring, .floor-live-dot { animation: none; }
+  .tc-shared .tc-poi-glyph::after { animation: none; opacity: 0.7; }
 }
 
 /* ------- Settings modal ------- */
@@ -742,7 +841,7 @@ button.accent:hover:not(:disabled),
   width: 22px; height: 22px;
   display: flex; align-items: center; justify-content: center;
   line-height: 1;
-  transition: transform 0.08s ease;
+  transition: transform var(--dur-fast) var(--ease-pop);
 }
 .tc-poi-glyph svg {
   width: 18px; height: 18px;
@@ -768,7 +867,7 @@ button.accent:hover:not(:disabled),
 }
 .tc-poi-marker.tc-hl .tc-poi-glyph {
   transform: scale(1.4);
-  filter: drop-shadow(0 0 6px rgba(252, 213, 53, 0.9));
+  filter: drop-shadow(0 0 6px var(--accent-glow));
 }
 .tc-poi-tip {
   background: var(--surface); color: var(--text); border: 1px solid var(--border);

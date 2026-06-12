@@ -1,4 +1,5 @@
 import React from "react";
+import { CrosshairSimple, Stack } from "@phosphor-icons/react";
 import type { MapFloor } from "./floorClassify";
 
 export const ALL_FLOORS = "all";
@@ -20,6 +21,9 @@ interface FloorSwitcherProps {
   onAuto: () => void;
 }
 
+// Floating floor dock on the rail side of the map. AUTO is a live-tracking
+// state (phosphor green), manual floors are brass when active. Counts are the
+// number of visible quest objectives per floor.
 export default function FloorSwitcher({
   floors,
   activeFloorId,
@@ -36,18 +40,24 @@ export default function FloorSwitcher({
     <div className="floor-switcher">
       <button
         type="button"
-        className={`floor-switcher-btn floor-switcher-auto${autoFollow ? " active" : ""}`}
+        className={`floor-switcher-btn floor-switcher-auto${autoFollow ? " live" : ""}`}
         onClick={onAuto}
         title="Follow my current floor automatically"
+        aria-pressed={autoFollow}
       >
-        Auto
+        <CrosshairSimple weight="bold" />
+        <span>Auto</span>
+        {autoFollow && <span className="floor-live-dot" />}
       </button>
+      <div className="floor-switcher__rule" />
       <button
         type="button"
         className={`floor-switcher-btn${!autoFollow && activeFloorId === ALL_FLOORS ? " active" : ""}`}
         onClick={() => onSelect(ALL_FLOORS)}
       >
-        All ({total})
+        <Stack weight="bold" />
+        <span>All</span>
+        <span className="floor-count">{total}</span>
       </button>
       {floors.map((f) => {
         const n = counts[f.id] ?? 0;
@@ -56,10 +66,11 @@ export default function FloorSwitcher({
           <button
             key={f.id}
             type="button"
-            className={`floor-switcher-btn${active ? " active" : ""}`}
+            className={`floor-switcher-btn${active ? " active" : ""}${n === 0 ? " empty" : ""}`}
             onClick={() => onSelect(f.id)}
           >
-            {shortLabel(f.name)} ({n})
+            <span className="floor-name">{shortLabel(f.name)}</span>
+            <span className="floor-count">{n}</span>
           </button>
         );
       })}

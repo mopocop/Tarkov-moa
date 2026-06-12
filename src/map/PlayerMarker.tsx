@@ -8,9 +8,18 @@ export interface PlayerMarkerProps {
   mapId: string;
 }
 
+// SVG arrow (crisp dark stroke, rounded joins) + a phosphor-green radar ping
+// ring — the "live signal" signature. Built once; heading rotates via CSS
+// transform on the live element (never recreate the icon).
 const PLAYER_ICON = L.divIcon({
   className: 'tc-player-marker',
-  html: '<div class="tc-player-arrow"></div>',
+  html:
+    '<div class="tc-player">' +
+    '<div class="tc-player-ring"></div>' +
+    '<div class="tc-player-arrow">' +
+    '<svg viewBox="0 0 24 24"><path d="M12 2.2 20.8 21.2 12 16.4 3.2 21.2Z"/></svg>' +
+    '</div>' +
+    '</div>',
   iconSize: [44, 44],
   iconAnchor: [22, 22],
 });

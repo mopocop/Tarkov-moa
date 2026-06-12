@@ -406,6 +406,29 @@ function App() {
   // (MarkerLayer) and custom markers (CustomMarkerLayer).
   const showOwnOnMap = !(squad.selfId && squad.hiddenQuests[squad.selfId]);
 
+  // Shared objectives: quest ids that ≥2 squad members (you included) have
+  // active right now. Pins for these get a strong "shared objective" ring on
+  // the map and a callout in the squad panel — push the same door together.
+  const sharedQuestIds = useMemo<Set<string>>(() => {
+    if (!squad.inSquad) return new Set();
+    const lists: string[][] = [];
+    for (const ids of Object.values(squad.quests)) lists.push(ids);
+    // Our own list may not be echoed back by the relay — count it locally.
+    if (squad.selfId && !squad.quests[squad.selfId] && questState) {
+      lists.push(questState.available.map((t) => t.id));
+    }
+    if (lists.length < 2) return new Set();
+    const counts = new Map<string, number>();
+    for (const ids of lists) {
+      for (const id of new Set(ids)) counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    return new Set(
+      Array.from(counts.entries())
+        .filter(([, n]) => n >= 2)
+        .map(([id]) => id),
+    );
+  }, [squad.inSquad, squad.quests, squad.selfId, questState]);
+
   const selectedMapName = useMemo(() => {
     if (!questState || !selectedMapId) return '';
     return resolveMapName(
@@ -678,9 +701,14 @@ function App() {
                         onCounts={setFloorCounts}
                         onHoverObjective={setHoveredObjectiveId}
                         onTogglePin={togglePin}
+                        sharedQuestIds={sharedQuestIds}
                       />
                     )}
-                    <SquadQuestLayer mapId={selectedMapId} questStates={squadQuestStates} />
+                    <SquadQuestLayer
+                      mapId={selectedMapId}
+                      questStates={squadQuestStates}
+                      sharedQuestIds={sharedQuestIds}
+                    />
                     <PlayerMarker position={playerPos} mapId={selectedMapId} />
                     <SquadmateLayer mapId={selectedMapId} />
                     <PoiLayer

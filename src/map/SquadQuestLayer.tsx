@@ -28,26 +28,32 @@ function resolvePosition(
   return null;
 }
 
+// One icon per color × shared flag. "Shared" changes only when quest lists
+// change (not mid-gesture), so a distinct cached icon is safe here.
 const iconCache = new Map<string, L.DivIcon>();
-function questIcon(hex: string): L.DivIcon {
-  const hit = iconCache.get(hex);
+function questIcon(hex: string, shared: boolean): L.DivIcon {
+  const key = `${hex}|${shared ? 1 : 0}`;
+  const hit = iconCache.get(key);
   if (hit) return hit;
   const icon = L.divIcon({
-    className: "tc-marker tc-squad-quest",
+    className: `tc-marker tc-squad-quest${shared ? " tc-shared" : ""}`,
     iconSize: [20, 20],
     iconAnchor: [10, 10],
     html: `<div class="tc-poi-glyph" style="color:${hex}">${QUEST_GLYPH_SVG}</div>`,
   });
-  iconCache.set(hex, icon);
+  iconCache.set(key, icon);
   return icon;
 }
 
 export default function SquadQuestLayer({
   mapId,
   questStates,
+  sharedQuestIds,
 }: {
   mapId: string;
   questStates: Record<string, DerivedQuestState>; // by member id (others only)
+  /** Quest ids ≥2 squadmates have active — pins get the shared-objective ring. */
+  sharedQuestIds?: Set<string>;
 }) {
   const squad = useSquad();
   const toLatLng = getGameToLatLng(mapId);
@@ -61,7 +67,6 @@ export default function SquadQuestLayer({
         const objectives = questStates[member.id]?.availableObjectivesByMap[mapId];
         if (!objectives || objectives.length === 0) return null;
         const hex = hexForColorId(member.colorId);
-        const icon = questIcon(hex);
         return objectives.map(({ task, objective }) => {
           const pos = resolvePosition(objective, mapId);
           if (!pos) return null;
@@ -69,7 +74,7 @@ export default function SquadQuestLayer({
             <Marker
               key={`${member.id}:${task.id}:${objective.id}`}
               position={toLatLng(pos.x, pos.z) as L.LatLngExpression}
-              icon={icon}
+              icon={questIcon(hex, sharedQuestIds?.has(task.id) ?? false)}
               keyboard={false}
               zIndexOffset={400}
             >

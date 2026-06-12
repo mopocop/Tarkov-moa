@@ -1,6 +1,7 @@
-import React, { useMemo } from "react";
-import { MapContainer, ImageOverlay } from "react-leaflet";
+import React, { useEffect, useMemo, useRef } from "react";
+import { MapContainer, ImageOverlay, useMap } from "react-leaflet";
 import L from "leaflet";
+import { Plus, Minus } from "@phosphor-icons/react";
 import "leaflet/dist/leaflet.css";
 import type { MapFloor } from "./floorClassify";
 import { normalizeBounds } from "./floorClassify";
@@ -653,6 +654,29 @@ export function getLatLngToGame(
   return (lat, lng) => ({ x: lng, z: lat });
 }
 
+// Custom zoom dock replacing Leaflet's built-in control so it can live on the
+// rail side of the screen (positioned via .shell--left/right in CSS).
+function ZoomDock(): React.JSX.Element {
+  const map = useMap();
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      L.DomEvent.disableClickPropagation(ref.current);
+      L.DomEvent.disableScrollPropagation(ref.current);
+    }
+  }, []);
+  return (
+    <div ref={ref} className="tc-zoom-dock">
+      <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => map.zoomIn()}>
+        <Plus weight="bold" />
+      </button>
+      <button type="button" aria-label="Zoom out" title="Zoom out" onClick={() => map.zoomOut()}>
+        <Minus weight="bold" />
+      </button>
+    </div>
+  );
+}
+
 interface MapViewProps {
   mapId: string;
   mapName: string;
@@ -708,6 +732,8 @@ export default function MapView({
       // reason on the marker pane.)
       zoomAnimation={false}
       markerZoomAnimation={false}
+      // Zoom buttons are rendered by ZoomDock on the rail side instead.
+      zoomControl={false}
     >
       {def.svgUrl.endsWith(".svg") ? (
         <FloorVisualOverlay
@@ -720,6 +746,7 @@ export default function MapView({
       ) : (
         <ImageOverlay url={def.svgUrl} bounds={bounds} />
       )}
+      <ZoomDock />
       {children}
     </MapContainer>
   );

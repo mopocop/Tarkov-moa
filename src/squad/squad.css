@@ -187,18 +187,32 @@
   opacity: 0.9;
 }
 
-/* ----- Map: squadmate dots ----- */
+/* ----- Map: squadmate pointers ----- */
 .tc-squadmate-marker { pointer-events: none; }
-.tc-squadmate { position: relative; width: 40px; height: 40px; transition: opacity 300ms; }
-.tc-squadmate.stale { opacity: 0.4; }
+/* Continuous staleness: --staleness (0 fresh → 1 ghost) is set on the live
+   element by SquadmateLayer; a slow linear transition between 5s ticks makes
+   the fade read as continuous. Ghost floor is 30% so they never vanish. */
+.tc-squadmate {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  opacity: calc(1 - 0.7 * var(--staleness, 0));
+  transition: opacity 5s linear;
+}
 .tc-squadmate-arrow {
-  width: 36px;
-  height: 36px;
-  background: var(--c, #888);
-  clip-path: polygon(50% 0%, 100% 100%, 50% 75%, 0% 100%);
-  border: 1px solid rgba(0, 0, 0, 0.55);
+  position: absolute;
+  inset: 2px;
   transform-origin: 50% 50%;
   transition: transform 80ms linear;
+  /* white hairline + soft shadow so any squad color reads on any map */
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.6)) drop-shadow(0 1px 4px rgba(0, 0, 0, 0.55));
+}
+.tc-squadmate-arrow svg { width: 100%; height: 100%; display: block; }
+.tc-squadmate-arrow path {
+  fill: var(--c, #888);
+  stroke: #0a0b09;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
 }
 .tc-squadmate-name {
   position: absolute;
