@@ -30,14 +30,14 @@ export interface SquadColor {
 }
 
 export const SQUAD_COLORS: readonly SquadColor[] = [
-  { id: "cyan", name: "Cyan", hex: "#22D3EE" },
-  { id: "orange", name: "Orange", hex: "#F59E0B" },
-  { id: "violet", name: "Violet", hex: "#8B5CF6" },
-  { id: "pink", name: "Pink", hex: "#EC4899" },
-  { id: "green", name: "Green", hex: "#34D399" },
-  { id: "blue", name: "Blue", hex: "#3B82F6" },
-  { id: "red", name: "Red", hex: "#F87171" },
-  { id: "white", name: "White", hex: "#E5E7EB" },
+  { id: "cyan", name: "Cyan", hex: "#4FC3DC" },
+  { id: "orange", name: "Orange", hex: "#E09B4C" },
+  { id: "violet", name: "Violet", hex: "#A08BE0" },
+  { id: "pink", name: "Pink", hex: "#DC7FB0" },
+  { id: "green", name: "Green", hex: "#7CC96B" },
+  { id: "blue", name: "Blue", hex: "#6593DC" },
+  { id: "red", name: "Red", hex: "#DC6660" },
+  { id: "white", name: "White", hex: "#ECEEE8" },
 ] as const;
 
 export const MAX_SQUAD_SIZE = SQUAD_COLORS.length;

@@ -35,14 +35,16 @@ export interface PoiCategoryMeta {
 
 // Drives the render layer (PoiLayer) color fallback and the legacy category
 // list. Heavy categories (spawn, loot) default OFF to avoid clutter on first paint.
+// Colors mirror what the category's markers actually render on the map
+// (FIELD GLASS retune, feedback round 1) so legend and map read the same.
 export const POI_CATEGORIES: PoiCategoryMeta[] = [
-  { id: "extract", label: "Extractions", defaultOn: true, color: "#22c55e" },
-  { id: "transit", label: "Transits", defaultOn: true, color: "#06b6d4" },
-  { id: "hazard", label: "Hazards", defaultOn: true, color: "#f97316" },
-  { id: "boss", label: "Bosses", defaultOn: true, color: "#a855f7" },
-  { id: "spawn", label: "Spawns", defaultOn: false, color: "#eab308" },
-  { id: "loot", label: "Loot containers", defaultOn: false, color: "#94a3b8" },
-  { id: "custom", label: "My markers", defaultOn: true, color: "#ec4899" },
+  { id: "extract", label: "Extractions", defaultOn: true, color: "#45C878" },
+  { id: "transit", label: "Transits", defaultOn: true, color: "#4FB8D8" },
+  { id: "hazard", label: "Hazards", defaultOn: true, color: "#E05252" },
+  { id: "boss", label: "Bosses", defaultOn: true, color: "#E05252" },
+  { id: "spawn", label: "Spawns", defaultOn: false, color: "#D89A4A" },
+  { id: "loot", label: "Loot containers", defaultOn: false, color: "#9BA08F" },
+  { id: "custom", label: "My markers", defaultOn: true, color: "#4FB8D8" },
 ];
 
 export const POI_CATEGORY_MAP: Record<PoiCategory, PoiCategoryMeta> =
@@ -51,15 +53,17 @@ export const POI_CATEGORY_MAP: Record<PoiCategory, PoiCategoryMeta> =
     PoiCategoryMeta
   >;
 
-// ---- Marker palette (Moacir's spec, 2026-05-30) ----------------------------
-// Five-color marker palette. Markers fill the glyph with one of these and draw a
-// dark outline (#1E2329) around it — see .tc-poi-glyph in App.css.
+// ---- Marker palette (FIELD GLASS retune of Moacir's 2026-05-30 five-color
+// spec — roles unchanged, hues harmonized; superseded per his 2026-06-12
+// feedback "redo markers to fit the new style") -----------------------------
+// Markers fill the glyph with one of these and draw a warm-ink outline
+// (#101208) around it — see .tc-poi-glyph in App.css.
 export const MARKER_COLORS = {
-  Y: "#E2E200", // yellow  — QUEST markers (see MarkerLayer; scroll icon)
-  G: "#0ECB81", // green   — PMC / friendly / medical
-  B: "#2DBDB6", // blue    — transit / custom markers
-  O: "#D38E2D", // orange  — scav / generic loot
-  R: "#F6465D", // red     — danger: sniper / cultist / boss / hazard
+  Y: "#E8C254", // quest gold — QUEST markers (see MarkerLayer; scroll icon)
+  G: "#45C878", // green      — PMC / friendly / medical
+  B: "#4FB8D8", // ice blue   — transit / custom markers
+  O: "#D89A4A", // amber      — scav / generic loot
+  R: "#E05252", // signal red — danger: sniper / cultist / boss / hazard
 } as const;
 
 // ---- Glyph resolution (keyed by facet) --------------------------------------
@@ -95,7 +99,7 @@ const FACET_ICON: Record<string, string> = {
   custom: mapPinSvg,
 };
 
-// Marker fill color per facet key (outline is always #1E2329, set in CSS).
+// Marker fill color per facet key (outline is always #101208, set in CSS).
 const FACET_COLOR: Record<string, string> = {
   "extract:pmc": MARKER_COLORS.G,
   "extract:scav": MARKER_COLORS.O,

@@ -170,7 +170,7 @@ button:disabled {
   color: var(--text-strong);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  font-size: 13px;
+  font-size: var(--fs-body);
   cursor: pointer;
   /* Replace the native chevron with our own, positioned with breathing room. */
   appearance: none;
@@ -617,7 +617,7 @@ button:disabled {
 .tc-poi-marker { background: transparent; border: none; overflow: visible; }
 /* Marker = a colored Phosphor SVG glyph with a dark outline (Moacir's spec).
    The fill color is set inline per facet (SVG inherits via currentColor); the
-   outline is the DS ink (#1E2329) drawn behind the fill via paint-order with
+   outline is the DS ink (#101208) drawn behind the fill via paint-order with
    ROUNDED joins — the soft joints the old font-glyph text-stroke couldn't do. */
 .tc-poi-glyph {
   position: relative;
@@ -632,7 +632,7 @@ button:disabled {
   overflow: visible; /* the stroke outline extends past the viewBox */
 }
 .tc-poi-glyph svg * {
-  stroke: #1e2329;
+  stroke: #101208;
   stroke-width: 34px; /* viewBox units (256 box) ≈ 2.4px at render size */
   stroke-linejoin: round;
   stroke-linecap: round;
@@ -645,7 +645,7 @@ button:disabled {
   white-space: nowrap; pointer-events: none;
   font-size: 12px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
   color: #ffffff;
-  -webkit-text-stroke: 2px #1e2329;
+  -webkit-text-stroke: 2px #101208;
   paint-order: stroke fill;
 }
 .tc-poi-marker.tc-hl .tc-poi-glyph {
@@ -699,7 +699,7 @@ button:disabled {
    the on-map marker so the legend and the map read the same. */
 .poi-swatch svg { width: 12px; height: 12px; display: block; overflow: visible; }
 .poi-swatch svg * {
-  stroke: #1e2329;
+  stroke: #101208;
   stroke-width: 18px;
   stroke-linejoin: round;
   paint-order: stroke fill;
