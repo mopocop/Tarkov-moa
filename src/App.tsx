@@ -35,7 +35,7 @@ import { markQuestAccepted, markQuestComplete, markQuestFailed } from './state/l
 import SettingsModal from './components/SettingsModal';
 import HowToUseModal from './components/HowToUseModal';
 import PatchNotesModal from './components/PatchNotesModal';
-import SquadPanel from './squad/SquadPanel';
+import SquadSection from './squad/SquadSection';
 import SquadmateLayer from './map/SquadmateLayer';
 import { useSquad } from './squad/SquadContext';
 import { checkForUpdate, applyUpdate, type AvailableUpdate } from './services/updater';
@@ -126,7 +126,6 @@ function App() {
   const [customPois, setCustomPois] = useState<Poi[]>(() => loadCustomPois());
   const relativeSynced = useRelativeTime(lastSynced);
   const squad = useSquad();
-  const [squadOpen, setSquadOpen] = useState(false);
   const {
     inSquad: squadInSquad,
     broadcastPosition: squadBroadcastPosition,
@@ -152,13 +151,9 @@ function App() {
     localStorage.setItem(RAIL_SIDE_KEY, railSide);
   }, [railSide]);
 
-  // Spine section clicks: squad opens its panel (modal for now); the rest
-  // toggle the rail panel section (click the active icon again to collapse).
+  // Spine section clicks toggle the rail panel section (click the active
+  // icon again to collapse the panel and give the map the full width).
   const handleToggleSection = useCallback((s: RailSection) => {
-    if (s === 'squad') {
-      setSquadOpen(true);
-      return;
-    }
     setRailSection((cur) => (cur === s ? null : s));
   }, []);
 
@@ -429,6 +424,12 @@ function App() {
     );
   }, [squad.inSquad, squad.quests, squad.selfId, questState]);
 
+  // Human-readable names for the shared quests (squad panel callout).
+  const sharedQuestNames = useMemo(
+    () => tasks.filter((t) => sharedQuestIds.has(t.id)).map((t) => t.name),
+    [tasks, sharedQuestIds],
+  );
+
   const selectedMapName = useMemo(() => {
     if (!questState || !selectedMapId) return '';
     return resolveMapName(
@@ -613,7 +614,13 @@ function App() {
           <aside className="rail-panel">
             <div className="rail-panel__header">
               <h2 className="rail-panel__title">
-                {railSection === 'map' ? 'Maps' : railSection === 'quests' ? 'Quests' : 'Intel'}
+                {railSection === 'map'
+                  ? 'Maps'
+                  : railSection === 'quests'
+                    ? 'Quests'
+                    : railSection === 'intel'
+                      ? 'Intel'
+                      : 'Squad'}
               </h2>
               {railSection === 'quests' && (
                 <IconButton
@@ -626,7 +633,9 @@ function App() {
               )}
             </div>
             <div className="rail-panel__body">
-              {!questState ? (
+              {railSection === 'squad' ? (
+                <SquadSection sharedQuestNames={sharedQuestNames} />
+              ) : !questState ? (
                 <p className="muted">{loading ? 'Loading quest data…' : 'No quest data yet.'}</p>
               ) : railSection === 'map' ? (
                 <>
@@ -774,7 +783,6 @@ function App() {
       {patchNotesOpen && (
         <PatchNotesModal onClose={() => setPatchNotesOpen(false)} />
       )}
-      {squadOpen && <SquadPanel onClose={() => setSquadOpen(false)} />}
     </div>
   );
 }
