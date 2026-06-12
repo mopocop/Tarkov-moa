@@ -43,13 +43,13 @@
   --font-display: 'Barlow Condensed', 'Inter Variable', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', Consolas, monospace;
 
-  --fs-micro: 11px;       /* etched labels (uppercase + tracked) */
-  --fs-caption: 12px;
-  --fs-body: 13px;        /* desktop-dense default */
-  --fs-body-lg: 14px;
-  --fs-title: 16px;
-  --fs-display-sm: 20px;  /* Barlow Condensed */
-  --fs-display: 28px;     /* Barlow Condensed */
+  --fs-micro: 12px;       /* etched labels (uppercase + tracked) */
+  --fs-caption: 13px;
+  --fs-body: 14px;        /* desktop default — roomy enough for a map monitor */
+  --fs-body-lg: 16px;
+  --fs-title: 18px;
+  --fs-display-sm: 22px;  /* Barlow Condensed */
+  --fs-display: 30px;     /* Barlow Condensed */
 
   --track-label: 0.07em;  /* tracking for etched uppercase labels */
 

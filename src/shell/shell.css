@@ -14,11 +14,11 @@
 
 /* ------------------------------------------------------------------ spine -- */
 .spine {
-  flex: 0 0 48px;
+  flex: 0 0 64px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   padding: var(--sp-2) 0;
   background: var(--bg-sunken);
   border-right: 1px solid var(--border);
@@ -27,20 +27,20 @@
 .shell--right .spine { border-right: none; border-left: 1px solid var(--border); }
 
 .spine__mark {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   margin-bottom: var(--sp-2);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--accent);
-  font-size: 22px;
+  font-size: 28px;
 }
 
 .spine__btn {
   position: relative;
-  width: 38px;
-  height: 38px;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,7 +48,7 @@
   border-radius: var(--r-md);
   background: transparent;
   color: var(--text-faint);
-  font-size: 19px;
+  font-size: 26px;
   line-height: 0;
   cursor: pointer;
   transition:
@@ -64,27 +64,27 @@
 .spine__btn--active::before {
   content: '';
   position: absolute;
-  left: -5px;
-  top: 9px;
-  bottom: 9px;
+  left: -7px;
+  top: 12px;
+  bottom: 12px;
   width: 2px;
   border-radius: 1px;
   background: var(--accent);
 }
-.shell--right .spine__btn--active::before { left: auto; right: -5px; }
+.shell--right .spine__btn--active::before { left: auto; right: -7px; }
 
 .spine__badge {
   position: absolute;
-  top: 3px;
-  right: 3px;
-  min-width: 14px;
-  height: 14px;
-  padding: 0 3px;
+  top: 4px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
   border-radius: var(--r-pill);
   background: var(--live);
   color: var(--bg-sunken);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -93,7 +93,7 @@
 
 .spine__spacer { flex: 1; }
 .spine__rule {
-  width: 22px;
+  width: 30px;
   height: 1px;
   margin: var(--sp-1) 0;
   background: var(--border);
@@ -117,7 +117,7 @@
 
 /* ------------------------------------------------------------------ panel -- */
 .rail-panel {
-  flex: 0 0 324px;
+  flex: 0 0 356px;
   display: flex;
   flex-direction: column;
   min-height: 0;
