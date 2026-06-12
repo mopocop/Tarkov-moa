@@ -12,7 +12,7 @@ import L from "leaflet";
 import { getGameToLatLng } from "./MapView";
 import { useSquad } from "../squad/SquadContext";
 import { hexForColorId } from "../../shared/squadProtocol";
-import { iconForFacet } from "../poi/registry";
+import { svgForFacet } from "../poi/registry";
 
 // One DivIcon per distinct color (squad caps at 8) — avoids rebuilding DOM-stable
 // icons on every render.
@@ -24,7 +24,7 @@ function markerIcon(hex: string): L.DivIcon {
     className: "tc-poi-marker tc-squad-marker",
     iconSize: [22, 22],
     iconAnchor: [11, 11],
-    html: `<div class="tc-poi-glyph" style="color:${hex}"><i class="${iconForFacet("custom")}"></i></div>`,
+    html: `<div class="tc-poi-glyph" style="color:${hex}">${svgForFacet("custom")}</div>`,
   });
   iconCache.set(hex, icon);
   return icon;

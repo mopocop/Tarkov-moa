@@ -1,23 +1,48 @@
 import type { PoiCategory } from "./types";
 
+// ---- Marker glyphs: Phosphor Icons (MIT), fill weight ----------------------
+// Raw SVG markup inlined at build time via Vite `?raw`. This file is the SINGLE
+// SOURCE OF TRUTH for marker glyph + color — swap any import or map entry here
+// and the map markers, filter-panel swatches, and squad layers all follow.
+// The dark outline + rounded joins are applied in CSS (.tc-poi-glyph svg *).
+import signOutSvg from "@phosphor-icons/core/assets/fill/sign-out-fill.svg?raw";
+import arrowSquareDownSvg from "@phosphor-icons/core/assets/fill/arrow-square-down-fill.svg?raw";
+import crosshairSvg from "@phosphor-icons/core/assets/fill/crosshair-fill.svg?raw";
+import knifeSvg from "@phosphor-icons/core/assets/fill/knife-fill.svg?raw";
+import skullSvg from "@phosphor-icons/core/assets/fill/skull-fill.svg?raw";
+import warningSvg from "@phosphor-icons/core/assets/fill/warning-fill.svg?raw";
+import packageSvg from "@phosphor-icons/core/assets/fill/package-fill.svg?raw";
+import bagSvg from "@phosphor-icons/core/assets/fill/bag-simple-fill.svg?raw";
+import cashRegisterSvg from "@phosphor-icons/core/assets/fill/cash-register-fill.svg?raw";
+import cpuSvg from "@phosphor-icons/core/assets/fill/cpu-fill.svg?raw";
+import archiveSvg from "@phosphor-icons/core/assets/fill/archive-fill.svg?raw";
+import coinSvg from "@phosphor-icons/core/assets/fill/coin-fill.svg?raw";
+import shirtSvg from "@phosphor-icons/core/assets/fill/shirt-folded-fill.svg?raw";
+import firstAidSvg from "@phosphor-icons/core/assets/fill/first-aid-kit-fill.svg?raw";
+import boxOpenSvg from "@phosphor-icons/core/assets/fill/box-arrow-up-fill.svg?raw";
+import vaultSvg from "@phosphor-icons/core/assets/fill/vault-fill.svg?raw";
+import swordSvg from "@phosphor-icons/core/assets/fill/sword-fill.svg?raw";
+import mapPinSvg from "@phosphor-icons/core/assets/fill/map-pin-fill.svg?raw";
+import scrollSvg from "@phosphor-icons/core/assets/fill/scroll-fill.svg?raw";
+import circleSvg from "@phosphor-icons/core/assets/fill/circle-fill.svg?raw";
+
 export interface PoiCategoryMeta {
   id: PoiCategory;
   label: string;
   defaultOn: boolean;
   color: string; // hex, used for the icon dot + filter swatch
-  glyph?: string; // FontAwesome class fallback, e.g. "fa-solid fa-circle"
 }
 
 // Drives the render layer (PoiLayer) color fallback and the legacy category
 // list. Heavy categories (spawn, loot) default OFF to avoid clutter on first paint.
 export const POI_CATEGORIES: PoiCategoryMeta[] = [
-  { id: "extract", label: "Extractions", defaultOn: true, color: "#22c55e", glyph: "fa-solid fa-door-open" },
-  { id: "transit", label: "Transits", defaultOn: true, color: "#06b6d4", glyph: "fa-solid fa-route" },
-  { id: "hazard", label: "Hazards", defaultOn: true, color: "#f97316", glyph: "fa-solid fa-triangle-exclamation" },
-  { id: "boss", label: "Bosses", defaultOn: true, color: "#a855f7", glyph: "fa-solid fa-skull" },
-  { id: "spawn", label: "Spawns", defaultOn: false, color: "#eab308", glyph: "fa-solid fa-person" },
-  { id: "loot", label: "Loot containers", defaultOn: false, color: "#94a3b8", glyph: "fa-solid fa-box" },
-  { id: "custom", label: "My markers", defaultOn: true, color: "#ec4899", glyph: "fa-solid fa-location-dot" },
+  { id: "extract", label: "Extractions", defaultOn: true, color: "#22c55e" },
+  { id: "transit", label: "Transits", defaultOn: true, color: "#06b6d4" },
+  { id: "hazard", label: "Hazards", defaultOn: true, color: "#f97316" },
+  { id: "boss", label: "Bosses", defaultOn: true, color: "#a855f7" },
+  { id: "spawn", label: "Spawns", defaultOn: false, color: "#eab308" },
+  { id: "loot", label: "Loot containers", defaultOn: false, color: "#94a3b8" },
+  { id: "custom", label: "My markers", defaultOn: true, color: "#ec4899" },
 ];
 
 export const POI_CATEGORY_MAP: Record<PoiCategory, PoiCategoryMeta> =
@@ -37,38 +62,37 @@ export const MARKER_COLORS = {
   R: "#F6465D", // red     — danger: sniper / cultist / boss / hazard
 } as const;
 
-// ---- FontAwesome icon resolution (keyed by facet) --------------------------
-// Single source of truth for which FA glyph + color each marker type uses. Keyed
-// by the facet key (see facets.facetKeyOf) so markers AND the filter-panel
-// swatches stay in sync, and so the mapping is as fine-grained as the filter
-// buckets. FA Solid only (per spec). Swap any value here; nothing else changes.
+// ---- Glyph resolution (keyed by facet) --------------------------------------
+// Single source of truth for which SVG glyph + color each marker type uses.
+// Keyed by the facet key (see facets.facetKeyOf) so markers AND the filter-panel
+// swatches stay in sync. Swap any value here; nothing else changes.
 const FACET_ICON: Record<string, string> = {
   // Extractions (transit folds in here — it's an extraction type)
-  "extract:pmc": "fa-solid fa-right-from-bracket",
-  "extract:scav": "fa-solid fa-right-from-bracket",
-  transit: "fa-solid fa-right-from-bracket",
+  "extract:pmc": signOutSvg,
+  "extract:scav": signOutSvg,
+  transit: signOutSvg,
   // Spawns
-  "spawn:pmc": "fa-solid fa-square-arrow-down",
-  "spawn:scav": "fa-solid fa-square-arrow-down",
-  "spawn:sniper": "fa-solid fa-crosshairs",
-  cultist: "fa-solid fa-knife",
-  boss: "fa-solid fa-skull",
-  // Hazards (not specified by Moacir — kept on the warning glyph)
-  hazard: "fa-solid fa-triangle-exclamation",
+  "spawn:pmc": arrowSquareDownSvg,
+  "spawn:scav": arrowSquareDownSvg,
+  "spawn:sniper": crosshairSvg,
+  cultist: knifeSvg,
+  boss: skullSvg,
+  // Hazards
+  hazard: warningSvg,
   // Loot containers
-  "loot:ammo": "fa-solid fa-crate-empty",
-  "loot:bag": "fa-solid fa-bag-shopping",
-  "loot:cash": "fa-solid fa-cash-register",
-  "loot:computer": "fa-solid fa-microchip",
-  "loot:container": "fa-solid fa-box-archive",
-  "loot:stash": "fa-solid fa-coin",
-  "loot:jacket": "fa-solid fa-shirt",
-  "loot:medbag": "fa-solid fa-briefcase-medical",
-  "loot:other": "fa-solid fa-box-open",
-  "loot:safe": "fa-solid fa-vault",
-  "loot:weapon": "fa-solid fa-gun",
+  "loot:ammo": packageSvg,
+  "loot:bag": bagSvg,
+  "loot:cash": cashRegisterSvg,
+  "loot:computer": cpuSvg,
+  "loot:container": archiveSvg,
+  "loot:stash": coinSvg,
+  "loot:jacket": shirtSvg,
+  "loot:medbag": firstAidSvg,
+  "loot:other": boxOpenSvg,
+  "loot:safe": vaultSvg,
+  "loot:weapon": swordSvg,
   // Custom markers
-  custom: "fa-solid fa-location-dot",
+  custom: mapPinSvg,
 };
 
 // Marker fill color per facet key (outline is always #1E2329, set in CSS).
@@ -87,17 +111,21 @@ const FACET_COLOR: Record<string, string> = {
   // all other loot:* default to orange via colorForFacet()
 };
 
-const DEFAULT_ICON = "fa-solid fa-circle";
+// Quest objective pins (own + squadmates') — yellow scroll, per Moacir's spec.
+export const QUEST_GLYPH_SVG = scrollSvg;
+
+const DEFAULT_ICON = circleSvg;
 const DEFAULT_COLOR = MARKER_COLORS.O;
 
-// FA class for a facet key. Falls back to the category's default (loot:* → box,
-// etc.) and finally a plain dot, so an unmapped subtype still renders.
-export function iconForFacet(facetKey: string): string {
+// Raw SVG markup for a facet key. Falls back to the category's default
+// (loot:* → box, etc.) and finally a plain dot, so an unmapped subtype still
+// renders. Embed inside a `.tc-poi-glyph` element with inline `color`.
+export function svgForFacet(facetKey: string): string {
   const hit = FACET_ICON[facetKey];
   if (hit) return hit;
-  if (facetKey.startsWith("loot:")) return "fa-solid fa-box-open";
-  if (facetKey.startsWith("extract:")) return "fa-solid fa-right-from-bracket";
-  if (facetKey.startsWith("spawn:")) return "fa-solid fa-square-arrow-down";
+  if (facetKey.startsWith("loot:")) return boxOpenSvg;
+  if (facetKey.startsWith("extract:")) return signOutSvg;
+  if (facetKey.startsWith("spawn:")) return arrowSquareDownSvg;
   return DEFAULT_ICON;
 }
 

@@ -3,6 +3,7 @@
 // when a fresh position for that member lands.
 
 import { useEffect, useRef, useState } from "react";
+import { Eye, EyeSlash } from "@phosphor-icons/react";
 import { useSquad, type MemberPosition } from "./SquadContext";
 import { hexForColorId, type SquadMember } from "../../shared/squadProtocol";
 import { useRelativeTime } from "../hooks/useRelativeTime";
@@ -52,7 +53,7 @@ function MemberRow({
         aria-label={hidden ? "Show on map" : "Hide on map"}
         aria-pressed={!hidden}
       >
-        <i className={`fa-solid ${hidden ? "fa-eye-slash" : "fa-eye"}`} />
+        {hidden ? <EyeSlash weight="bold" /> : <Eye weight="bold" />}
       </button>
     </div>
   );

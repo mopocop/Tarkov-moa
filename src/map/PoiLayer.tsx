@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Marker, Tooltip } from "react-leaflet";
 import L from "leaflet";
 import type { Poi } from "../poi/types";
-import { iconForFacet, colorForFacet } from "../poi/registry";
+import { svgForFacet, colorForFacet } from "../poi/registry";
 import { facetKeyOf } from "../poi/facets";
 import { getGameToLatLng } from "./MapView";
 import {
@@ -40,12 +40,12 @@ export interface PoiLayerProps {
   activeFloorId?: string;
 }
 
-// One stable icon per color+FA-glyph combo. Highlight is applied via a ".tc-hl"
+// One stable icon per color+glyph combo. Highlight is applied via a ".tc-hl"
 // CSS class on the live marker DOM element inside a useEffect — never via
 // setIcon — so the DOM stays stable and clicks fire reliably.
 const iconCache = new Map<string, L.DivIcon>();
-function getPoiIcon(color: string, faClass: string, label?: string): L.DivIcon {
-  const key = `${color}|${faClass}|${label ?? ""}`;
+function getPoiIcon(color: string, glyphSvg: string, label?: string): L.DivIcon {
+  const key = `${color}|${glyphSvg}|${label ?? ""}`;
   const cached = iconCache.get(key);
   if (cached) return cached;
 
@@ -59,7 +59,7 @@ function getPoiIcon(color: string, faClass: string, label?: string): L.DivIcon {
     className: "tc-poi-marker",
     iconSize: [22, 22],
     iconAnchor: [11, 11],
-    html: `<div class="tc-poi-glyph" style="color:${color}"><i class="${faClass}"></i>${labelHtml}</div>`,
+    html: `<div class="tc-poi-glyph" style="color:${color}">${glyphSvg}${labelHtml}</div>`,
   });
   iconCache.set(key, icon);
   return icon;
@@ -72,7 +72,7 @@ function resolvePoiIcon(poi: Poi): L.DivIcon {
   const color =
     poi.source === "user" && poi.color ? poi.color : colorForFacet(facetKey);
   const label = isExtractionLike(facetKey) ? poi.label : undefined;
-  return getPoiIcon(color, iconForFacet(facetKey), label);
+  return getPoiIcon(color, svgForFacet(facetKey), label);
 }
 
 interface PoiMarkerProps {

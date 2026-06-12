@@ -5,7 +5,7 @@ import type { Poi } from "../poi/types";
 import { getGameToLatLng, getLatLngToGame, getMapDef } from "./MapView";
 import { makeGrid, cellLabelAt } from "../poi/grid";
 import { newCustomPoi } from "../poi/customPoi";
-import { iconForFacet, colorForFacet } from "../poi/registry";
+import { svgForFacet, colorForFacet } from "../poi/registry";
 
 const CUSTOM_COLOR = colorForFacet("custom");
 
@@ -17,7 +17,7 @@ function customIcon(): L.DivIcon {
     className: "tc-poi-marker",
     iconSize: [22, 22],
     iconAnchor: [11, 11],
-    html: `<div class="tc-poi-glyph" style="color:${CUSTOM_COLOR}"><i class="${iconForFacet("custom")}"></i></div>`,
+    html: `<div class="tc-poi-glyph" style="color:${CUSTOM_COLOR}">${svgForFacet("custom")}</div>`,
   });
   return cachedIcon;
 }

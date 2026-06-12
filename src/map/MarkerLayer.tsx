@@ -9,7 +9,7 @@ import {
   type MapFloor,
 } from "./floorClassify";
 import { ALL_FLOORS } from "./FloorSwitcher";
-import { MARKER_COLORS } from "../poi/registry";
+import { MARKER_COLORS, QUEST_GLYPH_SVG } from "../poi/registry";
 
 interface MarkerLayerProps {
   mapId: string;
@@ -60,7 +60,7 @@ function getIcon(): L.DivIcon {
     className: "tc-marker",
     iconSize: [QUEST_GLYPH_SIZE, QUEST_GLYPH_SIZE],
     iconAnchor: [QUEST_GLYPH_SIZE / 2, QUEST_GLYPH_SIZE / 2],
-    html: `<div class="tc-poi-glyph" style="color:${MARKER_COLORS.Y}"><i class="fa-solid fa-scroll"></i></div>`,
+    html: `<div class="tc-poi-glyph" style="color:${MARKER_COLORS.Y}">${QUEST_GLYPH_SVG}</div>`,
   });
   return questIcon;
 }

@@ -75,9 +75,12 @@ export default function PoiFilterPanel({
                       checked={isOn(f.key, f.defaultOn)}
                       onChange={() => onToggleFacet(f.key)}
                     />
-                    <span className="poi-swatch">
-                      <i className={f.icon} style={{ color: f.color }} />
-                    </span>
+                    <span
+                      className="poi-swatch"
+                      style={{ color: f.color }}
+                      // Raw Phosphor SVG from the registry (trusted, bundled asset)
+                      dangerouslySetInnerHTML={{ __html: f.icon }}
+                    />
                     <span className="poi-facet-label">{f.label}</span>
                     <span className="poi-filter-count">{f.count}</span>
                   </label>

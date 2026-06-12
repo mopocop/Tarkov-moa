@@ -11,6 +11,7 @@ import type { TaskObjective } from "../api/types";
 import { getGameToLatLng } from "./MapView";
 import { useSquad } from "../squad/SquadContext";
 import { hexForColorId } from "../../shared/squadProtocol";
+import { QUEST_GLYPH_SVG } from "../poi/registry";
 
 // Same resolution MarkerLayer uses: prefer a zone position on this map, else the
 // first possible-location position on this map.
@@ -35,7 +36,7 @@ function questIcon(hex: string): L.DivIcon {
     className: "tc-marker tc-squad-quest",
     iconSize: [20, 20],
     iconAnchor: [10, 10],
-    html: `<div class="tc-poi-glyph" style="color:${hex}"><i class="fa-solid fa-scroll"></i></div>`,
+    html: `<div class="tc-poi-glyph" style="color:${hex}">${QUEST_GLYPH_SVG}</div>`,
   });
   iconCache.set(hex, icon);
   return icon;

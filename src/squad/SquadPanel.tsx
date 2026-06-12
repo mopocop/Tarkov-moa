@@ -3,6 +3,7 @@
 //   - In a squad: show the shareable code, the roster (SquadCard), and Leave.
 
 import { useState } from "react";
+import { UsersThree } from "@phosphor-icons/react";
 import { useSquad } from "./SquadContext";
 import { SQUAD_COLORS } from "../../shared/squadProtocol";
 import SquadCard from "./SquadCard";
@@ -49,7 +50,7 @@ export default function SquadPanel({ onClose }: { onClose: () => void }) {
       <div className="modal-card squad-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>
-            <i className="fa-solid fa-user-group" /> Squad Mode
+            <UsersThree weight="bold" /> Squad Mode
           </h2>
           <button onClick={onClose} aria-label="Close">
             ×

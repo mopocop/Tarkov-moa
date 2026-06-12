@@ -733,11 +733,10 @@ button.accent:hover:not(:disabled),
 
 /* ===== POIs / filter panel / grid / custom markers ===== */
 .tc-poi-marker { background: transparent; border: none; overflow: visible; }
-/* Marker = a colored FA-solid glyph with a dark outline (Moacir's spec). The
-   fill color is set inline per facet; the 3px outline is the DS ink (#1E2329)
-   drawn behind the fill via paint-order so it reads as an external stroke.
-   NOTE: -webkit-text-stroke joints are mitered (CSS can't round them) — the
-   "soft joints" land when Figma-designed icons replace the FA stand-ins. */
+/* Marker = a colored Phosphor SVG glyph with a dark outline (Moacir's spec).
+   The fill color is set inline per facet (SVG inherits via currentColor); the
+   outline is the DS ink (#1E2329) drawn behind the fill via paint-order with
+   ROUNDED joins — the soft joints the old font-glyph text-stroke couldn't do. */
 .tc-poi-glyph {
   position: relative;
   width: 22px; height: 22px;
@@ -745,9 +744,16 @@ button.accent:hover:not(:disabled),
   line-height: 1;
   transition: transform 0.08s ease;
 }
-.tc-poi-glyph i {
-  font-size: 18px; line-height: 1; color: inherit;
-  -webkit-text-stroke: 8px #1e2329;
+.tc-poi-glyph svg {
+  width: 18px; height: 18px;
+  display: block;
+  overflow: visible; /* the stroke outline extends past the viewBox */
+}
+.tc-poi-glyph svg * {
+  stroke: #1e2329;
+  stroke-width: 34px; /* viewBox units (256 box) ≈ 2.4px at render size */
+  stroke-linejoin: round;
+  stroke-linecap: round;
   paint-order: stroke fill;
 }
 /* Always-on extraction/transit name: all-caps white text, 2px dark outline,
@@ -822,7 +828,13 @@ button.accent:hover:not(:disabled),
 }
 /* Colored glyph (color set inline per facet) with a thin dark outline, mirroring
    the on-map marker so the legend and the map read the same. */
-.poi-swatch i { font-size: 12px; line-height: 1; -webkit-text-stroke: 1px #1e2329; paint-order: stroke fill; }
+.poi-swatch svg { width: 12px; height: 12px; display: block; overflow: visible; }
+.poi-swatch svg * {
+  stroke: #1e2329;
+  stroke-width: 18px;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
 .poi-filter-count { margin-left: auto; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
 /* Map options (reference-grid toggle + placement hint) */

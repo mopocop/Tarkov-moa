@@ -6,7 +6,7 @@
 // This drives BOTH the filter predicate (filterState.isPoiVisible) and the
 // grouped sidebar panel (PoiFilterPanel via buildFacetGroups).
 import type { Poi } from "./types";
-import { iconForFacet, colorForFacet } from "./registry";
+import { svgForFacet, colorForFacet } from "./registry";
 
 // ---- Facet derivation ------------------------------------------------------
 // Maps a POI to its facet key. Extract faction "shared" folds into pmc (a
@@ -152,7 +152,7 @@ export function buildFacetGroups(pois: Poi[]): FacetGroupView[] {
       const count = counts.get(key) ?? 0;
       if (count === 0) continue;
       const m = STATIC_FACET_BY_KEY[key];
-      facets.push({ key, label: m.label, color: colorForFacet(key), icon: iconForFacet(key), count, defaultOn: m.defaultOn });
+      facets.push({ key, label: m.label, color: colorForFacet(key), icon: svgForFacet(key), count, defaultOn: m.defaultOn });
     }
     if (facets.length) groups.push({ id: g.id, label: g.label, facets });
   }
@@ -167,7 +167,7 @@ export function buildFacetGroups(pois: Poi[]): FacetGroupView[] {
       label: "Loot containers",
       facets: lootKeys.map((key) => {
         const m = lootFacetMeta(key.slice("loot:".length));
-        return { key, label: m.label, color: m.color, icon: iconForFacet(key), count: counts.get(key) ?? 0, defaultOn: m.defaultOn };
+        return { key, label: m.label, color: m.color, icon: svgForFacet(key), count: counts.get(key) ?? 0, defaultOn: m.defaultOn };
       }),
     });
   }
@@ -182,7 +182,7 @@ export function buildFacetGroups(pois: Poi[]): FacetGroupView[] {
         key: "custom",
         label: customMeta.label,
         color: colorForFacet("custom"),
-        icon: iconForFacet("custom"),
+        icon: svgForFacet("custom"),
         count: counts.get("custom") ?? 0,
         defaultOn: customMeta.defaultOn,
       },

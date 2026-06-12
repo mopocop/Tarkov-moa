@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { UsersThree, PencilSimple, Eraser, TrashSimple } from '@phosphor-icons/react';
 import './App.css';
 import { TarkovDevClient } from './api/tarkov-dev';
 import { deriveQuestState, type DerivedQuestState } from './quests/derive';
@@ -557,7 +558,7 @@ function App() {
               onClick={() => setSquadOpen(true)}
               title="Squad Mode — share location with teammates"
             >
-              <i className="fa-solid fa-user-group" /> Squad
+              <UsersThree weight="bold" /> Squad
               {squad.inSquad && (
                 <span className="squad-toolbar-badge">{squad.members.length}</span>
               )}
@@ -571,7 +572,7 @@ function App() {
               aria-label="Draw"
               aria-pressed={drawTool === 'pen'}
             >
-              <i className="fa-solid fa-pen" />
+              <PencilSimple weight="bold" />
             </button>
             <button
               className={`btn-tertiary tc-tool-btn${drawTool === 'eraser' ? ' active' : ''}`}
@@ -581,7 +582,7 @@ function App() {
               aria-label="Eraser"
               aria-pressed={drawTool === 'eraser'}
             >
-              <i className="fa-solid fa-eraser" />
+              <Eraser weight="bold" />
             </button>
             {selectedMapId && ownDraws.some((d) => d.mapId === selectedMapId) && (
               <button
@@ -590,7 +591,7 @@ function App() {
                 title="Clear your drawings on this map"
                 aria-label="Clear drawings"
               >
-                <i className="fa-solid fa-trash-can" />
+                <TrashSimple weight="bold" />
               </button>
             )}
             <button
