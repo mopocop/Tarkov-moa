@@ -191,3 +191,26 @@
   .ob-scene { animation: none; }
   .ob-pos-ring { animation: none; opacity: 0.4; }
 }
+
+/* ----- Follow-cam options (position scene) ----- */
+.ob-follow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 14px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+.ob-follow-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ob-follow-text { display: flex; flex-direction: column; gap: 2px; }
+.ob-follow-text strong { font-size: var(--fs-body); color: var(--text); font-weight: 600; }
+.ob-follow-text span { font-size: var(--fs-micro); color: var(--text-faint); }
+.ob-follow-slider { flex: 0 0 190px; }

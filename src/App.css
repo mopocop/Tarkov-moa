@@ -567,6 +567,18 @@ button:disabled {
 }
 
 .settings-body { display: flex; flex-direction: column; gap: 6px; padding-bottom: 4px; }
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: 6px 0;
+}
+.settings-row__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.settings-row__text > span:first-child { font-size: var(--fs-body); color: var(--text); }
+.settings-row__hint { font-size: var(--fs-micro); color: var(--text-faint); line-height: 1.4; }
+.settings-row__control { flex: 0 0 200px; }
+.settings-credits { margin: 4px 0 0; font-size: var(--fs-micro); color: var(--text-faint); line-height: 1.5; }
 .settings-body .ui-section-label { margin-top: 14px; }
 .settings-body .ui-section-label:first-child { margin-top: 0; }
 .settings-ok { color: var(--live); font-size: var(--fs-caption); }

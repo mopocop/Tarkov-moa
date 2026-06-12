@@ -20,6 +20,7 @@ const LOG_LOCATION_TO_MAP_ID: Record<string, string> = {
   sandbox: '653e6760052c01c1c805532f',          // Ground Zero
   sandbox_high: '653e6760052c01c1c805532f',     // Ground Zero 21+ -> Ground Zero
   laboratory: '5b0fc42d86f7744a585f9105',       // The Lab
+  terminal: '6925a2c38bdebd9e2302692e',         // Terminal
 };
 
 export function mapIdFromLogLocation(location: string): string | undefined {

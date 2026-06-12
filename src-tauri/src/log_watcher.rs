@@ -4,7 +4,10 @@
 // (existing or newly created), tail-follows the file and parses three event
 // types out of the stream:
 //
-//   - "application|GameStarted"               → raid-started   {}
+//   - "application|GameStarted"               → raid-started   { location: string|null }
+//     (location comes from the preceding "TRACE-NetworkGameCreate profileStatus"
+//      line, which prints "... Location: <name>, ..." ~30-60s before GameStarted;
+//      verbatim sample from Moacir's logs, EFT 1.0.5.0.45272, 2026-06-01)
 //   - "Got notification | UserMatchOver"      → raid-ended     { location, shortId }
 //   - "Got notification | ChatMessageReceived" with templateId.type in {10,11,12}
 //                                             → quest-event   { status, templateId }
@@ -41,6 +44,32 @@ static CANCEL: OnceLock<Mutex<Option<Arc<AtomicBool>>>> = OnceLock::new();
 
 fn cancel_cell() -> &'static Mutex<Option<Arc<AtomicBool>>> {
     CANCEL.get_or_init(|| Mutex::new(None))
+}
+
+// Last raid location seen in a "TRACE-NetworkGameCreate profileStatus" line.
+// That line lands well before its GameStarted (different tail polls, possibly
+// different process_file calls), so it has to survive across calls. Taken
+// (consumed) when raid-started is emitted so a later GameStarted without its
+// own profileStatus line doesn't inherit a stale map.
+static LAST_RAID_LOCATION: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+
+fn raid_location_cell() -> &'static Mutex<Option<String>> {
+    LAST_RAID_LOCATION.get_or_init(|| Mutex::new(None))
+}
+
+/// Pull the location token out of a profileStatus trace line, e.g.
+/// `... RaidMode: Online, Ip: 45.134.141.149, Port: 17002, Location: Sandbox, Sid...`
+/// → `Sandbox`.
+fn extract_profile_status_location(line: &str) -> Option<String> {
+    let idx = line.find("Location: ")?;
+    let rest = &line[idx + "Location: ".len()..];
+    let end = rest.find(',').unwrap_or(rest.len());
+    let loc = rest[..end].trim();
+    if loc.is_empty() {
+        None
+    } else {
+        Some(loc.to_string())
+    }
 }
 
 #[derive(Serialize, Clone)]
@@ -228,8 +257,18 @@ pub fn process_file(
             // see another marker-bearing line. Otherwise keep waiting briefly.
         }
 
-        if line.contains("application|GameStarted") {
-            let _ = app.emit("raid-started", serde_json::json!({}));
+        if line.contains("TRACE-NetworkGameCreate profileStatus") {
+            if let Some(loc) = extract_profile_status_location(&line) {
+                if let Ok(mut cell) = raid_location_cell().lock() {
+                    *cell = Some(loc);
+                }
+            }
+        } else if line.contains("application|GameStarted") {
+            let location = raid_location_cell()
+                .lock()
+                .ok()
+                .and_then(|mut cell| cell.take());
+            let _ = app.emit("raid-started", serde_json::json!({ "location": location }));
             pending = None;
         } else if line.contains("Got notification | UserMatchOver") {
             pending = Some(Pending::RaidEnded);
@@ -501,6 +540,29 @@ mod tests {
                 c
             );
         }
+    }
+
+    #[test]
+    fn extracts_location_from_profile_status_line() {
+        // Verbatim from Moacir's application log (EFT 1.0.5.0.45272, 2026-06-01),
+        // truncated at the Sid like the real grep output.
+        let sandbox = "2026-06-01 20:45:29.464|1.0.5.0.45272|Debug|application|TRACE-NetworkGameCreate profileStatus: 'Profileid: 5e40a07cfe16a1113d12e9b1, Status: Busy, RaidMode: Online, Ip: 45.134.141.149, Port: 17002, Location: Sandbox, Sid: xyz'";
+        assert_eq!(
+            extract_profile_status_location(sandbox).as_deref(),
+            Some("Sandbox")
+        );
+
+        let streets = "2026-06-01 21:26:16.635|1.0.5.0.45272|Debug|application|TRACE-NetworkGameCreate profileStatus: 'Profileid: 5e40a07cfe16a1113d12e9b1, Status: Busy, RaidMode: Online, Ip: 149.22.83.114, Port: 17015, Location: TarkovStreets";
+        assert_eq!(
+            extract_profile_status_location(streets).as_deref(),
+            Some("TarkovStreets")
+        );
+
+        // No Location field → None (don't invent a map).
+        assert_eq!(
+            extract_profile_status_location("Debug|application|TRACE-NetworkGameCreate profileStatus: 'Status: Busy'"),
+            None
+        );
     }
 
     #[test]

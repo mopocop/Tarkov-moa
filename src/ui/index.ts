@@ -20,3 +20,4 @@ export { default as Field, type FieldProps } from './Field';
 export { default as SectionLabel, type SectionLabelProps } from './SectionLabel';
 export { default as Spinner, type SpinnerProps } from './Spinner';
 export { default as Kbd } from './Kbd';
+export { default as Slider, type SliderProps } from './Slider';

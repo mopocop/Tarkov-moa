@@ -29,6 +29,9 @@ interface MapDef {
   // Optional extra SVG overlays (our own bundled assets, e.g. hand-drawn Reserve
   // stairs) layered on top at the same bounds; shapes are recolored gold.
   extraSvgUrls?: string[];
+  // Floor selected when the map opens. Defaults to ALL_FLOORS; Interchange
+  // opens on Ground (Moacir's spec — "All" stacks three mall levels of noise).
+  defaultFloorId?: string;
 }
 
 // Customs floor data sourced verbatim from:
@@ -481,6 +484,7 @@ export const MAPS: Record<string, MapDef> = {
     transform: [0.265, 150.6, 0.265, 134.6],
     rotation: 180,
     floors: INTERCHANGE_FLOORS,
+    defaultFloorId: "ground",
   },
   // Factory — values verbatim from tarkov-dev maps.json. NOTE rotation 90 (not
   // 180 like the others). Night Factory shares this map; canonicalMap.ts routes

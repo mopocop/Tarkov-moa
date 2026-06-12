@@ -2,7 +2,12 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 
 export type { UnlistenFn };
 
-export interface RaidStartedPayload {}
+export interface RaidStartedPayload {
+  // BSG location token (e.g. "Sandbox", "TarkovStreets") parsed from the
+  // profileStatus trace that precedes GameStarted; null when the watcher
+  // didn't see one. Map to a tarkov.dev id via mapIdFromLogLocation().
+  location?: string | null;
+}
 export interface RaidEndedPayload {
   location: string;
   shortId: string;

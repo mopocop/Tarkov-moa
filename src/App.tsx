@@ -49,6 +49,7 @@ import CustomMarkerLayer, { MapClickPlacer } from './map/CustomMarkerLayer';
 import SquadMarkerLayer from './map/SquadMarkerLayer';
 import DrawLayer, { type DrawTool, newDrawId } from './map/DrawLayer';
 import MapToolsDock from './map/MapToolsDock';
+import FollowCamera from './map/FollowCamera';
 import {
   loadCustomPois,
   saveCustomPois,
@@ -76,6 +77,14 @@ const SELECTED_MAP_KEY = 'tc_selected_map';
 // vice versa. Chosen during onboarding, changeable in Settings.
 const RAIL_SIDE_KEY = 'tc_rail_side';
 export type RailSide = 'left' | 'right';
+
+// Screenshot follow-cam: center the map on each fresh position (default ON)
+// at this zoom. Offered in onboarding, changeable in Settings.
+const FOLLOW_CENTER_KEY = 'tc_follow_center';
+const FOLLOW_ZOOM_KEY = 'tc_follow_zoom';
+export const FOLLOW_ZOOM_DEFAULT = 1;
+// When '1', the floor switcher is hidden and floor tracking is locked to AUTO.
+const FLOOR_LOCK_KEY = 'tc_floor_lock';
 
 // Stable empty array for the `objectives` prop fallback. A fresh `[]` literal
 // would change identity every render, invalidating MarkerLayer's classified/
@@ -118,8 +127,24 @@ function App() {
   const [updating, setUpdating] = useState(false);
   const [appVersion, setAppVersion] = useState<string | null>(null);
   const [playerPos, setPlayerPos] = useState<
-    { x: number; y: number; z: number; rotation: number } | null
+    { x: number; y: number; z: number; rotation: number; ts: number } | null
   >(null);
+  // Map of the raid currently being played, from the raid-started log event.
+  // A ref because the position subscription (bound once) needs the live value.
+  const liveRaidMapIdRef = useRef<string | null>(null);
+  // Screenshot follow-cam settings.
+  const [followCenter, setFollowCenter] = useState<boolean>(
+    () => localStorage.getItem(FOLLOW_CENTER_KEY) !== '0',
+  );
+  const [followZoom, setFollowZoom] = useState<number>(() => {
+    const raw = Number(localStorage.getItem(FOLLOW_ZOOM_KEY));
+    return Number.isFinite(raw) && localStorage.getItem(FOLLOW_ZOOM_KEY) !== null
+      ? raw
+      : FOLLOW_ZOOM_DEFAULT;
+  });
+  const [floorLock, setFloorLock] = useState<boolean>(
+    () => localStorage.getItem(FLOOR_LOCK_KEY) === '1',
+  );
   // v0.5 POIs: tarkov.dev POI data indexed by map id, filter prefs, current
   // selection, and custom-marker placement mode.
   const [poisByMapId, setPoisByMapId] = useState<Record<string, Poi[]>>({});
@@ -156,6 +181,17 @@ function App() {
   useEffect(() => {
     localStorage.setItem(RAIL_SIDE_KEY, railSide);
   }, [railSide]);
+  useEffect(() => {
+    localStorage.setItem(FOLLOW_CENTER_KEY, followCenter ? '1' : '0');
+  }, [followCenter]);
+  useEffect(() => {
+    localStorage.setItem(FOLLOW_ZOOM_KEY, String(followZoom));
+  }, [followZoom]);
+  useEffect(() => {
+    localStorage.setItem(FLOOR_LOCK_KEY, floorLock ? '1' : '0');
+    // Locking the floor control means: always AUTO.
+    if (floorLock) setAutoFollowFloor(true);
+  }, [floorLock]);
 
   // Spine section clicks toggle the rail panel section (click the active
   // icon again to collapse the panel and give the map the full width).
@@ -278,11 +314,18 @@ function App() {
           const target = mapIdFromLogLocation(ev.location);
           if (target) setSelectedMapId(target);
         });
-        const u3 = await subscribeRaidStarted(() => {
+        const u3 = await subscribeRaidStarted((ev) => {
           setPlayerPos(null);
+          liveRaidMapIdRef.current = ev.location
+            ? mapIdFromLogLocation(ev.location) ?? null
+            : null;
         });
         const u4 = await subscribePlayerPosition((ev) => {
-          setPlayerPos(ev);
+          setPlayerPos({ ...ev, ts: Date.now() });
+          // Screenshot → make sure we're LOOKING at the raid's map. The
+          // follow-cam (FollowCamera) then centers if the user kept that on.
+          const liveMap = liveRaidMapIdRef.current;
+          if (liveMap) setSelectedMapId((cur) => (cur === liveMap ? cur : liveMap));
         });
         if (cancelled) {
           u1(); u2(); u3(); u4();
@@ -340,7 +383,10 @@ function App() {
     if (selectedMapId) localStorage.setItem(SELECTED_MAP_KEY, selectedMapId);
     setHoveredTaskId(null);
     setHoveredObjectiveId(null);
-    setActiveFloorId(ALL_FLOORS);
+    // Per-map opening floor (Interchange opens on Ground, not All).
+    setActiveFloorId(
+      (selectedMapId ? getMapDef(selectedMapId)?.defaultFloorId : undefined) ?? ALL_FLOORS,
+    );
     setAutoFollowFloor(true);
     setSelectedPoiId(null);
   }, [selectedMapId]);
@@ -737,6 +783,12 @@ function App() {
                       sharedQuestIds={sharedQuestIds}
                     />
                     <PlayerMarker position={playerPos} mapId={selectedMapId} />
+                    <FollowCamera
+                      mapId={selectedMapId}
+                      pos={playerPos}
+                      zoom={followZoom}
+                      enabled={followCenter}
+                    />
                     <SquadmateLayer mapId={selectedMapId} />
                     <PoiLayer
                       mapId={selectedMapId}
@@ -769,7 +821,7 @@ function App() {
                       onCommit={commitStroke}
                     />
                   </MapView>
-                  {selectedMapDef?.floors && selectedMapDef.floors.length > 0 && (
+                  {!floorLock && selectedMapDef?.floors && selectedMapDef.floors.length > 0 && (
                     <FloorSwitcher
                       floors={selectedMapDef.floors}
                       activeFloorId={activeFloorId}
@@ -805,6 +857,12 @@ function App() {
           onClose={() => setSettingsOpen(false)}
           railSide={railSide}
           onRailSideChange={setRailSide}
+          followCenter={followCenter}
+          onFollowCenterChange={setFollowCenter}
+          followZoom={followZoom}
+          onFollowZoomChange={setFollowZoom}
+          floorLock={floorLock}
+          onFloorLockChange={setFloorLock}
         />
       )}
       {onboardingOpen && (
@@ -814,6 +872,10 @@ function App() {
           onRailSideChange={setRailSide}
           onSyncLogs={handleReplayPastLogs}
           syncingLogs={replayingLogs}
+          followCenter={followCenter}
+          onFollowCenterChange={setFollowCenter}
+          followZoom={followZoom}
+          onFollowZoomChange={setFollowZoom}
         />
       )}
       {patchNotesOpen && (

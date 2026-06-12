@@ -3,13 +3,19 @@ import { invoke } from '@tauri-apps/api/core';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { getVersion } from '@tauri-apps/api/app';
 import { checkForUpdate, applyUpdate, type AvailableUpdate } from '../services/updater';
-import { Segmented, Modal, Button, SectionLabel } from '../ui';
+import { Segmented, Modal, Button, SectionLabel, Toggle, Slider } from '../ui';
 
 interface SettingsModalProps {
   onClose: () => void;
   onChanged?: (resolvedLogsDir: string) => void;
   railSide: 'left' | 'right';
   onRailSideChange: (side: 'left' | 'right') => void;
+  followCenter: boolean;
+  onFollowCenterChange: (on: boolean) => void;
+  followZoom: number;
+  onFollowZoomChange: (zoom: number) => void;
+  floorLock: boolean;
+  onFloorLockChange: (locked: boolean) => void;
 }
 
 export default function SettingsModal({
@@ -17,6 +23,12 @@ export default function SettingsModal({
   onChanged,
   railSide,
   onRailSideChange,
+  followCenter,
+  onFollowCenterChange,
+  followZoom,
+  onFollowZoomChange,
+  floorLock,
+  onFloorLockChange,
 }: SettingsModalProps): React.JSX.Element {
   const [installRoot, setInstallRoot] = useState<string | null>(null);
   const [resolvedLogsDir, setResolvedLogsDir] = useState<string | null>(null);
@@ -143,6 +155,46 @@ export default function SettingsModal({
           ]}
         />
 
+        <SectionLabel>On screenshot</SectionLabel>
+        <div className="settings-row">
+          <div className="settings-row__text">
+            <span>Jump to my position</span>
+            <span className="settings-row__hint">
+              Each screenshot re-centers the map on you (and switches to the raid's map).
+            </span>
+          </div>
+          <Toggle checked={followCenter} onChange={onFollowCenterChange} label="Jump to my position on screenshot" />
+        </div>
+        <div className="settings-row">
+          <div className="settings-row__text">
+            <span>Follow zoom</span>
+            <span className="settings-row__hint">How close the camera sits when it jumps.</span>
+          </div>
+          <div className="settings-row__control">
+            <Slider
+              label="Follow zoom level"
+              min={-1}
+              max={4}
+              step={0.5}
+              value={followZoom}
+              onChange={onFollowZoomChange}
+              disabled={!followCenter}
+              valueText={(followZoom >= 0 ? '+' : '') + followZoom.toFixed(1)}
+            />
+          </div>
+        </div>
+
+        <SectionLabel>Floors</SectionLabel>
+        <div className="settings-row">
+          <div className="settings-row__text">
+            <span>Automatic floors only</span>
+            <span className="settings-row__hint">
+              Hides the floor control; the map always tracks your floor (AUTO).
+            </span>
+          </div>
+          <Toggle checked={floorLock} onChange={onFloorLockChange} label="Automatic floors only" />
+        </div>
+
         <SectionLabel>EFT install folder</SectionLabel>
         {installRoot === null ? (
           <p className="muted">(auto-detect)</p>
@@ -175,6 +227,13 @@ export default function SettingsModal({
           )}
         </div>
         {updateMsg && <p className="muted">{updateMsg}</p>}
+
+        <SectionLabel>About</SectionLabel>
+        <p className="settings-credits">
+          Unofficial fan tool — not affiliated with Battlestate Games. Quest, map &
+          POI data by tarkov.dev · map rendering by Leaflet (BSD-2) · icons by
+          Phosphor (MIT).
+        </p>
       </div>
     </Modal>
   );

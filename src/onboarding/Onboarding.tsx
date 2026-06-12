@@ -20,7 +20,7 @@ import {
   XCircle,
   ClockCounterClockwise,
 } from "@phosphor-icons/react";
-import { Modal, Button, Kbd, Spinner } from "../ui";
+import { Modal, Button, Kbd, Spinner, Toggle, Slider } from "../ui";
 import type { RailSide } from "../App";
 import "./onboarding.css";
 
@@ -32,6 +32,10 @@ interface OnboardingProps {
   onRailSideChange: (side: RailSide) => void;
   onSyncLogs: () => void;
   syncingLogs: boolean;
+  followCenter: boolean;
+  onFollowCenterChange: (on: boolean) => void;
+  followZoom: number;
+  onFollowZoomChange: (zoom: number) => void;
 }
 
 const STEPS = ["welcome", "side", "folder", "position", "ready"] as const;
@@ -69,6 +73,10 @@ export default function Onboarding({
   onRailSideChange,
   onSyncLogs,
   syncingLogs,
+  followCenter,
+  onFollowCenterChange,
+  followZoom,
+  onFollowZoomChange,
 }: OnboardingProps) {
   const [step, setStep] = useState<Step>("welcome");
   const idx = STEPS.indexOf(step);
@@ -250,6 +258,37 @@ export default function Onboarding({
               <span className="ob-pos-arrow" />
               <span className="ob-pos-ring" />
             </div>
+            <div className="ob-follow">
+              <div className="ob-follow-row">
+                <div className="ob-follow-text">
+                  <strong>Jump to my position</strong>
+                  <span>Each screenshot switches to the raid's map and centers on you.</span>
+                </div>
+                <Toggle
+                  checked={followCenter}
+                  onChange={onFollowCenterChange}
+                  label="Jump to my position on screenshot"
+                />
+              </div>
+              <div className="ob-follow-row">
+                <div className="ob-follow-text">
+                  <strong>Follow zoom</strong>
+                  <span>How close the camera sits when it jumps.</span>
+                </div>
+                <div className="ob-follow-slider">
+                  <Slider
+                    label="Follow zoom level"
+                    min={-1}
+                    max={4}
+                    step={0.5}
+                    value={followZoom}
+                    onChange={onFollowZoomChange}
+                    disabled={!followCenter}
+                    valueText={(followZoom >= 0 ? "+" : "") + followZoom.toFixed(1)}
+                  />
+                </div>
+              </div>
+            </div>
             <p className="ob-hint">
               Each press saves a screenshot; Tarkov MoA reads the position instantly and deletes
               the file. Nothing piles up in your Documents.
@@ -262,8 +301,8 @@ export default function Onboarding({
             <h2 className="ob-step-title">You're set. The rail runs everything:</h2>
             <ul className="ob-tour">
               <li>
-                <MapTrifold weight="bold" /> <strong>Maps</strong> — switch maps; auto-follows
-                your raids
+                <MapTrifold weight="bold" /> <strong>Map picker</strong> — top of every panel;
+                raids switch it automatically
               </li>
               <li>
                 <Scroll weight="bold" /> <strong>Quests</strong> — what you can do on this map,
