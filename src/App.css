@@ -963,6 +963,29 @@ button.accent:hover:not(:disabled),
 .poi-toggle-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
 .poi-hint { margin: 8px 0 0; font-size: 11px; color: var(--text-muted); line-height: 1.4; }
 
+/* ===== Feedback modal ===== */
+.fb-body { display: flex; flex-direction: column; gap: var(--sp-3); }
+.fb-chips { display: flex; gap: var(--sp-2); }
+.fb-count {
+  flex: 1;
+  align-self: center;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--text-faint);
+}
+.fb-error { margin: 0; font-size: var(--fs-caption); color: var(--danger); }
+.fb-privacy { margin: 0; font-size: var(--fs-micro); color: var(--text-faint); }
+.fb-sent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-5) 0;
+  color: var(--live);
+  font-size: 40px;
+}
+.fb-sent p { margin: 0; font-size: var(--fs-body-lg); color: var(--text); }
+
 .tc-grid-svg { pointer-events: none; }
 .tc-grid-line { stroke: rgba(250, 250, 250, 0.18); stroke-width: 1; }
 .tc-grid-label { fill: rgba(250, 250, 250, 0.55); font-size: 11px; font-family: monospace; }

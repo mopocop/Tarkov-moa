@@ -37,6 +37,7 @@ import {
   recordActiveMembers,
   getStats,
 } from "./analytics.ts";
+import { handleFeedback } from "./feedback.ts";
 
 // A single inbound frame is hard-capped here; `ws` drops the socket before we
 // ever parse anything larger. Positions/quests/markers are tiny; the largest
@@ -269,6 +270,10 @@ export function startServer(
       if (url.pathname === "/health") {
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify({ ok: true }));
+        return;
+      }
+      if (url.pathname === "/feedback") {
+        handleFeedback(req, res);
         return;
       }
       if (url.pathname === "/stats") {

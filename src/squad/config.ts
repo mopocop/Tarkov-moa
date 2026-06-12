@@ -6,6 +6,10 @@ const env = (import.meta as unknown as { env?: Record<string, string | undefined
 
 export const RELAY_URL: string = env?.VITE_SQUAD_RELAY_URL ?? "ws://localhost:8787";
 
+// The relay also hosts the anonymous feedback intake over HTTP(S) — same host,
+// ws:// → http:// (and wss:// → https:// in production).
+export const FEEDBACK_URL: string = RELAY_URL.replace(/^ws/, "http") + "/feedback";
+
 // A squadmate's dot is only as fresh as their last in-game screenshot. Past this
 // age we visibly fade it; the SquadCard also shows a relative "last seen".
 export const POSITION_STALE_MS = 90_000;

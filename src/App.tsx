@@ -35,6 +35,7 @@ import { markQuestAccepted, markQuestComplete, markQuestFailed } from './state/l
 import SettingsModal from './components/SettingsModal';
 import Onboarding, { ONBOARDED_KEY } from './onboarding/Onboarding';
 import PatchNotesModal from './components/PatchNotesModal';
+import FeedbackModal from './feedback/FeedbackModal';
 import SquadSection from './squad/SquadSection';
 import SquadmateLayer from './map/SquadmateLayer';
 import { useSquad } from './squad/SquadContext';
@@ -109,6 +110,7 @@ function App() {
     () => !localStorage.getItem(ONBOARDED_KEY),
   );
   const [patchNotesOpen, setPatchNotesOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [replayingLogs, setReplayingLogs] = useState(false);
   const [availableUpdate, setAvailableUpdate] = useState<AvailableUpdate | null>(null);
   const [updating, setUpdating] = useState(false);
@@ -608,6 +610,7 @@ function App() {
           onUpdate={handleApplyUpdate}
           onSyncLogs={handleReplayPastLogs}
           syncingLogs={replayingLogs}
+          onFeedback={() => setFeedbackOpen(true)}
           onHowTo={() => setOnboardingOpen(true)}
           onSettings={() => setSettingsOpen(true)}
         />
@@ -790,6 +793,14 @@ function App() {
       )}
       {patchNotesOpen && (
         <PatchNotesModal onClose={() => setPatchNotesOpen(false)} />
+      )}
+      {feedbackOpen && (
+        <FeedbackModal
+          onClose={() => setFeedbackOpen(false)}
+          appVersion={appVersion}
+          activeMapId={selectedMapId}
+          squadActive={squad.inSquad}
+        />
       )}
     </div>
   );

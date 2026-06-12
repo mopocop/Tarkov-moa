@@ -14,6 +14,7 @@ import {
   TrashSimple,
   ArrowCircleUp,
   ClockCounterClockwise,
+  ChatTeardropText,
   Question,
   GearSix,
 } from '@phosphor-icons/react';
@@ -42,6 +43,7 @@ export interface SpineProps {
   onUpdate?: () => void;
   onSyncLogs: () => void;
   syncingLogs: boolean;
+  onFeedback: () => void;
   onHowTo: () => void;
   onSettings: () => void;
 }
@@ -98,6 +100,7 @@ export default function Spine({
   onUpdate,
   onSyncLogs,
   syncingLogs,
+  onFeedback,
   onHowTo,
   onSettings,
 }: SpineProps) {
@@ -185,6 +188,9 @@ export default function Spine({
         onClick={onSyncLogs}
       >
         <ClockCounterClockwise weight="regular" />
+      </SpineButton>
+      <SpineButton label="Send feedback" side={side} onClick={onFeedback}>
+        <ChatTeardropText weight="regular" />
       </SpineButton>
       <SpineButton label="How to use" side={side} onClick={onHowTo}>
         <Question weight="regular" />
