@@ -11,10 +11,14 @@ export interface FieldProps {
   className?: string;
 }
 
-/** Label + control + hint/error stack. Wrap any Input/Select/TextArea. */
+/** Label + control + hint/error stack. Wrap any Input/Select/TextArea.
+ *  The wrapper is a <div>, NOT a <label>: a label without htmlFor adopts its
+ *  first form control and browsers forward :hover/click to it — with multiple
+ *  controls inside (e.g. the squad color swatches) the first one lights up
+ *  whenever ANY part of the field is hovered. */
 export default function Field({ label, hint, error, children, className }: FieldProps) {
   return (
-    <label className={['ui-field', className].filter(Boolean).join(' ')}>
+    <div className={['ui-field', className].filter(Boolean).join(' ')}>
       {label && <span className="ui-field__label">{label}</span>}
       {children}
       {error ? (
@@ -22,6 +26,6 @@ export default function Field({ label, hint, error, children, className }: Field
       ) : (
         hint && <span className="ui-field__hint">{hint}</span>
       )}
-    </label>
+    </div>
   );
 }

@@ -1,5 +1,9 @@
 /* Base styles. All variables live in src/ui/tokens.css (FIELD GLASS). */
 
+/* Padding and borders count INSIDE declared widths — without this, every
+   `width: 100%` input overflows its container by its own padding. */
+*, *::before, *::after { box-sizing: border-box; }
+
 :root {
   font-family: var(--font-ui);
   font-size: var(--fs-body);

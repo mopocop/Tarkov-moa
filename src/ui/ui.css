@@ -355,7 +355,9 @@
 .ui-chip--sm { height: 20px; padding: 0 8px; font-size: var(--fs-micro); }
 
 /* ----------------------------------------------------------- Input/Select -- */
-.ui-input-wrap { position: relative; display: flex; align-items: center; width: 100%; }
+/* min-width: 0 lets the wrap shrink inside flex rows (e.g. squad join row)
+   instead of forcing a horizontal scrollbar. */
+.ui-input-wrap { position: relative; display: flex; align-items: center; width: 100%; min-width: 0; }
 .ui-input-wrap__icon {
   position: absolute;
   left: 10px;
