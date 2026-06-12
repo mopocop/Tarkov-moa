@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { getVersion } from '@tauri-apps/api/app';
 import { checkForUpdate, applyUpdate, type AvailableUpdate } from '../services/updater';
-import { Segmented } from '../ui';
+import { Segmented, Modal, Button, SectionLabel } from '../ui';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -126,60 +126,56 @@ export default function SettingsModal({
   }, [handleSetRoot]);
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Settings</h2>
-          <button onClick={onClose} aria-label="Close">×</button>
-        </div>
-        <div className="modal-body">
-          <h3>Control rail side</h3>
-          <p className="muted">
-            Put the rail on the side nearest your main monitor — left if this screen sits to the
-            right of it, right if it sits to the left.
-          </p>
-          <Segmented
-            fullWidth
-            value={railSide}
-            onChange={(v) => onRailSideChange(v as 'left' | 'right')}
-            options={[
-              { id: 'left', label: 'Left rail' },
-              { id: 'right', label: 'Right rail' },
-            ]}
-          />
+    <Modal title="Settings" onClose={onClose} size="md">
+      <div className="settings-body">
+        <SectionLabel>Control rail side</SectionLabel>
+        <p className="muted">
+          Put the rail on the side nearest your main monitor — left if this screen sits to the
+          right of it, right if it sits to the left.
+        </p>
+        <Segmented
+          fullWidth
+          value={railSide}
+          onChange={(v) => onRailSideChange(v as 'left' | 'right')}
+          options={[
+            { id: 'left', label: 'Left rail' },
+            { id: 'right', label: 'Right rail' },
+          ]}
+        />
 
-          <h3 style={{ marginTop: 16 }}>EFT install folder</h3>
-          {installRoot === null ? (
-            <p className="muted">(auto-detect)</p>
-          ) : (
-            <p><code>{installRoot}</code></p>
+        <SectionLabel>EFT install folder</SectionLabel>
+        {installRoot === null ? (
+          <p className="muted">(auto-detect)</p>
+        ) : (
+          <p><code>{installRoot}</code></p>
+        )}
+        {resolvedLogsDir ? (
+          <p className="settings-ok">Logs directory: <code>{resolvedLogsDir}</code> ✓</p>
+        ) : resolveError ? (
+          <p className="settings-err">✗ {resolveError}</p>
+        ) : null}
+        <div className="modal-actions">
+          <Button onClick={handleChangeFolder} disabled={busy}>Change folder…</Button>
+          <Button variant="tertiary" onClick={handleUseAutoDetect} disabled={busy}>
+            Use auto-detect
+          </Button>
+        </div>
+        {statusMsg && <p className="muted">{statusMsg}</p>}
+
+        <SectionLabel>App updates</SectionLabel>
+        <p className="muted">Current version: {appVersion ?? '—'}</p>
+        <div className="modal-actions">
+          <Button onClick={handleCheckUpdate} loading={checking} disabled={installing}>
+            Check for updates
+          </Button>
+          {foundUpdate && (
+            <Button variant="primary" onClick={handleInstallUpdate} loading={installing}>
+              Install & restart
+            </Button>
           )}
-          {resolvedLogsDir ? (
-            <p>Logs directory: <code>{resolvedLogsDir}</code> <span style={{ color: '#4ade80' }}>✓</span></p>
-          ) : resolveError ? (
-            <p className="error">✗ {resolveError}</p>
-          ) : null}
-          <div className="modal-actions">
-            <button onClick={handleChangeFolder} disabled={busy}>Change folder…</button>
-            <button onClick={handleUseAutoDetect} disabled={busy}>Use auto-detect</button>
-          </div>
-          {statusMsg && <p className="muted">{statusMsg}</p>}
-
-          <h3>App updates</h3>
-          <p className="muted">Current version: {appVersion ?? '—'}</p>
-          <div className="modal-actions">
-            <button onClick={handleCheckUpdate} disabled={checking || installing}>
-              {checking ? 'Checking…' : 'Check for updates'}
-            </button>
-            {foundUpdate && (
-              <button onClick={handleInstallUpdate} disabled={installing}>
-                {installing ? 'Installing…' : 'Install & restart'}
-              </button>
-            )}
-          </div>
-          {updateMsg && <p className="muted">{updateMsg}</p>}
         </div>
+        {updateMsg && <p className="muted">{updateMsg}</p>}
       </div>
-    </div>
+    </Modal>
   );
 }

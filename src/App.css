@@ -738,7 +738,15 @@ button.accent:hover:not(:disabled),
   display: flex;
   gap: 8px;
   margin-top: 12px;
+  margin-bottom: 12px;
 }
+
+.settings-body { display: flex; flex-direction: column; gap: 6px; padding-bottom: 4px; }
+.settings-body .ui-section-label { margin-top: 14px; }
+.settings-body .ui-section-label:first-child { margin-top: 0; }
+.settings-ok { color: var(--live); font-size: var(--fs-caption); }
+.settings-err { color: var(--danger); font-size: var(--fs-caption); }
+.settings-body code { background: var(--bg-sunken); padding: 2px 6px; border-radius: var(--r-sm); font-size: 0.85em; }
 
 /* ===== How-to-use guide modal ===== */
 .howto-card { max-width: 560px; }

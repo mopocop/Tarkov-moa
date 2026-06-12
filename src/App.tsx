@@ -33,7 +33,7 @@ import {
 import { mapIdFromLogLocation } from './map/logLocationMap';
 import { markQuestAccepted, markQuestComplete, markQuestFailed } from './state/localProgress';
 import SettingsModal from './components/SettingsModal';
-import HowToUseModal from './components/HowToUseModal';
+import Onboarding, { ONBOARDED_KEY } from './onboarding/Onboarding';
 import PatchNotesModal from './components/PatchNotesModal';
 import SquadSection from './squad/SquadSection';
 import SquadmateLayer from './map/SquadmateLayer';
@@ -103,9 +103,11 @@ function App() {
   const [floorCounts, setFloorCounts] = useState<Record<string, number>>({});
   const [toast, setToast] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // "How to use" guide opens on every launch (per design); also reopenable from
-  // the top bar.
-  const [howToOpen, setHowToOpen] = useState(true);
+  // Onboarding wizard: auto-opens on first run only (tc_onboarded_v1); the
+  // spine's Help button reopens it as the how-to guide.
+  const [onboardingOpen, setOnboardingOpen] = useState(
+    () => !localStorage.getItem(ONBOARDED_KEY),
+  );
   const [patchNotesOpen, setPatchNotesOpen] = useState(false);
   const [replayingLogs, setReplayingLogs] = useState(false);
   const [availableUpdate, setAvailableUpdate] = useState<AvailableUpdate | null>(null);
@@ -606,7 +608,7 @@ function App() {
           onUpdate={handleApplyUpdate}
           onSyncLogs={handleReplayPastLogs}
           syncingLogs={replayingLogs}
-          onHowTo={() => setHowToOpen(true)}
+          onHowTo={() => setOnboardingOpen(true)}
           onSettings={() => setSettingsOpen(true)}
         />
 
@@ -777,8 +779,14 @@ function App() {
           onRailSideChange={setRailSide}
         />
       )}
-      {howToOpen && (
-        <HowToUseModal onClose={() => setHowToOpen(false)} />
+      {onboardingOpen && (
+        <Onboarding
+          onClose={() => setOnboardingOpen(false)}
+          railSide={railSide}
+          onRailSideChange={setRailSide}
+          onSyncLogs={handleReplayPastLogs}
+          syncingLogs={replayingLogs}
+        />
       )}
       {patchNotesOpen && (
         <PatchNotesModal onClose={() => setPatchNotesOpen(false)} />
