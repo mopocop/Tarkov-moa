@@ -9,13 +9,14 @@ import L from "leaflet";
 import { getGameToLatLng, getMapDef } from "./MapView";
 import { useSquad, type MemberPosition } from "../squad/SquadContext";
 import { hexForColorId, type SquadMember } from "../../shared/squadProtocol";
-import { POSITION_STALE_MS } from "../squad/config";
 
 // Staleness is CONTINUOUS: the pointer's opacity eases down as the position
 // ages (fresh → ghost), driven by a --staleness custom property set on the
 // live DOM element — the icon itself is stable per name+color (no DOM swaps).
-const STALE_FADE_START_MS = 15_000; // fully solid until here
-const STALE_FADE_FULL_MS = POSITION_STALE_MS * 3; // ghost (min opacity) at 4.5min
+// Tuned per Moacir (2026-06-12): solid for 5s, then fade to the 30% ghost
+// floor by 30s — a squadmate pointer should read as outdated FAST.
+const STALE_FADE_START_MS = 5_000; // fully solid until here
+const STALE_FADE_FULL_MS = 30_000; // ghost (30% opacity, set in CSS) here
 
 function stalenessOf(ageMs: number): number {
   const t = (ageMs - STALE_FADE_START_MS) / (STALE_FADE_FULL_MS - STALE_FADE_START_MS);
@@ -90,11 +91,12 @@ export default function SquadmateLayer({ mapId }: { mapId: string }) {
   const toLatLng = getGameToLatLng(mapId);
   const mapRotation = getMapDef(mapId)?.rotation ?? 0;
 
-  // Tick so staleness fades update over time even without new messages. 5s
-  // steps + a slow CSS opacity transition read as a continuous fade.
+  // Tick so staleness fades update over time even without new messages. 2.5s
+  // steps + a matching CSS opacity transition read as a continuous fade over
+  // the (now short) 5s→30s ramp.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 5_000);
+    const t = setInterval(() => setNow(Date.now()), 2_500);
     return () => clearInterval(t);
   }, []);
 
