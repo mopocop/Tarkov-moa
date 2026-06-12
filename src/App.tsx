@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { UsersThree, PencilSimple, Eraser, TrashSimple } from '@phosphor-icons/react';
+import { ArrowsClockwise } from '@phosphor-icons/react';
 import './App.css';
+import './shell/shell.css';
 import { TarkovDevClient } from './api/tarkov-dev';
 import { deriveQuestState, type DerivedQuestState } from './quests/derive';
 import type { TarkovTask } from './api/types';
@@ -17,8 +18,8 @@ import FloorSwitcher, { ALL_FLOORS } from './map/FloorSwitcher';
 import { classifyMarker } from './map/floorClassify';
 import MapPicker from './components/MapPicker';
 import QuestSidebar from './components/QuestSidebar';
-import Spinner from './components/Spinner';
-import Toast from './components/Toast';
+import { Toast, IconButton, Spinner } from './ui';
+import Spine, { type RailSection } from './shell/Spine';
 import { useRelativeTime } from './hooks/useRelativeTime';
 import { resolveMapName } from './quests/mapNames';
 import {
@@ -67,6 +68,11 @@ import { facetDefaultOn } from './poi/facets';
 import type { Poi } from './poi/types';
 
 const SELECTED_MAP_KEY = 'tc_selected_map';
+// Which screen side the Operator Rail lives on. People run this app on a
+// secondary monitor — left rail suits a monitor right of the primary, and
+// vice versa. Chosen during onboarding, changeable in Settings.
+const RAIL_SIDE_KEY = 'tc_rail_side';
+export type RailSide = 'left' | 'right';
 
 // Stable empty array for the `objectives` prop fallback. A fresh `[]` literal
 // would change identity every render, invalidating MarkerLayer's classified/
@@ -113,7 +119,10 @@ function App() {
   const [poisByMapId, setPoisByMapId] = useState<Record<string, Poi[]>>({});
   const [filterState, setFilterState] = useState<PoiFilterState>(() => loadFilterState());
   const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
-  const [sidebarTab, setSidebarTab] = useState<'quests' | 'pois'>('quests');
+  const [railSide, setRailSide] = useState<RailSide>(() =>
+    localStorage.getItem(RAIL_SIDE_KEY) === 'right' ? 'right' : 'left',
+  );
+  const [railSection, setRailSection] = useState<RailSection | null>('quests');
   const [customPois, setCustomPois] = useState<Poi[]>(() => loadCustomPois());
   const relativeSynced = useRelativeTime(lastSynced);
   const squad = useSquad();
@@ -137,6 +146,21 @@ function App() {
   selectedMapIdRef.current = selectedMapId;
   const myDrawHexRef = useRef(myDrawHex);
   myDrawHexRef.current = myDrawHex;
+
+  // Persist the rail side whenever it changes.
+  useEffect(() => {
+    localStorage.setItem(RAIL_SIDE_KEY, railSide);
+  }, [railSide]);
+
+  // Spine section clicks: squad opens its panel (modal for now); the rest
+  // toggle the rail panel section (click the active icon again to collapse).
+  const handleToggleSection = useCallback((s: RailSection) => {
+    if (s === 'squad') {
+      setSquadOpen(true);
+      return;
+    }
+    setRailSection((cur) => (cur === s ? null : s));
+  }, []);
 
   const togglePin = useCallback(
     (kind: 'task' | 'objective', id: string) => {
@@ -536,149 +560,80 @@ function App() {
   return (
     <div className="app-container">
       <Toast message={toast} onDismiss={() => setToast(null)} />
-      <div className="main-section">
-        <div className="header">
-          <h1>Tarkov MoA{appVersion ? ` v${appVersion}` : ''}</h1>
-          <div className="header-meta">
-            {relativeSynced && (
-              <span className="synced">Synced {relativeSynced}</span>
-            )}
-            {availableUpdate && (
-              <button
-                className="update-btn"
-                onClick={handleApplyUpdate}
-                disabled={updating}
-                title={availableUpdate.notes ?? `Update to v${availableUpdate.version}`}
-              >
-                {updating ? 'Updating…' : `⬆ Update to v${availableUpdate.version}`}
-              </button>
-            )}
-            <button
-              className="btn-tertiary squad-toolbar-btn"
-              onClick={() => setSquadOpen(true)}
-              title="Squad Mode — share location with teammates"
-            >
-              <UsersThree weight="bold" /> Squad
-              {squad.inSquad && (
-                <span className="squad-toolbar-badge">{squad.members.length}</span>
+      <div className={`shell shell--${railSide}`}>
+        <Spine
+          side={railSide}
+          activeSection={railSection}
+          onToggleSection={handleToggleSection}
+          squadCount={squad.inSquad ? squad.members.length : undefined}
+          questCount={
+            questState && selectedMapId
+              ? questState.availableTasksByMap[selectedMapId]?.length ?? 0
+              : 0
+          }
+          drawTool={drawTool}
+          onDrawTool={setDrawTool}
+          drawColor={myDrawHex}
+          canDraw={!!selectedMapId}
+          canClearDraws={!!selectedMapId && ownDraws.some((d) => d.mapId === selectedMapId)}
+          onClearDraws={clearOwnDraws}
+          updateVersion={availableUpdate?.version ?? null}
+          updating={updating}
+          onUpdate={handleApplyUpdate}
+          onSyncLogs={handleReplayPastLogs}
+          syncingLogs={replayingLogs}
+          onHowTo={() => setHowToOpen(true)}
+          onSettings={() => setSettingsOpen(true)}
+        />
+
+        {railSection && (
+          <aside className="rail-panel">
+            <div className="rail-panel__header">
+              <h2 className="rail-panel__title">
+                {railSection === 'map' ? 'Maps' : railSection === 'quests' ? 'Quests' : 'Intel'}
+              </h2>
+              {railSection === 'quests' && (
+                <IconButton
+                  icon={loading ? <Spinner size="sm" /> : <ArrowsClockwise weight="bold" />}
+                  label="Refresh quest data"
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={loading}
+                />
               )}
-            </button>
-            <button
-              className={`btn-tertiary tc-tool-btn${drawTool === 'pen' ? ' active' : ''}`}
-              style={drawTool === 'pen' ? { color: myDrawHex } : undefined}
-              onClick={() => setDrawTool((t) => (t === 'pen' ? null : 'pen'))}
-              disabled={!selectedMapId}
-              title="Draw on the map — shared live with your squad"
-              aria-label="Draw"
-              aria-pressed={drawTool === 'pen'}
-            >
-              <PencilSimple weight="bold" />
-            </button>
-            <button
-              className={`btn-tertiary tc-tool-btn${drawTool === 'eraser' ? ' active' : ''}`}
-              onClick={() => setDrawTool((t) => (t === 'eraser' ? null : 'eraser'))}
-              disabled={!selectedMapId}
-              title="Eraser — click one of your drawings to delete it"
-              aria-label="Eraser"
-              aria-pressed={drawTool === 'eraser'}
-            >
-              <Eraser weight="bold" />
-            </button>
-            {selectedMapId && ownDraws.some((d) => d.mapId === selectedMapId) && (
-              <button
-                className="btn-tertiary tc-tool-btn"
-                onClick={clearOwnDraws}
-                title="Clear your drawings on this map"
-                aria-label="Clear drawings"
-              >
-                <TrashSimple weight="bold" />
-              </button>
-            )}
-            <button
-              className="btn-tertiary"
-              onClick={() => setPatchNotesOpen(true)}
-              title="What's new in this version"
-            >
-              Patch notes
-            </button>
-            <button
-              className="btn-tertiary"
-              onClick={() => setHowToOpen(true)}
-              title="How to use Tarkov MoA"
-            >
-              How to use
-            </button>
-            <button
-              className="btn-tertiary"
-              onClick={() => setSettingsOpen(true)}
-              title="Settings (EFT install folder, etc.)"
-            >
-              ⚙
-            </button>
-            <button
-              className="btn-tertiary"
-              onClick={handleReplayPastLogs}
-              disabled={loading || replayingLogs}
-              title="Re-process every EFT log file ever recorded. Useful on first launch."
-            >
-              {replayingLogs ? 'Syncing…' : 'Sync past logs'}
-            </button>
-            <button className="btn-primary" onClick={handleRefresh} disabled={loading}>
-              {loading && <Spinner />}
-              {loading ? 'Refreshing…' : 'Refresh'}
-            </button>
-          </div>
-        </div>
-
-        {error && <div className="error">{error}</div>}
-
-        {questState && (
-          <div className="workspace">
-            <aside className="sidebar">
-              <h3>Maps</h3>
-              <MapPicker
-                availableObjectivesByMap={questState.availableObjectivesByMap}
-                availableTasksByMap={questState.availableTasksByMap}
-                selectedMapId={selectedMapId}
-                onSelect={setSelectedMapId}
-              />
-              <SquadQuestSummary
-                selfQuestState={questState}
-                questStates={squadQuestStates}
-                selectedMapId={selectedMapId}
-                onSelect={setSelectedMapId}
-              />
-              <div className="sidebar-tabs">
-                <button
-                  className={sidebarTab === 'quests' ? 'active' : ''}
-                  onClick={() => setSidebarTab('quests')}
-                >
-                  Quests
-                </button>
-                <button
-                  className={sidebarTab === 'pois' ? 'active' : ''}
-                  onClick={() => setSidebarTab('pois')}
-                >
-                  Others
-                </button>
-              </div>
-              {sidebarTab === 'quests' ? (
+            </div>
+            <div className="rail-panel__body">
+              {!questState ? (
+                <p className="muted">{loading ? 'Loading quest data…' : 'No quest data yet.'}</p>
+              ) : railSection === 'map' ? (
                 <>
-                  <h3>On this map</h3>
-                  <QuestSidebar
-                    selectedMapId={selectedMapId}
-                    availableTasksByMap={questState.availableTasksByMap}
+                  <MapPicker
                     availableObjectivesByMap={questState.availableObjectivesByMap}
-                    anyLocation={questState.anyLocation}
-                    locked={questState.locked}
-                    hoveredTaskId={hoveredTaskId}
-                    onHoverTask={setHoveredTaskId}
-                    hoveredObjectiveId={hoveredObjectiveId}
-                    onHoverObjective={setHoveredObjectiveId}
-                    pinned={pinned}
-                    onTogglePin={togglePin}
+                    availableTasksByMap={questState.availableTasksByMap}
+                    selectedMapId={selectedMapId}
+                    onSelect={setSelectedMapId}
+                  />
+                  <SquadQuestSummary
+                    selfQuestState={questState}
+                    questStates={squadQuestStates}
+                    selectedMapId={selectedMapId}
+                    onSelect={setSelectedMapId}
                   />
                 </>
+              ) : railSection === 'quests' ? (
+                <QuestSidebar
+                  selectedMapId={selectedMapId}
+                  availableTasksByMap={questState.availableTasksByMap}
+                  availableObjectivesByMap={questState.availableObjectivesByMap}
+                  anyLocation={questState.anyLocation}
+                  locked={questState.locked}
+                  hoveredTaskId={hoveredTaskId}
+                  onHoverTask={setHoveredTaskId}
+                  hoveredObjectiveId={hoveredObjectiveId}
+                  onHoverObjective={setHoveredObjectiveId}
+                  pinned={pinned}
+                  onTogglePin={togglePin}
+                />
               ) : (
                 <PoiFilterPanel
                   pois={panelPois}
@@ -689,9 +644,27 @@ function App() {
                   onSaveDefault={handleSaveDefault}
                 />
               )}
-            </aside>
-            <section className="map-area">
-              {selectedMapId ? (
+            </div>
+            <div className="rail-panel__footer">
+              <button
+                className="rail-panel__version mono"
+                onClick={() => setPatchNotesOpen(true)}
+                title="What's new in this version"
+              >
+                {appVersion ? `v${appVersion}` : 'dev'}
+              </button>
+              {relativeSynced && <span>· synced {relativeSynced}</span>}
+              <span className="rail-panel__footer-spacer" />
+              <span title="Unofficial fan tool — not affiliated with Battlestate Games. Quest & map data: tarkov.dev">
+                unofficial · data tarkov.dev
+              </span>
+            </div>
+          </aside>
+        )}
+
+        <section className="map-stage map-area">
+              {error && <div className="shell-error">{error}</div>}
+              {selectedMapId && questState ? (
                 <>
                   <MapView mapId={selectedMapId} mapName={selectedMapName} activeFloorId={activeFloorId}>
                     {showOwnOnMap && (
@@ -754,14 +727,18 @@ function App() {
                   )}
                 </>
               ) : (
-                <div className="map-placeholder">Select a map</div>
+                <div className="map-placeholder">
+                  {!questState && loading ? <Spinner size="lg" /> : 'Select a map'}
+                </div>
               )}
-            </section>
-          </div>
-        )}
+        </section>
       </div>
       {settingsOpen && (
-        <SettingsModal onClose={() => setSettingsOpen(false)} />
+        <SettingsModal
+          onClose={() => setSettingsOpen(false)}
+          railSide={railSide}
+          onRailSideChange={setRailSide}
+        />
       )}
       {howToOpen && (
         <HowToUseModal onClose={() => setHowToOpen(false)} />

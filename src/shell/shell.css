@@ -1,0 +1,211 @@
+/* ============================================================================
+   Operator Rail — the single-side control shell (FIELD GLASS).
+   .shell--left  : spine | panel | map      (default)
+   .shell--right : map | panel | spine      (flex-direction: row-reverse)
+   All chrome lives on ONE side so the app works on a secondary monitor.
+   ========================================================================== */
+
+.shell {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.shell--right { flex-direction: row-reverse; }
+
+/* ------------------------------------------------------------------ spine -- */
+.spine {
+  flex: 0 0 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--sp-2) 0;
+  background: var(--bg-sunken);
+  border-right: 1px solid var(--border);
+  z-index: var(--z-rail);
+}
+.shell--right .spine { border-right: none; border-left: 1px solid var(--border); }
+
+.spine__mark {
+  width: 34px;
+  height: 34px;
+  margin-bottom: var(--sp-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  font-size: 22px;
+}
+
+.spine__btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 19px;
+  line-height: 0;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.spine__btn:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
+.spine__btn:active:not(:disabled) { transform: scale(0.92); }
+.spine__btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.spine__btn--active { color: var(--accent); background: var(--accent-soft); }
+/* active edge tick on the screen-edge side */
+.spine__btn--active::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 9px;
+  bottom: 9px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+.shell--right .spine__btn--active::before { left: auto; right: -5px; }
+
+.spine__badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: var(--r-pill);
+  background: var(--live);
+  color: var(--bg-sunken);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spine__spacer { flex: 1; }
+.spine__rule {
+  width: 22px;
+  height: 1px;
+  margin: var(--sp-1) 0;
+  background: var(--border);
+}
+
+/* update pill — brass, gently pulsing until clicked */
+.spine__btn--update { color: var(--accent); }
+.spine__btn--update::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--accent-glow);
+  animation: spine-pulse 2.2s var(--ease-in-out) infinite;
+  pointer-events: none;
+}
+@keyframes spine-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.85; }
+}
+
+/* ------------------------------------------------------------------ panel -- */
+.rail-panel {
+  flex: 0 0 324px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  background: var(--surface-1);
+  border-right: 1px solid var(--border);
+  animation: rail-panel-in-left var(--dur-slow) var(--ease-out);
+}
+.shell--right .rail-panel {
+  border-right: none;
+  border-left: 1px solid var(--border);
+  animation-name: rail-panel-in-right;
+}
+@keyframes rail-panel-in-left { from { opacity: 0; transform: translateX(-10px); } }
+@keyframes rail-panel-in-right { from { opacity: 0; transform: translateX(10px); } }
+
+.rail-panel__header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) var(--sp-2);
+}
+.rail-panel__title {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-display-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.rail-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--sp-4) var(--sp-4);
+}
+.rail-panel__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-micro);
+  color: var(--text-faint);
+}
+.rail-panel__footer .mono { font-family: var(--font-mono); }
+.rail-panel__footer-spacer { flex: 1; }
+.rail-panel__version {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--fs-micro);
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.rail-panel__version:hover { color: var(--accent); }
+
+/* Floor switcher docks to the rail side so all controls cluster together. */
+.shell--left .floor-switcher { left: 12px; right: auto; }
+
+/* ------------------------------------------------------------------- map -- */
+.map-stage {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  background: var(--bg-sunken);
+}
+.map-stage .leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: var(--bg-sunken);
+}
+
+/* error banner floats over the map, rail-side aligned */
+.shell-error {
+  position: absolute;
+  top: var(--sp-3);
+  left: var(--sp-3);
+  right: var(--sp-3);
+  z-index: var(--z-map-ui);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-body);
+  backdrop-filter: blur(4px);
+}

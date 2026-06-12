@@ -3,13 +3,21 @@ import { invoke } from '@tauri-apps/api/core';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { getVersion } from '@tauri-apps/api/app';
 import { checkForUpdate, applyUpdate, type AvailableUpdate } from '../services/updater';
+import { Segmented } from '../ui';
 
 interface SettingsModalProps {
   onClose: () => void;
   onChanged?: (resolvedLogsDir: string) => void;
+  railSide: 'left' | 'right';
+  onRailSideChange: (side: 'left' | 'right') => void;
 }
 
-export default function SettingsModal({ onClose, onChanged }: SettingsModalProps): React.JSX.Element {
+export default function SettingsModal({
+  onClose,
+  onChanged,
+  railSide,
+  onRailSideChange,
+}: SettingsModalProps): React.JSX.Element {
   const [installRoot, setInstallRoot] = useState<string | null>(null);
   const [resolvedLogsDir, setResolvedLogsDir] = useState<string | null>(null);
   const [resolveError, setResolveError] = useState<string | null>(null);
@@ -125,7 +133,22 @@ export default function SettingsModal({ onClose, onChanged }: SettingsModalProps
           <button onClick={onClose} aria-label="Close">×</button>
         </div>
         <div className="modal-body">
-          <h3>EFT install folder</h3>
+          <h3>Control rail side</h3>
+          <p className="muted">
+            Put the rail on the side nearest your main monitor — left if this screen sits to the
+            right of it, right if it sits to the left.
+          </p>
+          <Segmented
+            fullWidth
+            value={railSide}
+            onChange={(v) => onRailSideChange(v as 'left' | 'right')}
+            options={[
+              { id: 'left', label: 'Left rail' },
+              { id: 'right', label: 'Right rail' },
+            ]}
+          />
+
+          <h3 style={{ marginTop: 16 }}>EFT install folder</h3>
           {installRoot === null ? (
             <p className="muted">(auto-detect)</p>
           ) : (
