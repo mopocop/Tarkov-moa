@@ -1,46 +1,11 @@
+/* Base styles. All variables live in src/ui/tokens.css (FIELD GLASS). */
+
 :root {
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  /* ---- Binance-inspired theme tokens (see docs/design-notes.md) ---- */
-  /* Surfaces */
-  --bg: #0b0e11;            /* app canvas */
-  --bg-2: #181a20;          /* deeper wells (map gutter, inputs) */
-  --surface: #1e2329;       /* panels, cards, sidebar */
-  --surface-2: #2b3139;     /* elevated rows, hover, controls */
-  --border: #2b3139;        /* hairlines */
-  --border-strong: #3a424c; /* stronger dividers */
-
-  /* Accent (yellow — use scarcely: CTAs, active tab, grid-on) */
-  --accent: #fcd535;
-  --accent-active: #f0b90b;
-  --accent-soft: rgba(252, 213, 53, 0.14); /* tinted backgrounds */
-
-  /* Text */
-  --text: #eaecef;
-  --text-muted: #707a8a;
-  --text-strong: #ffffff;
-
-  /* Signal */
-  --up: #0ecb81;
-  --down: #f6465d;
-
-  /* Radius */
-  --r-sm: 4px;
-  --r-md: 6px;
-  --r-lg: 8px;
-  --r-xl: 12px;
-  --r-pill: 9999px;
-
-  /* Spacing scale */
-  --sp-xxs: 4px;
-  --sp-xs: 8px;
-  --sp-sm: 12px;
-  --sp-md: 16px;
-  --sp-lg: 24px;
-  --sp-xl: 32px;
 }
 
 html, body, #root {
@@ -58,4 +23,29 @@ body {
 #root {
   display: flex;
   flex-direction: column;
+}
+
+/* Machined scrollbars — slim, matte, no arrows. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--r-pill);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-track { background: transparent; }
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+/* Focus is brass, always visible for keyboard users, never for mouse. */
+:focus-visible {
+  outline: 2px solid var(--accent-glow);
+  outline-offset: 1px;
 }
