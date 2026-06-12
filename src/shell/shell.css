@@ -150,6 +150,13 @@
   text-transform: uppercase;
   color: var(--text);
 }
+/* Pinned map selector — the top-level choice, visible in every section. */
+.rail-panel__map {
+  padding: 0 var(--sp-4) var(--sp-3);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--sp-3);
+}
+
 .rail-panel__body {
   flex: 1;
   min-height: 0;

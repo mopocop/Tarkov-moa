@@ -78,6 +78,88 @@ button:disabled {
   font-style: italic;
 }
 
+/* ------- Deployment board (no map selected) ------- */
+
+.map-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-6);
+  overflow-y: auto;
+}
+.map-empty__mark { color: var(--accent); font-size: 46px; line-height: 0; opacity: 0.9; }
+.map-empty__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.map-empty__sub {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-body);
+  color: var(--text-dim);
+  max-width: 460px;
+  text-align: center;
+  line-height: 1.55;
+}
+.map-empty__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 780px;
+}
+.map-empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 14px 14px 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--edge);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.map-empty-card:hover {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  transform: translateY(-1px);
+}
+.map-empty-card:active { transform: translateY(0) scale(0.99); }
+.map-empty-card__name {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.map-empty-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+}
+.map-empty-card__meta svg { font-size: 14px; }
+.map-empty-card__quests { display: inline-flex; align-items: center; gap: 5px; color: var(--accent); }
+.map-empty-card__quests.zero { color: var(--text-faint); }
+.map-empty-card__squad { display: inline-flex; align-items: center; gap: 5px; color: var(--live); }
+.map-empty__hint { margin: var(--sp-2) 0 0; font-size: var(--fs-micro); color: var(--text-faint); }
+
 /* ------- Map picker ------- */
 
 .map-picker-select {

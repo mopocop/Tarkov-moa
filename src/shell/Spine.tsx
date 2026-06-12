@@ -5,7 +5,6 @@
 import type { ReactNode } from 'react';
 import {
   Crosshair,
-  MapTrifold,
   Scroll,
   Binoculars,
   UsersThree,
@@ -21,7 +20,9 @@ import {
 import { Tooltip } from '../ui';
 import type { DrawTool } from '../map/DrawLayer';
 
-export type RailSection = 'map' | 'quests' | 'intel' | 'squad';
+// The map is NOT a section: it's the top-level selection, pinned above every
+// section's panel body (see .rail-panel__map in App.tsx).
+export type RailSection = 'quests' | 'intel' | 'squad';
 
 export interface SpineProps {
   side: 'left' | 'right';
@@ -122,7 +123,6 @@ export default function Spine({
         <Crosshair weight="duotone" />
       </div>
 
-      {section('map', 'Maps', <MapTrifold weight={activeSection === 'map' ? 'fill' : 'regular'} />)}
       {section(
         'quests',
         'Quests on this map',

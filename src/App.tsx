@@ -16,7 +16,8 @@ import MarkerLayer from './map/MarkerLayer';
 import PlayerMarker from './map/PlayerMarker';
 import FloorSwitcher, { ALL_FLOORS } from './map/FloorSwitcher';
 import { classifyMarker } from './map/floorClassify';
-import MapPicker from './components/MapPicker';
+import MapPicker, { buildMapRows } from './components/MapPicker';
+import MapEmptyState from './components/MapEmptyState';
 import QuestSidebar from './components/QuestSidebar';
 import { Toast, IconButton, Spinner } from './ui';
 import Spine, { type RailSection } from './shell/Spine';
@@ -443,6 +444,28 @@ function App() {
     );
   }, [questState, selectedMapId]);
 
+  // Rows for the pinned map picker + the deployment-board empty state.
+  const mapRows = useMemo(
+    () =>
+      questState
+        ? buildMapRows(questState.availableObjectivesByMap, questState.availableTasksByMap)
+        : [],
+    [questState],
+  );
+
+  // Squadmates currently positioned per map (self excluded) — surfacing where
+  // the squad actually is on the deployment board.
+  const squadMapCounts = useMemo<Record<string, number>>(() => {
+    const out: Record<string, number> = {};
+    if (!squad.inSquad) return out;
+    for (const m of squad.members) {
+      if (m.id === squad.selfId) continue;
+      const pos = squad.positions[m.id];
+      if (pos) out[pos.payload.mapId] = (out[pos.payload.mapId] ?? 0) + 1;
+    }
+    return out;
+  }, [squad.inSquad, squad.members, squad.positions, squad.selfId]);
+
   // ---- POI derived state + filter handlers (v0.6 faceted) ----
   const currentPois = useMemo<Poi[]>(
     () => (selectedMapId ? poisByMapId[selectedMapId] ?? [] : []),
@@ -619,13 +642,7 @@ function App() {
           <aside className="rail-panel">
             <div className="rail-panel__header">
               <h2 className="rail-panel__title">
-                {railSection === 'map'
-                  ? 'Maps'
-                  : railSection === 'quests'
-                    ? 'Quests'
-                    : railSection === 'intel'
-                      ? 'Intel'
-                      : 'Squad'}
+                {railSection === 'quests' ? 'Quests' : railSection === 'intel' ? 'Intel' : 'Squad'}
               </h2>
               {railSection === 'quests' && (
                 <IconButton
@@ -637,19 +654,21 @@ function App() {
                 />
               )}
             </div>
+            {/* The map is the top-level selection — pinned above every section. */}
+            {questState && (
+              <div className="rail-panel__map">
+                <MapPicker
+                  availableObjectivesByMap={questState.availableObjectivesByMap}
+                  availableTasksByMap={questState.availableTasksByMap}
+                  selectedMapId={selectedMapId}
+                  onSelect={setSelectedMapId}
+                />
+              </div>
+            )}
             <div className="rail-panel__body">
               {railSection === 'squad' ? (
-                <SquadSection sharedQuestNames={sharedQuestNames} />
-              ) : !questState ? (
-                <p className="muted">{loading ? 'Loading quest data…' : 'No quest data yet.'}</p>
-              ) : railSection === 'map' ? (
                 <>
-                  <MapPicker
-                    availableObjectivesByMap={questState.availableObjectivesByMap}
-                    availableTasksByMap={questState.availableTasksByMap}
-                    selectedMapId={selectedMapId}
-                    onSelect={setSelectedMapId}
-                  />
+                  <SquadSection sharedQuestNames={sharedQuestNames} />
                   <SquadQuestSummary
                     selfQuestState={questState}
                     questStates={squadQuestStates}
@@ -657,6 +676,8 @@ function App() {
                     onSelect={setSelectedMapId}
                   />
                 </>
+              ) : !questState ? (
+                <p className="muted">{loading ? 'Loading quest data…' : 'No quest data yet.'}</p>
               ) : railSection === 'quests' ? (
                 <QuestSidebar
                   selectedMapId={selectedMapId}
@@ -768,10 +789,16 @@ function App() {
                     />
                   )}
                 </>
-              ) : (
+              ) : !questState ? (
                 <div className="map-placeholder">
-                  {!questState && loading ? <Spinner size="lg" /> : 'Select a map'}
+                  {loading ? <Spinner size="lg" /> : 'No quest data yet — check your connection.'}
                 </div>
+              ) : (
+                <MapEmptyState
+                  rows={mapRows}
+                  squadCounts={squadMapCounts}
+                  onSelect={setSelectedMapId}
+                />
               )}
         </section>
       </div>
