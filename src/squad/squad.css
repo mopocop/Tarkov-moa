@@ -161,15 +161,6 @@
 .squad-footer-row { display: flex; align-items: center; justify-content: space-between; }
 .squad-leave { color: #f6465d; }
 
-/* SVG stroke in eraser mode: signal it's clickable to delete. */
-.tc-draw-erasable {
-  cursor: pointer;
-}
-.tc-draw-erasable:hover {
-  stroke-opacity: 1;
-  stroke-width: 5;
-}
-
 /* ----- Roster: quest-visibility eye ----- */
 .squad-eye {
   background: none;

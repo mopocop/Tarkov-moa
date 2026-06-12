@@ -3,9 +3,10 @@
 // see it live, tinted by the author's squad color.
 //
 // Interaction model:
-//   - tool "pen":    map panning is OFF; press-drag-release draws one stroke.
-//   - tool "eraser":  panning stays ON; click one of YOUR strokes to delete it.
-//   - tool null:      no drawing; strokes (yours + teammates') just render.
+//   - tool "pen":  map panning is OFF; press-drag-release draws one stroke.
+//   - tool null:   no drawing; strokes (yours + teammates') just render.
+// Per-stroke erasing was removed (feedback round 1) — the only destructive
+// action is "clear all my drawings on this map" (App.clearOwnDraws).
 //
 // Coordinates: the map's custom CRS bakes in per-map rotation, so we convert at
 // the latLng edge only — game<->latLng is the trivial swap getGameToLatLng /
@@ -19,7 +20,7 @@ import { getGameToLatLng, getLatLngToGame } from "./MapView";
 import { useSquad } from "../squad/SquadContext";
 import { hexForColorId, type DrawPayload } from "../../shared/squadProtocol";
 
-export type DrawTool = "pen" | "eraser" | null;
+export type DrawTool = "pen" | null;
 
 type Pt = { x: number; z: number };
 
@@ -44,14 +45,12 @@ export default function DrawLayer({
   color,
   ownDraws,
   onCommit,
-  onErase,
 }: {
   mapId: string;
   tool: DrawTool;
   color: string; // hex for the local user's ink
   ownDraws: DrawPayload[];
   onCommit: (points: Pt[]) => void;
-  onErase: (id: string) => void;
 }) {
   const map = useMap();
   const squad = useSquad();
@@ -138,7 +137,6 @@ export default function DrawLayer({
 
   if (!toLatLng) return null;
 
-  const eraserOn = tool === "eraser";
   const render = (pts: Pt[]) =>
     pts.map((p) => toLatLng(p.x, p.z) as L.LatLngExpression);
 
@@ -162,23 +160,16 @@ export default function DrawLayer({
           ));
       })}
 
-      {/* Your strokes — clickable only while erasing (keyed so interactivity
-          actually toggles, since Leaflet bakes `interactive` at creation). */}
+      {/* Your strokes. */}
       {ownDraws
         .filter((d) => d.mapId === mapId && d.points.length >= 2)
         .map((d) => (
           <Polyline
-            key={`own:${d.id}:${eraserOn ? "e" : "n"}`}
+            key={`own:${d.id}`}
             positions={render(d.points)}
-            interactive={eraserOn}
+            interactive={false}
             pane={DRAW_PANE}
-            eventHandlers={eraserOn ? { click: () => onErase(d.id) } : undefined}
-            pathOptions={{
-              color,
-              weight: 3,
-              opacity: 0.9,
-              className: eraserOn ? "tc-draw-erasable" : undefined,
-            }}
+            pathOptions={{ color, weight: 3, opacity: 0.9 }}
           />
         ))}
 

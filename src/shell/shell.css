@@ -185,9 +185,10 @@
 }
 .rail-panel__version:hover { color: var(--accent); }
 
-/* Floor switcher + zoom dock dock to the rail side so all controls cluster. */
+/* Floor switcher + zoom/tools docks cluster on the rail side. */
 .shell--left .floor-switcher { left: 12px; right: auto; }
 .shell--left .tc-zoom-dock { left: 12px; right: auto; }
+.shell--left .tc-tools-dock { left: 12px; right: auto; }
 
 /* ------------------------------------------------------------------- map -- */
 .map-stage {

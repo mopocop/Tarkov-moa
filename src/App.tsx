@@ -48,6 +48,7 @@ import GridOverlay from './map/GridOverlay';
 import CustomMarkerLayer, { MapClickPlacer } from './map/CustomMarkerLayer';
 import SquadMarkerLayer from './map/SquadMarkerLayer';
 import DrawLayer, { type DrawTool, newDrawId } from './map/DrawLayer';
+import MapToolsDock from './map/MapToolsDock';
 import {
   loadCustomPois,
   saveCustomPois,
@@ -546,10 +547,6 @@ function App() {
     setOwnDraws((cur) => [...cur, payload]);
     if (squadRef.current.inSquad) squadRef.current.addDraw(payload);
   }, []);
-  const eraseStroke = useCallback((id: string) => {
-    setOwnDraws((cur) => cur.filter((d) => d.id !== id));
-    if (squadRef.current.inSquad) squadRef.current.removeDraw(id);
-  }, []);
   const clearOwnDraws = useCallback(() => {
     const mid = selectedMapIdRef.current;
     setOwnDraws((cur) => {
@@ -558,6 +555,7 @@ function App() {
       }
       return cur.filter((d) => d.mapId !== mid);
     });
+    setToast('Drawings cleared on this map.');
   }, []);
 
   const handleRefresh = async () => {
@@ -622,12 +620,6 @@ function App() {
               ? questState.availableTasksByMap[selectedMapId]?.length ?? 0
               : 0
           }
-          drawTool={drawTool}
-          onDrawTool={setDrawTool}
-          drawColor={myDrawHex}
-          canDraw={!!selectedMapId}
-          canClearDraws={!!selectedMapId && ownDraws.some((d) => d.mapId === selectedMapId)}
-          onClearDraws={clearOwnDraws}
           updateVersion={availableUpdate?.version ?? null}
           updating={updating}
           onUpdate={handleApplyUpdate}
@@ -713,8 +705,8 @@ function App() {
               </button>
               {relativeSynced && <span>· synced {relativeSynced}</span>}
               <span className="rail-panel__footer-spacer" />
-              <span title="Unofficial fan tool — not affiliated with Battlestate Games. Quest & map data: tarkov.dev">
-                unofficial · data tarkov.dev
+              <span title="Unofficial fan tool — not affiliated with Battlestate Games. Quest & map data: tarkov.dev · map engine: Leaflet (BSD-2)">
+                unofficial · tarkov.dev · Leaflet
               </span>
             </div>
           </aside>
@@ -775,7 +767,6 @@ function App() {
                       color={myDrawHex}
                       ownDraws={ownDraws}
                       onCommit={commitStroke}
-                      onErase={eraseStroke}
                     />
                   </MapView>
                   {selectedMapDef?.floors && selectedMapDef.floors.length > 0 && (
@@ -788,6 +779,13 @@ function App() {
                       onAuto={handleEnableAutoFloor}
                     />
                   )}
+                  <MapToolsDock
+                    tool={drawTool}
+                    onTool={setDrawTool}
+                    color={myDrawHex}
+                    canClear={ownDraws.some((d) => d.mapId === selectedMapId)}
+                    onClear={clearOwnDraws}
+                  />
                 </>
               ) : !questState ? (
                 <div className="map-placeholder">

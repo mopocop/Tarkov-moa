@@ -733,6 +733,9 @@ export default function MapView({
       markerZoomAnimation={true}
       // Zoom buttons are rendered by ZoomDock on the rail side instead.
       zoomControl={false}
+      // The "Leaflet" flag lives in the rail footer + Settings credits instead
+      // of floating over the map (BSD-2 license carried in the repo).
+      attributionControl={false}
     >
       {def.svgUrl.endsWith(".svg") ? (
         <FloorVisualOverlay

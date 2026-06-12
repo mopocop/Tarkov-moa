@@ -8,9 +8,6 @@ import {
   Scroll,
   Binoculars,
   UsersThree,
-  PencilSimple,
-  Eraser,
-  TrashSimple,
   ArrowCircleUp,
   ClockCounterClockwise,
   ChatTeardropText,
@@ -18,7 +15,6 @@ import {
   GearSix,
 } from '@phosphor-icons/react';
 import { Tooltip } from '../ui';
-import type { DrawTool } from '../map/DrawLayer';
 
 // The map is NOT a section: it's the top-level selection, pinned above every
 // section's panel body (see .rail-panel__map in App.tsx).
@@ -31,14 +27,7 @@ export interface SpineProps {
   squadCount?: number;
   /** Quest count for the selected map (badge on the Quests section). */
   questCount?: number;
-  // Draw tools
-  drawTool: DrawTool;
-  onDrawTool: (t: DrawTool) => void;
-  drawColor: string;
-  canDraw: boolean;
-  canClearDraws: boolean;
-  onClearDraws: () => void;
-  // Utilities
+  // Utilities (draw tools live in the on-map MapToolsDock now)
   updateVersion?: string | null;
   updating?: boolean;
   onUpdate?: () => void;
@@ -90,12 +79,6 @@ export default function Spine({
   onToggleSection,
   squadCount,
   questCount,
-  drawTool,
-  onDrawTool,
-  drawColor,
-  canDraw,
-  canClearDraws,
-  onClearDraws,
   updateVersion,
   updating,
   onUpdate,
@@ -139,33 +122,6 @@ export default function Spine({
         'Squad Mode',
         <UsersThree weight={activeSection === 'squad' ? 'fill' : 'regular'} />,
         squadCount,
-      )}
-
-      <div className="spine__rule" />
-
-      <SpineButton
-        label="Draw on the map — shared live with your squad"
-        side={side}
-        active={drawTool === 'pen'}
-        disabled={!canDraw}
-        onClick={() => onDrawTool(drawTool === 'pen' ? null : 'pen')}
-        style={drawTool === 'pen' ? { color: drawColor } : undefined}
-      >
-        <PencilSimple weight={drawTool === 'pen' ? 'fill' : 'regular'} />
-      </SpineButton>
-      <SpineButton
-        label="Eraser — click one of your drawings to delete it"
-        side={side}
-        active={drawTool === 'eraser'}
-        disabled={!canDraw}
-        onClick={() => onDrawTool(drawTool === 'eraser' ? null : 'eraser')}
-      >
-        <Eraser weight={drawTool === 'eraser' ? 'fill' : 'regular'} />
-      </SpineButton>
-      {canClearDraws && (
-        <SpineButton label="Clear your drawings on this map" side={side} onClick={onClearDraws}>
-          <TrashSimple weight="regular" />
-        </SpineButton>
       )}
 
       <div className="spine__spacer" />

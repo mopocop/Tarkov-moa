@@ -457,6 +457,48 @@ button:disabled {
 .tc-zoom-dock button:hover { background: var(--surface-3); color: var(--text); }
 .tc-zoom-dock button:active { transform: scale(0.9); }
 
+/* ------- Draw tools dock (pen + clear-all) — sits above the zoom dock ------- */
+
+.tc-tools-dock {
+  position: absolute;
+  bottom: 104px;
+  right: 12px;
+  z-index: var(--z-map-ui);
+  display: flex;
+  flex-direction: column;
+  padding: 3px;
+  gap: 2px;
+  background: rgba(26, 28, 23, 0.92);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--edge), var(--elev-2);
+}
+.tc-tools-dock button {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--r-md);
+  color: var(--text-dim);
+  font-size: 17px;
+  line-height: 0;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.tc-tools-dock button:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
+.tc-tools-dock button:active:not(:disabled) { transform: scale(0.9); }
+.tc-tools-dock button:disabled { opacity: 0.35; cursor: not-allowed; }
+/* pen engaged — brass well; icon color is the user's ink (inline style) */
+.tc-tools-dock button.active { background: var(--accent-soft); }
+
 /* ------- Player position marker (live signal) ------- */
 
 .tc-player-marker {
