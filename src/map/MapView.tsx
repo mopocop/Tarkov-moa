@@ -717,21 +717,20 @@ export default function MapView({
       inertia={false}
       minZoom={-3}
       maxZoom={7}
-      // Fractional zoom steps: each scroll notch changes zoom by 0.25 instead of
-      // a whole level, so the (animation-free) reflow is small and reads as a
-      // quick ease rather than a hard jump. Paired with a CSS transition on the
-      // map panes (.leaflet-map-pane/.leaflet-overlay-pane — see App.css).
+      // Fractional zoom steps: each scroll notch changes zoom by 0.25 instead
+      // of a whole level so a wheel gesture reads as a smooth ramp.
       zoomSnap={0.25}
       zoomDelta={0.25}
       wheelPxPerZoomLevel={120}
-      // Our custom CRS bakes a rotation into project/unproject. Leaflet's
-      // animated zoom interpolates layer positions with a CSS transform that
-      // assumes an un-rotated transform, so the map visibly drifts mid-zoom and
-      // snaps back on zoomend. Disabling zoom animation makes it reflow directly
-      // to the correct frame — no flicker. (markerZoomAnimation off for the same
-      // reason on the marker pane.)
-      zoomAnimation={false}
-      markerZoomAnimation={false}
+      // NATIVE animated zoom. Our CRS is affine (the rotation is applied inside
+      // projection.project, BEFORE the linear Transformation), so pixel coords
+      // at any two zooms differ by a uniform scale about a pivot — exactly the
+      // transform Leaflet's zoom animation applies. The historical "rotated CRS
+      // drifts" flicker was actually caused by hand-rolled CSS transitions on
+      // the overlay/markers (removed — see App.css note); with those gone the
+      // native animation is geometrically exact and markers ride along.
+      zoomAnimation={true}
+      markerZoomAnimation={true}
       // Zoom buttons are rendered by ZoomDock on the rail side instead.
       zoomControl={false}
     >
