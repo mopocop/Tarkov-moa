@@ -77,18 +77,6 @@
   margin: 0 0 6px;
 }
 
-.squad-input {
-  width: 100%;
-  box-sizing: border-box;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  color: var(--text-strong);
-  padding: 8px 10px;
-  font-size: 0.9rem;
-}
-.squad-input:focus { outline: 1px solid var(--up, #0ecb81); }
-
 .squad-swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
 .squad-swatch {
   width: 26px;
@@ -110,14 +98,7 @@
 
 .squad-hint { font-size: 0.75rem; color: var(--text); opacity: 0.6; margin: 6px 0 0; }
 
-.squad-block-btn { width: 100%; }
-
 .squad-join-row { display: flex; gap: 8px; }
-.squad-code-input {
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  font-family: monospace;
-}
 
 .squad-code {
   flex: 1;
@@ -179,26 +160,6 @@
 
 .squad-footer-row { display: flex; align-items: center; justify-content: space-between; }
 .squad-leave { color: #f6465d; }
-
-.squad-toolbar-btn { display: inline-flex; align-items: center; gap: 6px; }
-.squad-toolbar-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 8px;
-  background: #0ecb81;
-  color: #000;
-  font-size: 0.7rem;
-  font-weight: 700;
-}
-
-/* ----- Toolbar: drawing tools ----- */
-.tc-tool-btn.active {
-  box-shadow: inset 0 0 0 1px currentColor;
-}
 
 /* SVG stroke in eraser mode: signal it's clickable to delete. */
 .tc-draw-erasable {
