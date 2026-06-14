@@ -7,23 +7,23 @@
 // states are re-derived from their broadcast IDs (see squadQuests.ts).
 
 import type { DerivedQuestState } from "../quests/derive";
-import { SUPPORTED_MAP_NAMES } from "../map/MapView";
-import { useSquad } from "../squad/SquadContext";
+import { SUPPORTED_MAP_NAMES } from "../map/mapDefs";
+import { useSquad } from "../squad/useSquad";
 import { hexForColorId } from "../../shared/squadProtocol";
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   selfQuestState: DerivedQuestState | null;
   questStates: Record<string, DerivedQuestState>; // others, by member id
-  selectedMapId: string | null;
   onSelect: (mapId: string) => void;
 }
 
 export default function SquadQuestSummary({
   selfQuestState,
   questStates,
-  selectedMapId,
   onSelect,
 }: Props) {
+  const { t } = useTranslation();
   const squad = useSquad();
   if (!squad.inSquad) return null;
 
@@ -61,21 +61,25 @@ export default function SquadQuestSummary({
 
   return (
     <section className="squad-quest-summary">
-      <label className="squad-label">Squad quests by map</label>
+      <label className="squad-label">{t('quests.squadQuestsByMap')}</label>
       {rows.map((row) => (
         <button
           key={row.id}
           type="button"
-          className={`sqs-row${row.id === selectedMapId ? " active" : ""}`}
+          className="sqs-row"
           onClick={() => onSelect(row.id)}
-          title={`Show ${row.name}`}
+          title={t('mapEmpty.openMap', { name: row.name })}
         >
           <span className="sqs-map">{row.name}</span>
           <span className="sqs-chips">
             {row.chips.map((c) => (
-              <span key={c.id} className="sqs-chip" title={`${c.name}: ${c.count}`}>
-                <span className="squad-dot" style={{ background: c.hex }} />
-                {c.isSelf ? "You" : c.name} {c.count}
+              <span
+                key={c.id}
+                className="sqs-chip"
+                style={{ color: c.hex }}
+                title={`${c.isSelf ? t('squad.you') : c.name}: ${t('quests.questsWithCount', { count: c.count })}`}
+              >
+                {c.count}
               </span>
             ))}
           </span>

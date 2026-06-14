@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 export interface TooltipProps {
@@ -40,6 +40,24 @@ export default function Tooltip({ content, hint, children, side = 'top', delay =
     setPos(null);
   };
 
+  // A click (e.g. opening a modal) removes the element from under the cursor, so
+  // the mouseleave that would normally hide the tip never fires and it sticks.
+  // While a tip is up, dismiss it on any pointer-down, scroll, or window blur.
+  useEffect(() => {
+    if (!pos) return;
+    const dismiss = () => hide();
+    window.addEventListener('pointerdown', dismiss, true);
+    window.addEventListener('mousedown', dismiss, true);
+    window.addEventListener('scroll', dismiss, true);
+    window.addEventListener('blur', dismiss);
+    return () => {
+      window.removeEventListener('pointerdown', dismiss, true);
+      window.removeEventListener('mousedown', dismiss, true);
+      window.removeEventListener('scroll', dismiss, true);
+      window.removeEventListener('blur', dismiss);
+    };
+  }, [pos]);
+
   const transform =
     pos?.side === 'top' ? 'translate(-50%, -100%)'
     : pos?.side === 'bottom' ? 'translate(-50%, 0)'
@@ -54,6 +72,9 @@ export default function Tooltip({ content, hint, children, side = 'top', delay =
       onMouseLeave={hide}
       onFocus={show}
       onBlur={hide}
+      // Clicking the trigger cancels a still-pending tip too (click before the
+      // open delay elapsed) — otherwise it pops up over the modal you just opened.
+      onPointerDown={hide}
     >
       {children}
       {pos &&

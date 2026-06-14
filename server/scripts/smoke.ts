@@ -1,8 +1,6 @@
 import { WebSocket } from "ws";
 import { startServer } from "../src/index.ts";
 
-let failures = 0;
-
 function fail(reason: string): never {
   console.error(`FAIL: ${reason}`);
   process.exit(1);
@@ -34,6 +32,9 @@ function connectWs(url: string): Promise<WebSocket> {
   });
 }
 
+// Smoke-test envelopes carry arbitrary payload shapes; loose typing keeps the
+// assertion chain below terse without modelling every message variant.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function waitMessage(ws: WebSocket, timeoutMs = 2000): Promise<any> {
   return new Promise((res, rej) => {
     const timer = setTimeout(() => rej(new Error("timeout waiting for message")), timeoutMs);

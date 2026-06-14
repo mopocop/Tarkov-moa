@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ArrowsClockwise } from '@phosphor-icons/react';
+import { useTranslation } from 'react-i18next';
 import './App.css';
 import './shell/shell.css';
-import { TarkovDevClient } from './api/tarkov-dev';
+import { TarkovDevClient, type ApiLang } from './api/tarkov-dev';
+import { i18n } from './i18n';
 import { deriveQuestState, type DerivedQuestState } from './quests/derive';
 import type { TarkovTask } from './api/types';
 import {
@@ -11,12 +13,14 @@ import {
   toTrackerProgress,
   type LocalProgress,
 } from './state/localProgress';
-import MapView, { getMapDef, SUPPORTED_MAP_NAMES } from './map/MapView';
+import MapView from './map/MapView';
+import { getMapDef, SUPPORTED_MAP_NAMES } from './map/mapDefs';
 import MarkerLayer from './map/MarkerLayer';
 import PlayerMarker from './map/PlayerMarker';
 import FloorSwitcher, { ALL_FLOORS } from './map/FloorSwitcher';
 import { classifyMarker } from './map/floorClassify';
-import MapPicker, { buildMapRows } from './components/MapPicker';
+import MapPicker from './components/MapPicker';
+import { buildMapRows } from './components/mapRows';
 import MapEmptyState from './components/MapEmptyState';
 import QuestSidebar from './components/QuestSidebar';
 import { Toast, IconButton, Spinner } from './ui';
@@ -39,7 +43,7 @@ import PatchNotesModal from './components/PatchNotesModal';
 import FeedbackModal from './feedback/FeedbackModal';
 import SquadSection from './squad/SquadSection';
 import SquadmateLayer from './map/SquadmateLayer';
-import { useSquad } from './squad/SquadContext';
+import { useSquad } from './squad/useSquad';
 import { checkForUpdate, applyUpdate, type AvailableUpdate } from './services/updater';
 import { getVersion } from '@tauri-apps/api/app';
 import PoiLayer from './map/PoiLayer';
@@ -47,7 +51,8 @@ import PoiFilterPanel from './map/PoiFilterPanel';
 import GridOverlay from './map/GridOverlay';
 import CustomMarkerLayer, { MapClickPlacer } from './map/CustomMarkerLayer';
 import SquadMarkerLayer from './map/SquadMarkerLayer';
-import DrawLayer, { type DrawTool, newDrawId } from './map/DrawLayer';
+import DrawLayer, { type DrawTool } from './map/DrawLayer';
+import { newDrawId } from './map/drawId';
 import MapToolsDock from './map/MapToolsDock';
 import FollowCamera from './map/FollowCamera';
 import {
@@ -149,7 +154,9 @@ function App() {
   // selection, and custom-marker placement mode.
   const [poisByMapId, setPoisByMapId] = useState<Record<string, Poi[]>>({});
   const [filterState, setFilterState] = useState<PoiFilterState>(() => loadFilterState());
-  const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
+  // POIs highlight independently — several can be lit at once (like quest pins),
+  // not a single radio selection. Cleared on map change and by "Hide all".
+  const [selectedPoiIds, setSelectedPoiIds] = useState<Set<string>>(() => new Set());
   const [railSide, setRailSide] = useState<RailSide>(() =>
     localStorage.getItem(RAIL_SIDE_KEY) === 'right' ? 'right' : 'left',
   );
@@ -166,16 +173,25 @@ function App() {
   // ---- Drawing (Phase D) ----
   const [drawTool, setDrawTool] = useState<DrawTool>(null);
   const [ownDraws, setOwnDraws] = useState<DrawPayload[]>([]); // in-memory, session-only
-  // Local ink: your squad color if seated, else your saved pick, else neutral.
-  const myDrawHex = hexForColorId(squad.selfColorId ?? squad.identity.colorId ?? '');
+  // Local ink: your squad color if seated, else your saved pick, else brass.
+  // Picking a color in the Squad tab persists it immediately, so this updates
+  // your map ink live (no more grey-forever).
+  const myColorId = squad.selfColorId ?? squad.identity.colorId;
+  const myDrawHex = myColorId ? hexForColorId(myColorId) : '#c9a86a';
   // Refs let the stable marker/draw callbacks read fresh state without being
   // recreated — MapClickPlacer and DrawLayer bind their map handlers once.
+  // These refs are read only inside those (async) event handlers, never during
+  // render, so syncing them in an effect after each commit is safe.
   const squadRef = useRef(squad);
-  squadRef.current = squad;
   const selectedMapIdRef = useRef<string | null>(selectedMapId);
-  selectedMapIdRef.current = selectedMapId;
   const myDrawHexRef = useRef(myDrawHex);
-  myDrawHexRef.current = myDrawHex;
+  useEffect(() => {
+    squadRef.current = squad;
+    selectedMapIdRef.current = selectedMapId;
+    myDrawHexRef.current = myDrawHex;
+  });
+
+  const { t } = useTranslation();
 
   // Persist the rail side whenever it changes.
   useEffect(() => {
@@ -189,9 +205,14 @@ function App() {
   }, [followZoom]);
   useEffect(() => {
     localStorage.setItem(FLOOR_LOCK_KEY, floorLock ? '1' : '0');
-    // Locking the floor control means: always AUTO.
-    if (floorLock) setAutoFollowFloor(true);
   }, [floorLock]);
+
+  // Toggling the floor lock also resumes AUTO when locking, so the derived
+  // state change lives with the user action instead of cascading from an effect.
+  const handleFloorLockChange = useCallback((locked: boolean) => {
+    setFloorLock(locked);
+    if (locked) setAutoFollowFloor(true);
+  }, []);
 
   // Spine section clicks toggle the rail panel section (click the active
   // icon again to collapse the panel and give the map the full width).
@@ -232,7 +253,7 @@ function App() {
       setLoading(true);
       setError(null);
       try {
-        const devClient = new TarkovDevClient();
+        const devClient = new TarkovDevClient(i18n.language as ApiLang);
         const tasks = await devClient.getTasks();
         const next = deriveQuestState(toTrackerProgress(current), tasks);
         setQuestState(next);
@@ -240,7 +261,7 @@ function App() {
         pruneStaleSelections(next);
         setLastSynced(Date.now());
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load quest data');
+        setError(err instanceof Error ? err.message : t('errors.failedToLoadQuestData'));
       } finally {
         setLoading(false);
       }
@@ -248,8 +269,11 @@ function App() {
     [pruneStaleSelections],
   );
 
-  // Initial load.
+  // Initial load. This is the canonical "fetch from an external system on mount"
+  // effect — loadQuestData drives loading/error/result state as the request
+  // resolves, which is the intended use of an effect rather than a cascade.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadQuestData(progress);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -274,11 +298,27 @@ function App() {
   // Load tarkov.dev POI data once, in the background (non-blocking; 24h cached).
   // Swallow errors offline — quest data + map still work without POIs.
   useEffect(() => {
-    void new TarkovDevClient()
+    void new TarkovDevClient(i18n.language as ApiLang)
       .getMapPois()
       .then((maps) => setPoisByMapId(poisByMap(maps)))
       .catch((e) => console.warn('[POIs] load failed (offline?):', e));
   }, []);
+
+  // Re-fetch localized data when the UI language changes. tarkov.dev serves
+  // quest/POI/map names per-language, so a language switch must refresh both.
+  useEffect(() => {
+    const onLangChange = (): void => {
+      void loadQuestData(progress);
+      void new TarkovDevClient(i18n.language as ApiLang)
+        .getMapPois()
+        .then((maps) => setPoisByMapId(poisByMap(maps)))
+        .catch((e) => console.warn('[POIs] reload failed (offline?):', e));
+    };
+    i18n.on('languageChanged', onLangChange);
+    return () => {
+      i18n.off('languageChanged', onLangChange);
+    };
+  }, [loadQuestData, progress]);
 
   // POI filters are NOT auto-persisted — the user saves the current set as the
   // default explicitly (see handleSaveDefault / the "Save as default" button), so
@@ -344,14 +384,20 @@ function App() {
     };
   }, []);
 
-  // Re-derive quest state when progress changes (e.g. quest-event from log watcher).
+  // Re-derive quest state when progress changes (e.g. quest-event from log
+  // watcher). Like the initial load, this re-fetches from tarkov.dev and lets
+  // loadQuestData drive the resulting state — an external-system sync, not a
+  // render cascade.
   useEffect(() => {
     if (!questState) return; // initial load handles first derive
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadQuestData(progress);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress]);
 
-  // Resolve default selected map once questState arrives.
+  // Resolve default selected map once questState arrives. This corrects the
+  // selection in response to async quest data loading (an external system), so
+  // the setSelectedMapId calls below are an intended sync, not a cascade.
   useEffect(() => {
     if (!questState) return;
     const objsByMap = questState.availableObjectivesByMap;
@@ -366,6 +412,7 @@ function App() {
     if (allMapIds.length === 0) {
       // No active-quest map and nothing valid selected — leave whatever the
       // user picked (a supported map), else clear.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (!stored || !(stored in SUPPORTED_MAP_NAMES)) setSelectedMapId(null);
       return;
     }
@@ -379,8 +426,12 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questState]);
 
+  // When the selected map changes, reset the per-map view state (hover, floor,
+  // POI selection) to that map's defaults. These resets are the point of the
+  // effect — they intentionally re-sync dependent UI state to the new map.
   useEffect(() => {
     if (selectedMapId) localStorage.setItem(SELECTED_MAP_KEY, selectedMapId);
+    /* eslint-disable react-hooks/set-state-in-effect */
     setHoveredTaskId(null);
     setHoveredObjectiveId(null);
     // Per-map opening floor (Interchange opens on Ground, not All).
@@ -388,7 +439,8 @@ function App() {
       (selectedMapId ? getMapDef(selectedMapId)?.defaultFloorId : undefined) ?? ALL_FLOORS,
     );
     setAutoFollowFloor(true);
-    setSelectedPoiId(null);
+    setSelectedPoiIds(new Set());
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [selectedMapId]);
 
   const selectedMapDef = useMemo(
@@ -403,6 +455,8 @@ function App() {
     if (!autoFollowFloor) return;
     const floors = selectedMapDef?.floors;
     if (!floors || floors.length === 0 || !playerPos) return;
+    // Syncing the active floor to the live player position (external log feed).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveFloorId(classifyMarker(playerPos.x, playerPos.y, playerPos.z, floors));
   }, [autoFollowFloor, selectedMapDef, playerPos]);
 
@@ -561,7 +615,7 @@ function App() {
   // Persist the current filter set as the saved default (explicit — see button).
   const handleSaveDefault = useCallback(() => {
     saveFilterState(filterState);
-    setToast('Filters saved as default.');
+    setToast(t('common.filtersSavedAsDefault'));
   }, [filterState]);
 
   // ---- Custom markers ----
@@ -601,14 +655,14 @@ function App() {
       }
       return cur.filter((d) => d.mapId !== mid);
     });
-    setToast('Drawings cleared on this map.');
+    setToast(t('common.drawingsCleared'));
   }, []);
 
   const handleRefresh = async () => {
     setError(null);
     setLoading(true);
     try {
-      const devClient = new TarkovDevClient();
+      const devClient = new TarkovDevClient(i18n.language as ApiLang);
       const tasks = await devClient.getTasks();
       const next = deriveQuestState(toTrackerProgress(progress), tasks);
       setQuestState(next);
@@ -616,7 +670,7 @@ function App() {
       pruneStaleSelections(next);
       setLastSynced(Date.now());
     } catch (err) {
-      setToast(err instanceof Error ? err.message : 'Refresh failed');
+      setToast(err instanceof Error ? err.message : t('errors.refreshFailed'));
     } finally {
       setLoading(false);
     }
@@ -625,17 +679,17 @@ function App() {
   const handleApplyUpdate = useCallback(async () => {
     if (!availableUpdate) return;
     setUpdating(true);
-    setToast(`Downloading update v${availableUpdate.version}…`);
+    setToast(t('settings.downloadingUpdate', { version: availableUpdate.version }));
     try {
       await applyUpdate(availableUpdate.update, ({ downloaded, total }) => {
         if (total) {
           const pct = Math.round((downloaded / total) * 100);
-          setToast(`Downloading update v${availableUpdate.version}… ${pct}%`);
+          setToast(t('settings.downloadingUpdateProgress', { version: availableUpdate.version, pct }));
         }
       });
       // relaunch() inside applyUpdate restarts the app; code below only runs on failure.
     } catch (err) {
-      setToast(err instanceof Error ? err.message : 'Update failed');
+      setToast(err instanceof Error ? err.message : t('errors.updateFailed'));
       setUpdating(false);
     }
   }, [availableUpdate]);
@@ -644,9 +698,9 @@ function App() {
     setReplayingLogs(true);
     try {
       const count = await replayPastLogs();
-      setToast(`Replayed ${count} log file${count === 1 ? '' : 's'}. Quest list updating…`);
+      setToast(t('rail.replayedLogs', { count }));
     } catch (err) {
-      setToast(err instanceof Error ? err.message : 'Replay failed');
+      setToast(err instanceof Error ? err.message : t('errors.replayFailed'));
     } finally {
       setReplayingLogs(false);
     }
@@ -678,21 +732,8 @@ function App() {
 
         {railSection && (
           <aside className="rail-panel">
-            <div className="rail-panel__header">
-              <h2 className="rail-panel__title">
-                {railSection === 'quests' ? 'Quests' : railSection === 'intel' ? 'Intel' : 'Squad'}
-              </h2>
-              {railSection === 'quests' && (
-                <IconButton
-                  icon={loading ? <Spinner size="sm" /> : <ArrowsClockwise weight="bold" />}
-                  label="Refresh quest data"
-                  size="sm"
-                  onClick={handleRefresh}
-                  disabled={loading}
-                />
-              )}
-            </div>
-            {/* The map is the top-level selection — pinned above every section. */}
+            {/* The map is the top-level selection — it's universal across every
+                section, so it sits ABOVE the section title, divided from it. */}
             {questState && (
               <div className="rail-panel__map">
                 <MapPicker
@@ -703,6 +744,20 @@ function App() {
                 />
               </div>
             )}
+            <div className="rail-panel__header">
+              <h2 className="rail-panel__title">
+                {railSection === 'quests' ? t('rail.quests') : railSection === 'intel' ? t('rail.intel') : t('rail.squad')}
+              </h2>
+              {railSection === 'quests' && (
+                <IconButton
+                  icon={loading ? <Spinner size="sm" /> : <ArrowsClockwise weight="bold" />}
+                  label={t('rail.refreshQuests')}
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={loading}
+                />
+              )}
+            </div>
             <div className="rail-panel__body">
               {railSection === 'squad' ? (
                 <>
@@ -710,12 +765,11 @@ function App() {
                   <SquadQuestSummary
                     selfQuestState={questState}
                     questStates={squadQuestStates}
-                    selectedMapId={selectedMapId}
                     onSelect={setSelectedMapId}
                   />
                 </>
               ) : !questState ? (
-                <p className="muted">{loading ? 'Loading quest data…' : 'No quest data yet.'}</p>
+                <p className="muted">{loading ? t('common.loadingQuestData') : t('common.noQuestData')}</p>
               ) : railSection === 'quests' ? (
                 <QuestSidebar
                   selectedMapId={selectedMapId}
@@ -736,6 +790,7 @@ function App() {
                   state={filterState}
                   onToggleFacet={toggleFacet}
                   onSetAllFacets={setAllFacets}
+                  onHideAll={() => setSelectedPoiIds(new Set())}
                   onToggleGrid={toggleGrid}
                   onSaveDefault={handleSaveDefault}
                 />
@@ -745,15 +800,13 @@ function App() {
               <button
                 className="rail-panel__version mono"
                 onClick={() => setPatchNotesOpen(true)}
-                title="What's new in this version"
+                title={t('rail.whatsNew')}
               >
                 {appVersion ? `v${appVersion}` : 'dev'}
               </button>
-              {relativeSynced && <span>· synced {relativeSynced}</span>}
-              <span className="rail-panel__footer-spacer" />
-              <span title="Unofficial fan tool — not affiliated with Battlestate Games. Quest & map data: tarkov.dev · map engine: Leaflet (BSD-2)">
-                unofficial · tarkov.dev · Leaflet
-              </span>
+              {relativeSynced && <span>· {t('common.synced', { time: relativeSynced })}</span>}
+              {/* Attribution (tarkov.dev · Leaflet BSD-2 · Phosphor MIT) lives in
+                  Settings → About, so the footer stays a single clean line. */}
             </div>
           </aside>
         )}
@@ -794,11 +847,16 @@ function App() {
                       mapId={selectedMapId}
                       pois={currentPois}
                       isVisible={poiVisible}
-                      selectedPoiId={selectedPoiId}
+                      selectedPoiIds={selectedPoiIds}
                       floors={selectedMapDef?.floors}
                       activeFloorId={activeFloorId}
                       onSelect={(poi) =>
-                        setSelectedPoiId((cur) => (cur === poi.id ? null : poi.id))
+                        setSelectedPoiIds((cur) => {
+                          const next = new Set(cur);
+                          if (next.has(poi.id)) next.delete(poi.id);
+                          else next.add(poi.id);
+                          return next;
+                        })
                       }
                     />
                     <GridOverlay mapId={selectedMapId} visible={filterState.gridVisible} />
@@ -841,7 +899,7 @@ function App() {
                 </>
               ) : !questState ? (
                 <div className="map-placeholder">
-                  {loading ? <Spinner size="lg" /> : 'No quest data yet — check your connection.'}
+                  {loading ? <Spinner size="lg" /> : t('common.noQuestDataCheckConnection')}
                 </div>
               ) : (
                 <MapEmptyState
@@ -862,7 +920,7 @@ function App() {
           followZoom={followZoom}
           onFollowZoomChange={setFollowZoom}
           floorLock={floorLock}
-          onFloorLockChange={setFloorLock}
+          onFloorLockChange={handleFloorLockChange}
         />
       )}
       {onboardingOpen && (

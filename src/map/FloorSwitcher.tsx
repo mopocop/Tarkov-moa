@@ -1,5 +1,6 @@
 import React from "react";
 import { CrosshairSimple, Stack } from "@phosphor-icons/react";
+import { useTranslation } from "react-i18next";
 import type { MapFloor } from "./floorClassify";
 
 export const ALL_FLOORS = "all";
@@ -32,6 +33,7 @@ export default function FloorSwitcher({
   onSelect,
   onAuto,
 }: FloorSwitcherProps): React.JSX.Element | null {
+  const { t } = useTranslation();
   if (!floors || floors.length === 0) return null;
 
   const total = counts[ALL_FLOORS] ?? 0;
@@ -42,11 +44,11 @@ export default function FloorSwitcher({
         type="button"
         className={`floor-switcher-btn floor-switcher-auto${autoFollow ? " live" : ""}`}
         onClick={onAuto}
-        title="Follow my current floor automatically"
+        title={t('map.followCurrentFloor')}
         aria-pressed={autoFollow}
       >
         <CrosshairSimple weight="bold" />
-        <span>Auto</span>
+        <span>{t('common.auto')}</span>
         {autoFollow && <span className="floor-live-dot" />}
       </button>
       <div className="floor-switcher__rule" />
@@ -56,7 +58,7 @@ export default function FloorSwitcher({
         onClick={() => onSelect(ALL_FLOORS)}
       >
         <Stack weight="bold" />
-        <span>All</span>
+        <span>{t('map.allFloors')}</span>
         <span className="floor-count">{total}</span>
       </button>
       {floors.map((f) => {

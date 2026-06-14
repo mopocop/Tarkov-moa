@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from '@phosphor-icons/react';
+import { useTranslation } from 'react-i18next';
 import IconButton from './IconButton';
 
 export interface ModalProps {
@@ -24,6 +25,7 @@ export default function Modal({
   size = 'md',
   dismissable = true,
 }: ModalProps) {
+  const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,7 +55,7 @@ export default function Modal({
           <div className="ui-modal__header">
             {title && <h2 className="ui-modal__title">{title}</h2>}
             {dismissable && (
-              <IconButton icon={<X weight="bold" />} label="Close" size="sm" onClick={onClose} />
+              <IconButton icon={<X weight="bold" />} label={t('common.close')} size="sm" onClick={onClose} />
             )}
           </div>
         )}

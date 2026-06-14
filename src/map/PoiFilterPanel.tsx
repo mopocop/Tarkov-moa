@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Poi } from "../poi/types";
 import type { PoiFilterState } from "../poi/filterState";
 import { buildFacetGroups } from "../poi/facets";
@@ -10,6 +11,8 @@ interface PoiFilterPanelProps {
   state: PoiFilterState;
   onToggleFacet: (key: string) => void;
   onSetAllFacets: (keys: string[], on: boolean) => void;
+  /** Hide-all also clears any POI highlights (selection ≠ visibility). */
+  onHideAll?: () => void;
   onToggleGrid: () => void;
   onSaveDefault: () => void;
 }
@@ -19,9 +22,11 @@ export default function PoiFilterPanel({
   state,
   onToggleFacet,
   onSetAllFacets,
+  onHideAll,
   onToggleGrid,
   onSaveDefault,
 }: PoiFilterPanelProps): React.JSX.Element {
+  const { t } = useTranslation();
   const groups = useMemo(() => buildFacetGroups(pois), [pois]);
   const allKeys = useMemo(
     () => groups.flatMap((g) => g.facets.map((f) => f.key)),
@@ -36,8 +41,15 @@ export default function PoiFilterPanel({
   return (
     <div className="poi-panel">
       <div className="poi-bulk-actions">
-        <button onClick={() => onSetAllFacets(allKeys, true)}>Show all</button>
-        <button onClick={() => onSetAllFacets(allKeys, false)}>Hide all</button>
+        <button onClick={() => onSetAllFacets(allKeys, true)}>{t('common.showAll')}</button>
+        <button
+          onClick={() => {
+            onSetAllFacets(allKeys, false);
+            onHideAll?.();
+          }}
+        >
+          {t('common.hideAll')}
+        </button>
       </div>
 
       {groups.map((group) => {
@@ -61,7 +73,7 @@ export default function PoiFilterPanel({
                   const anyOn = group.facets.some((f) => isOn(f.key, f.defaultOn));
                   onSetAllFacets(groupKeys, !anyOn);
                 }}
-                title="Toggle all in this group"
+                title={t('map.toggleAllInGroup')}
               >
                 {total}
               </button>
@@ -93,15 +105,15 @@ export default function PoiFilterPanel({
 
       <div className="poi-map-options">
         <button className="poi-save-default" onClick={onSaveDefault}>
-          Save as default
+          {t('map.saveAsDefault')}
         </button>
         <button
           className={`poi-toggle-btn${state.gridVisible ? " active" : ""}`}
           onClick={onToggleGrid}
         >
-          Reference grid: {state.gridVisible ? "On" : "Off"}
+          {state.gridVisible ? t('map.referenceGridOn') : t('map.referenceGridOff')}
         </button>
-        <p className="poi-hint">Click the map to drop a marker · click a marker to remove it.</p>
+        <p className="poi-hint">{t('map.clickToDropMarker')}</p>
       </div>
     </div>
   );

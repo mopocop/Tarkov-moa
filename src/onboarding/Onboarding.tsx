@@ -19,8 +19,11 @@ import {
   CheckCircle,
   XCircle,
   ClockCounterClockwise,
+  Info,
 } from "@phosphor-icons/react";
-import { Modal, Button, Kbd, Spinner, Toggle, Slider } from "../ui";
+import { useTranslation } from "react-i18next";
+import { Modal, Button, Kbd, Spinner, Toggle, Slider, Select } from "../ui";
+import { SUPPORTED_LANGS, LANG_LABELS, changeLang, type Lang } from "../i18n";
 import type { RailSide } from "../App";
 import "./onboarding.css";
 
@@ -42,12 +45,12 @@ const STEPS = ["welcome", "side", "folder", "position", "ready"] as const;
 type Step = (typeof STEPS)[number];
 
 /** Mini monitor-pair diagram. The map screen carries a brass rail stripe. */
-function MonitorDiagram({ mapOnRight }: { mapOnRight: boolean }) {
-  const main = <div className="ob-mon ob-mon--main">main</div>;
+function MonitorDiagram({ mapOnRight, t }: { mapOnRight: boolean; t: (key: string) => string }) {
+  const main = <div className="ob-mon ob-mon--main">{t('onboarding.side.monitorMain')}</div>;
   const map = (
     <div className={`ob-mon ob-mon--map ob-mon--rail-${mapOnRight ? "left" : "right"}`}>
       <span className="ob-mon-rail" />
-      map
+      {t('onboarding.side.monitorMap')}
     </div>
   );
   return (
@@ -78,6 +81,7 @@ export default function Onboarding({
   followZoom,
   onFollowZoomChange,
 }: OnboardingProps) {
+  const { t, i18n } = useTranslation();
   const [step, setStep] = useState<Step>("welcome");
   const idx = STEPS.indexOf(step);
 
@@ -106,7 +110,10 @@ export default function Onboarding({
     }
   }, []);
 
+  // Fetch the EFT install/log status from the Tauri backend on mount; the result
+  // drives install/error state as it resolves (external-system sync).
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refreshStatus();
   }, [refreshStatus]);
 
@@ -114,13 +121,30 @@ export default function Onboarding({
     const chosen = await openDialog({
       directory: true,
       multiple: false,
-      title: "Select your Escape From Tarkov game folder",
+      title: t('onboarding.folder.dialogTitle', { gameName: 'Escape From Tarkov' }),
     });
     if (!chosen || Array.isArray(chosen)) return;
     setBusy(true);
     try {
       const dir = await invoke<string>("set_eft_install_root", { root: chosen });
       setInstallRoot(chosen);
+      setLogsDir(dir);
+      setFolderErr(null);
+    } catch (e: unknown) {
+      setFolderErr(e instanceof Error ? e.message : String(e));
+      setLogsDir(null);
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  // Re-run auto-detect (clears any manual override — same backend as Settings'
+  // "Use auto-detect"). Lets a user who picked the wrong folder fall back.
+  const useAutoDetect = useCallback(async () => {
+    setBusy(true);
+    try {
+      const dir = await invoke<string>("set_eft_install_root", { root: null });
+      setInstallRoot(null);
       setLogsDir(dir);
       setFolderErr(null);
     } catch (e: unknown) {
@@ -142,7 +166,7 @@ export default function Onboarding({
   const detected = !!logsDir;
 
   return (
-    <Modal size="md" onClose={finish} title={step === "welcome" ? undefined : "Setup"}>
+    <Modal size="md" onClose={finish} title={step === "welcome" ? undefined : t('onboarding.setupTitle')}>
       <div className="ob-root" data-step={step}>
         {step === "welcome" && (
           <div className="ob-scene ob-welcome">
@@ -150,28 +174,40 @@ export default function Onboarding({
               <Crosshair weight="duotone" />
             </div>
             <h1 className="ob-title">Tarkov MoA</h1>
+            <p className="ob-fullname">
+              Tarkov <b>M</b>ap <b>o</b>f <b>A</b>ction
+            </p>
             <p className="ob-tagline">
-              Your live quest map for Escape from Tarkov — objectives, extracts and your
-              real-time position on every map, synced straight from the game. No tabbing out,
-              no manual ticking.
+              {t('onboarding.welcome.tagline', { gameName: 'Escape from Tarkov' })}
             </p>
             <p className="ob-disclaimer">
-              Unofficial fan tool — not affiliated with Battlestate Games. Quest, map and POI
-              data by{" "}
+              {t('onboarding.welcome.disclaimerPrefix', { developerName: 'Battlestate Games' })}
               <a href="https://tarkov.dev" target="_blank" rel="noreferrer">
                 tarkov.dev
               </a>
-              .
+              {t('onboarding.welcome.disclaimerSuffix')}
             </p>
+            <div className="ob-lang">
+              <label htmlFor="ob-lang-select">{t('settings.language')}</label>
+              <Select
+                id="ob-lang-select"
+                aria-label={t('settings.language')}
+                value={i18n.language}
+                onChange={(e) => { void changeLang(e.target.value as Lang); }}
+              >
+                {SUPPORTED_LANGS.map((lng) => (
+                  <option key={lng} value={lng}>{LANG_LABELS[lng]}</option>
+                ))}
+              </Select>
+            </div>
           </div>
         )}
 
         {step === "side" && (
           <div className="ob-scene">
-            <h2 className="ob-step-title">Where is this screen?</h2>
+            <h2 className="ob-step-title">{t('onboarding.side.title')}</h2>
             <p className="ob-step-sub">
-              Most people run Tarkov MoA on a second monitor. Pick your arrangement and the
-              control rail will hug the edge nearest your main screen — applied instantly.
+              {t('onboarding.side.subtitle', { appName: 'Tarkov MoA' })}
             </p>
             <div className="ob-side-cards">
               <button
@@ -180,9 +216,9 @@ export default function Onboarding({
                 onClick={() => onRailSideChange("left")}
                 aria-pressed={railSide === "left"}
               >
-                <MonitorDiagram mapOnRight={true} />
-                <span className="ob-side-label">Map screen on the RIGHT</span>
-                <span className="ob-side-note">controls on the left edge</span>
+                <MonitorDiagram mapOnRight={true} t={t} />
+                <span className="ob-side-label">{t('onboarding.side.mapOnRight')}</span>
+                <span className="ob-side-note">{t('onboarding.side.controlsOnLeft')}</span>
               </button>
               <button
                 type="button"
@@ -190,28 +226,33 @@ export default function Onboarding({
                 onClick={() => onRailSideChange("right")}
                 aria-pressed={railSide === "right"}
               >
-                <MonitorDiagram mapOnRight={false} />
-                <span className="ob-side-label">Map screen on the LEFT</span>
-                <span className="ob-side-note">controls on the right edge</span>
+                <MonitorDiagram mapOnRight={false} t={t} />
+                <span className="ob-side-label">{t('onboarding.side.mapOnLeft')}</span>
+                <span className="ob-side-note">{t('onboarding.side.controlsOnRight')}</span>
               </button>
             </div>
-            <p className="ob-hint">You can change this any time in Settings.</p>
+            <p className="ob-hint">{t('onboarding.side.hint')}</p>
           </div>
         )}
 
         {step === "folder" && (
           <div className="ob-scene">
-            <h2 className="ob-step-title">Link your game folder</h2>
+            <h2 className="ob-step-title">{t('onboarding.folder.title')}</h2>
             <p className="ob-step-sub">
-              Tarkov MoA reads EFT's log files to track your quests automatically — accepted,
-              completed, failed — and to switch maps when a raid starts.
+              {t('onboarding.folder.subtitle', { appName: 'Tarkov MoA' })}
+            </p>
+            <p className="ob-limits">
+              <Info weight="fill" />
+              <span>
+                {t('onboarding.folder.limitsPrefix')}<b>{t('onboarding.folder.limitsBold')}</b>{t('onboarding.folder.limitsSuffix')}
+              </span>
             </p>
             {outsideTauri ? (
               <div className="ob-status">
                 <span className="ob-status-icon warn">
                   <XCircle weight="fill" />
                 </span>
-                Running in a browser — folder linking works in the desktop app.
+                {t('onboarding.folder.browserWarning')}
               </div>
             ) : detected ? (
               <div className="ob-status">
@@ -219,7 +260,7 @@ export default function Onboarding({
                   <CheckCircle weight="fill" />
                 </span>
                 <div>
-                  <strong>Game folder detected.</strong>
+                  <strong>{t('onboarding.folder.detected')}</strong>
                   <div className="ob-path">{installRoot ?? logsDir}</div>
                 </div>
               </div>
@@ -229,30 +270,33 @@ export default function Onboarding({
                   <XCircle weight="fill" />
                 </span>
                 <div>
-                  <strong>Not found.</strong>
-                  <div className="ob-path">{folderErr ?? "Auto-detect didn't find EFT."}</div>
+                  <strong>{t('onboarding.folder.notFound')}</strong>
+                  <div className="ob-path">{folderErr ?? t('onboarding.folder.autoDetectFailed')}</div>
                 </div>
               </div>
             )}
             {!outsideTauri && (
-              <Button onClick={pickFolder} loading={busy}>
-                {detected ? "Change folder…" : "Pick game folder…"}
-              </Button>
+              <div className="ob-folder-actions">
+                <Button onClick={pickFolder} loading={busy}>
+                  {detected ? t('onboarding.folder.changeFolder') : t('onboarding.folder.pickGameFolder')}
+                </Button>
+                <Button variant="tertiary" onClick={useAutoDetect} disabled={busy}>
+                  {t('onboarding.folder.autoDetect')}
+                </Button>
+              </div>
             )}
             <p className="ob-hint">
-              Find it via the EFT launcher: <em>Game settings → Browse local files</em>. Pick
-              the main folder (the one with the game's <code>.exe</code>).
+              {t('onboarding.folder.hintLauncher')} <em>{t('onboarding.folder.hintGameSettingsPath')}</em>. {t('onboarding.folder.hintPickFolder')} <code>.exe</code>).
             </p>
           </div>
         )}
 
         {step === "position" && (
           <div className="ob-scene">
-            <h2 className="ob-step-title">Live position on the map</h2>
+            <h2 className="ob-step-title">{t('onboarding.position.title')}</h2>
             <p className="ob-step-sub">
-              EFT hides your coordinates in screenshot filenames. Bind <strong>Screenshot</strong>{" "}
-              to a comfortable key in the game's settings — we recommend <Kbd>M</Kbd> — and tap
-              it in raid whenever you want your arrow to move.
+              {t('onboarding.position.subtitle1')}<strong>Screenshot</strong>{" "}
+              {t('onboarding.position.subtitle2')}<Kbd>M</Kbd>{t('onboarding.position.subtitle3')}
             </p>
             <div className="ob-pos-demo">
               <span className="ob-pos-arrow" />
@@ -261,23 +305,23 @@ export default function Onboarding({
             <div className="ob-follow">
               <div className="ob-follow-row">
                 <div className="ob-follow-text">
-                  <strong>Jump to my position</strong>
-                  <span>Each screenshot switches to the raid's map and centers on you.</span>
+                  <strong>{t('onboarding.position.jumpToPosition')}</strong>
+                  <span>{t('onboarding.position.jumpToPositionDesc')}</span>
                 </div>
                 <Toggle
                   checked={followCenter}
                   onChange={onFollowCenterChange}
-                  label="Jump to my position on screenshot"
+                  label={t('onboarding.position.jumpToPositionLabel')}
                 />
               </div>
               <div className="ob-follow-row">
                 <div className="ob-follow-text">
-                  <strong>Follow zoom</strong>
-                  <span>How close the camera sits when it jumps.</span>
+                  <strong>{t('onboarding.position.followZoom')}</strong>
+                  <span>{t('onboarding.position.followZoomDesc')}</span>
                 </div>
                 <div className="ob-follow-slider">
                   <Slider
-                    label="Follow zoom level"
+                    label={t('onboarding.position.followZoomLabel')}
                     min={-1}
                     max={4}
                     step={0.5}
@@ -290,35 +334,29 @@ export default function Onboarding({
               </div>
             </div>
             <p className="ob-hint">
-              Each press saves a screenshot; Tarkov MoA reads the position instantly and deletes
-              the file. Nothing piles up in your Documents.
+              {t('onboarding.position.hint', { appName: 'Tarkov MoA' })}
             </p>
           </div>
         )}
 
         {step === "ready" && (
           <div className="ob-scene">
-            <h2 className="ob-step-title">You're set. The rail runs everything:</h2>
+            <h2 className="ob-step-title">{t('onboarding.ready.title')}</h2>
             <ul className="ob-tour">
               <li>
-                <MapTrifold weight="bold" /> <strong>Map picker</strong> — top of every panel;
-                raids switch it automatically
+                <MapTrifold weight="bold" /> <strong>{t('onboarding.ready.mapPicker')}</strong> — {t('onboarding.ready.mapPickerDesc')}
               </li>
               <li>
-                <Scroll weight="bold" /> <strong>Quests</strong> — what you can do on this map,
-                live
+                <Scroll weight="bold" /> <strong>{t('onboarding.ready.quests')}</strong> — {t('onboarding.ready.questsDesc')}
               </li>
               <li>
-                <Binoculars weight="bold" /> <strong>Intel</strong> — extracts, spawns, loot
-                filters
+                <Binoculars weight="bold" /> <strong>{t('onboarding.ready.intel')}</strong> — {t('onboarding.ready.intelDesc')}
               </li>
               <li>
-                <UsersThree weight="bold" /> <strong>Squad</strong> — share live positions &
-                markers with friends
+                <UsersThree weight="bold" /> <strong>{t('onboarding.ready.squad')}</strong> — {t('onboarding.ready.squadDesc')}
               </li>
               <li>
-                <PencilSimple weight="bold" /> <strong>Draw</strong> — sketch routes; your squad
-                sees them live
+                <PencilSimple weight="bold" /> <strong>{t('onboarding.ready.draw')}</strong> — {t('onboarding.ready.drawDesc')}
               </li>
             </ul>
             <div className="ob-sync-row">
@@ -328,23 +366,22 @@ export default function Onboarding({
                 disabled={syncingLogs || outsideTauri}
                 onClick={onSyncLogs}
               >
-                {syncingLogs ? "Syncing…" : "Sync past logs now"}
+                {syncingLogs ? t('onboarding.ready.syncing') : t('onboarding.ready.syncNow')}
               </Button>
               <span className="ob-hint">
-                First time here? This replays your old EFT logs so your quest progress is
-                accurate immediately.
+                {t('onboarding.ready.syncHint')}
               </span>
             </div>
           </div>
         )}
 
         <div className="ob-footer">
-          <div className="ob-dots" role="tablist" aria-label="Setup progress">
+          <div className="ob-dots" role="tablist" aria-label={t('onboarding.progressLabel')}>
             {STEPS.map((s, i) => (
               <button
                 key={s}
                 className={`ob-dot${i === idx ? " active" : ""}`}
-                aria-label={`Step ${i + 1}`}
+                aria-label={t('onboarding.stepIndicator', { step: i + 1 })}
                 onClick={() => setStep(s)}
               />
             ))}
@@ -352,21 +389,21 @@ export default function Onboarding({
           <div className="ob-nav">
             {idx > 0 && (
               <Button variant="tertiary" onClick={back}>
-                Back
+                {t('onboarding.back')}
               </Button>
             )}
             {idx === 0 && (
               <Button variant="tertiary" onClick={finish}>
-                Skip
+                {t('onboarding.skip')}
               </Button>
             )}
             {idx < STEPS.length - 1 ? (
               <Button variant="primary" onClick={next}>
-                {step === "welcome" ? "Get started" : "Next"}
+                {step === "welcome" ? t('onboarding.getStarted') : t('onboarding.next')}
               </Button>
             ) : (
               <Button variant="primary" onClick={finish}>
-                Enter Tarkov MoA
+                {t('onboarding.enterApp', { appName: 'Tarkov MoA' })}
               </Button>
             )}
           </div>

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Marker } from 'react-leaflet';
 import L from 'leaflet';
-import { getGameToLatLng, getMapDef } from './MapView';
+import { getGameToLatLng, getMapDef } from './mapDefs';
 
 export interface PlayerMarkerProps {
   position: { x: number; y: number; z: number; rotation: number } | null;

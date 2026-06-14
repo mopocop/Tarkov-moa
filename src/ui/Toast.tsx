@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { CheckCircle, Info, WarningCircle, XCircle, X } from '@phosphor-icons/react';
+import { useTranslation } from 'react-i18next';
 import IconButton from './IconButton';
 
 export type ToastVariant = 'info' | 'success' | 'warn' | 'error';
@@ -21,6 +22,7 @@ const ICONS = {
 
 /** Bottom-center toast. Auto-dismisses; colored left edge per variant. */
 export default function Toast({ message, onDismiss, variant = 'info', duration = 6000 }: ToastProps) {
+  const { t } = useTranslation();
   useEffect(() => {
     if (!message || duration <= 0) return;
     const t = setTimeout(onDismiss, duration);
@@ -33,7 +35,7 @@ export default function Toast({ message, onDismiss, variant = 'info', duration =
     <div className={`ui-toast ui-toast--${variant}`} role="status">
       <span className="ui-toast__icon"><Icon weight="fill" /></span>
       <span className="ui-toast__msg">{message}</span>
-      <IconButton icon={<X weight="bold" />} label="Dismiss" size="sm" onClick={onDismiss} />
+      <IconButton icon={<X weight="bold" />} label={t('common.dismiss')} size="sm" onClick={onDismiss} />
     </div>
   );
 }

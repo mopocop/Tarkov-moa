@@ -1,6 +1,9 @@
 /* Onboarding wizard — FIELD GLASS. Scenes fade/rise on step change. */
 
-.ob-root { display: flex; flex-direction: column; min-height: 360px; }
+/* Fixed floor so the modal is the SAME height on every step — short steps get
+   extra breathing room rather than the dialog resizing as you click through.
+   Tuned to the tallest step (folder / position) so nothing ever scrolls. */
+.ob-root { display: flex; flex-direction: column; min-height: 460px; }
 
 .ob-scene {
   flex: 1;
@@ -30,6 +33,16 @@
   text-transform: uppercase;
   color: var(--text);
 }
+/* Full name spelled out — M, o, A in brass so the "MoA" mark reads clearly. */
+.ob-fullname {
+  margin: var(--sp-1) 0 var(--sp-2);
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.ob-fullname b { color: var(--accent); font-weight: 700; }
 .ob-tagline {
   margin: 0;
   max-width: 400px;
@@ -122,6 +135,25 @@
 .ob-status-icon.bad { color: var(--danger); }
 .ob-status-icon.warn { color: var(--warn); }
 .ob-path { color: var(--text-faint); margin-top: 2px; word-break: break-all; }
+.ob-folder-actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+
+/* Limitations caveat — what the auto-tracker does NOT cover. Warn-tinted rail,
+   calm not alarming. */
+.ob-limits {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  padding: 8px 10px;
+  background: var(--bg-sunken);
+  border-left: 2px solid var(--warn);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+.ob-limits svg { color: var(--warn); font-size: 15px; flex: 0 0 auto; margin-top: 1px; }
+.ob-limits b { color: var(--text); font-weight: 700; }
 
 /* ---- position demo: a little live arrow with ping ---- */
 .ob-pos-demo {
@@ -214,3 +246,18 @@
 .ob-follow-text strong { font-size: var(--fs-body); color: var(--text); font-weight: 600; }
 .ob-follow-text span { font-size: var(--fs-micro); color: var(--text-faint); }
 .ob-follow-slider { flex: 0 0 190px; }
+
+/* Language picker on the welcome scene */
+.ob-lang {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3, 12px);
+  margin-top: var(--sp-4, 16px);
+}
+.ob-lang label {
+  font-size: 13px;
+  color: var(--text-muted, #8a93a3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}

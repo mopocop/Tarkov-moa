@@ -9,8 +9,8 @@
 
 import { Marker, Tooltip } from "react-leaflet";
 import L from "leaflet";
-import { getGameToLatLng } from "./MapView";
-import { useSquad } from "../squad/SquadContext";
+import { getGameToLatLng } from "./mapDefs";
+import { useSquad } from "../squad/useSquad";
 import { hexForColorId } from "../../shared/squadProtocol";
 import { svgForFacet } from "../poi/registry";
 

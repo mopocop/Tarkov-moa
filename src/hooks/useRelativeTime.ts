@@ -12,14 +12,16 @@ function format(ms: number): string {
 }
 
 export function useRelativeTime(timestamp: number | null): string | null {
-  const [, tick] = useState(0);
+  // Hold "now" in state instead of reading Date.now() during render (which is
+  // impure). The interval advances it every 30s, re-rendering the label.
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (timestamp === null) return;
-    const id = setInterval(() => tick((n) => n + 1), 30_000);
+    const id = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(id);
   }, [timestamp]);
 
   if (timestamp === null) return null;
-  return format(Date.now() - timestamp);
+  return format(now - timestamp);
 }

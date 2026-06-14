@@ -4,7 +4,7 @@ import L from "leaflet";
 import type { Poi } from "../poi/types";
 import { svgForFacet, colorForFacet } from "../poi/registry";
 import { facetKeyOf } from "../poi/facets";
-import { getGameToLatLng } from "./MapView";
+import { getGameToLatLng } from "./mapDefs";
 import {
   classifyMarker,
   GROUND_FLOOR_ID,
@@ -30,7 +30,8 @@ export interface PoiLayerProps {
   mapId: string;
   pois: Poi[];
   isVisible: (poi: Poi) => boolean;
-  selectedPoiId?: string | null;
+  /** Ids of POIs currently highlighted — several at once, like quest pins. */
+  selectedPoiIds?: Set<string>;
   onSelect?: (poi: Poi) => void;
   onHover?: (poiId: string | null) => void;
   // Floor data + the active floor. When a specific floor is selected, POIs that
@@ -131,7 +132,7 @@ export default function PoiLayer({
   mapId,
   pois,
   isVisible,
-  selectedPoiId,
+  selectedPoiIds,
   onSelect,
   onHover,
   floors,
@@ -154,7 +155,7 @@ export default function PoiLayer({
           <PoiMarker
             key={poi.id}
             poi={poi}
-            highlighted={selectedPoiId === poi.id}
+            highlighted={selectedPoiIds?.has(poi.id) ?? false}
             offFloor={offFloor}
             latLng={toLatLng(poi.position.x, poi.position.z)}
             onHover={onHover}

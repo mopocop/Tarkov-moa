@@ -150,11 +150,11 @@
   text-transform: uppercase;
   color: var(--text);
 }
-/* Pinned map selector — the top-level choice, visible in every section. */
+/* Pinned map selector — the top-level choice, sits above the section title and
+   is separated from it by a full-width divider line. */
 .rail-panel__map {
-  padding: 0 var(--sp-4) var(--sp-3);
-  border-bottom: 1px solid var(--border);
-  margin-bottom: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .rail-panel__body {
@@ -175,15 +175,17 @@
 .rail-panel__footer .mono { font-family: var(--font-mono); }
 .rail-panel__footer-spacer { flex: 1; }
 .rail-panel__version {
-  background: none;
-  border: none;
-  padding: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 2px 9px;
   font-size: var(--fs-micro);
   color: var(--text-faint);
   cursor: pointer;
-  transition: color var(--dur-fast) var(--ease-out);
+  transition: color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
-.rail-panel__version:hover { color: var(--accent); }
+.rail-panel__version:hover { color: var(--accent); border-color: var(--border-strong); }
 
 /* Floor switcher + zoom/tools docks cluster on the rail side. */
 .shell--left .floor-switcher { left: 12px; right: auto; }

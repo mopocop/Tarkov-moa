@@ -3,7 +3,9 @@ import { invoke } from '@tauri-apps/api/core';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { getVersion } from '@tauri-apps/api/app';
 import { checkForUpdate, applyUpdate, type AvailableUpdate } from '../services/updater';
-import { Segmented, Modal, Button, SectionLabel, Toggle, Slider } from '../ui';
+import { useTranslation } from 'react-i18next';
+import { Segmented, Modal, Button, SectionLabel, Toggle, Slider, Select } from '../ui';
+import { SUPPORTED_LANGS, LANG_LABELS, changeLang, type Lang } from '../i18n';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -30,6 +32,7 @@ export default function SettingsModal({
   floorLock,
   onFloorLockChange,
 }: SettingsModalProps): React.JSX.Element {
+  const { t, i18n } = useTranslation();
   const [installRoot, setInstallRoot] = useState<string | null>(null);
   const [resolvedLogsDir, setResolvedLogsDir] = useState<string | null>(null);
   const [resolveError, setResolveError] = useState<string | null>(null);
@@ -81,29 +84,29 @@ export default function SettingsModal({
     const u = await checkForUpdate();
     if (u) {
       setFoundUpdate(u);
-      setUpdateMsg(`Update available: v${u.version}`);
+      setUpdateMsg(t('settings.updateAvailable', { version: u.version }));
     } else {
-      setUpdateMsg("You're up to date.");
+      setUpdateMsg(t('settings.upToDate'));
     }
     setChecking(false);
-  }, []);
+  }, [t]);
 
   const handleInstallUpdate = useCallback(async () => {
     if (!foundUpdate) return;
     setInstalling(true);
-    setUpdateMsg(`Downloading v${foundUpdate.version}…`);
+    setUpdateMsg(t('settings.downloadingUpdate', { version: foundUpdate.version }));
     try {
       await applyUpdate(foundUpdate.update, ({ downloaded, total }) => {
         if (total) {
-          setUpdateMsg(`Downloading v${foundUpdate.version}… ${Math.round((downloaded / total) * 100)}%`);
+          setUpdateMsg(t('settings.downloadingUpdateProgress', { version: foundUpdate.version, pct: Math.round((downloaded / total) * 100) }));
         }
       });
       // relaunch() restarts the app; only reached on failure.
     } catch (e) {
-      setUpdateMsg(e instanceof Error ? e.message : 'Update failed');
+      setUpdateMsg(e instanceof Error ? e.message : t('errors.updateFailed'));
       setInstalling(false);
     }
-  }, [foundUpdate]);
+  }, [foundUpdate, t]);
 
   const handleSetRoot = useCallback(
     async (root: string | null, msg: string) => {
@@ -128,51 +131,66 @@ export default function SettingsModal({
   );
 
   const handleChangeFolder = useCallback(async () => {
-    const chosen = await openDialog({ directory: true, multiple: false, title: 'Select EFT install folder' });
+    const chosen = await openDialog({ directory: true, multiple: false, title: t('settings.selectEftInstallFolder') });
     if (!chosen || Array.isArray(chosen)) return;
-    await handleSetRoot(chosen, 'EFT folder updated. Click Sync past logs to backfill quest history.');
+    await handleSetRoot(chosen, t('settings.eftFolderUpdated'));
   }, [handleSetRoot]);
 
   const handleUseAutoDetect = useCallback(async () => {
-    await handleSetRoot(null, 'Auto-detect re-enabled.');
+    await handleSetRoot(null, t('settings.autoDetectReEnabled'));
   }, [handleSetRoot]);
 
   return (
-    <Modal title="Settings" onClose={onClose} size="md">
+    <Modal title={t('settings.title')} onClose={onClose} size="md">
       <div className="settings-body">
-        <SectionLabel>Control rail side</SectionLabel>
-        <p className="muted">
-          Put the rail on the side nearest your main monitor — left if this screen sits to the
-          right of it, right if it sits to the left.
-        </p>
+        <SectionLabel>{t('settings.language')}</SectionLabel>
+        <div className="settings-row">
+          <div className="settings-row__text">
+            <span>{t('settings.language')}</span>
+            <span className="settings-row__hint">{t('settings.languageHint')}</span>
+          </div>
+          <div className="settings-row__control">
+            <Select
+              aria-label={t('settings.language')}
+              value={i18n.language}
+              onChange={(e) => { void changeLang(e.target.value as Lang); }}
+            >
+              {SUPPORTED_LANGS.map((lng) => (
+                <option key={lng} value={lng}>{LANG_LABELS[lng]}</option>
+              ))}
+            </Select>
+          </div>
+        </div>
+
+        <SectionLabel>{t('settings.controlRailSide')}</SectionLabel>
         <Segmented
           fullWidth
           value={railSide}
           onChange={(v) => onRailSideChange(v as 'left' | 'right')}
           options={[
-            { id: 'left', label: 'Left rail' },
-            { id: 'right', label: 'Right rail' },
+            { id: 'left', label: t('settings.leftRail') },
+            { id: 'right', label: t('settings.rightRail') },
           ]}
         />
 
-        <SectionLabel>On screenshot</SectionLabel>
+        <SectionLabel>{t('settings.onScreenshot')}</SectionLabel>
         <div className="settings-row">
           <div className="settings-row__text">
-            <span>Jump to my position</span>
+            <span>{t('settings.jumpToPosition')}</span>
             <span className="settings-row__hint">
-              Each screenshot re-centers the map on you (and switches to the raid's map).
+              {t('settings.jumpToPositionHint')}
             </span>
           </div>
-          <Toggle checked={followCenter} onChange={onFollowCenterChange} label="Jump to my position on screenshot" />
+          <Toggle checked={followCenter} onChange={onFollowCenterChange} label={t('settings.jumpToPositionLabel')} />
         </div>
         <div className="settings-row">
           <div className="settings-row__text">
-            <span>Follow zoom</span>
-            <span className="settings-row__hint">How close the camera sits when it jumps.</span>
+            <span>{t('settings.followZoom')}</span>
+            <span className="settings-row__hint">{t('settings.followZoomHint')}</span>
           </div>
           <div className="settings-row__control">
             <Slider
-              label="Follow zoom level"
+              label={t('settings.followZoomLabel')}
               min={-1}
               max={4}
               step={0.5}
@@ -184,55 +202,53 @@ export default function SettingsModal({
           </div>
         </div>
 
-        <SectionLabel>Floors</SectionLabel>
+        <SectionLabel>{t('settings.floors')}</SectionLabel>
         <div className="settings-row">
           <div className="settings-row__text">
-            <span>Automatic floors only</span>
+            <span>{t('settings.automaticFloorsOnly')}</span>
             <span className="settings-row__hint">
-              Hides the floor control; the map always tracks your floor (AUTO).
+              {t('settings.automaticFloorsOnlyHint')}
             </span>
           </div>
-          <Toggle checked={floorLock} onChange={onFloorLockChange} label="Automatic floors only" />
+          <Toggle checked={floorLock} onChange={onFloorLockChange} label={t('settings.automaticFloorsOnlyLabel')} />
         </div>
 
-        <SectionLabel>EFT install folder</SectionLabel>
+        <SectionLabel>{t('settings.eftInstallFolder')}</SectionLabel>
         {installRoot === null ? (
-          <p className="muted">(auto-detect)</p>
+          <p className="muted">{t('settings.autoDetect')}</p>
         ) : (
           <p><code>{installRoot}</code></p>
         )}
         {resolvedLogsDir ? (
-          <p className="settings-ok">Logs directory: <code>{resolvedLogsDir}</code> ✓</p>
+          <p className="settings-ok">{t('settings.logsDirectory')}: <code>{resolvedLogsDir}</code> ✓</p>
         ) : resolveError ? (
           <p className="settings-err">✗ {resolveError}</p>
         ) : null}
         <div className="modal-actions">
-          <Button onClick={handleChangeFolder} disabled={busy}>Change folder…</Button>
+          <Button onClick={handleChangeFolder} disabled={busy}>{t('settings.changeFolder')}</Button>
           <Button variant="tertiary" onClick={handleUseAutoDetect} disabled={busy}>
-            Use auto-detect
+            {t('settings.useAutoDetect')}
           </Button>
         </div>
         {statusMsg && <p className="muted">{statusMsg}</p>}
 
-        <SectionLabel>App updates</SectionLabel>
-        <p className="muted">Current version: {appVersion ?? '—'}</p>
+        <SectionLabel>{t('settings.appUpdates')}</SectionLabel>
+        <p className="muted">{t('settings.currentVersion', { version: appVersion ?? '—' })}</p>
         <div className="modal-actions">
           <Button onClick={handleCheckUpdate} loading={checking} disabled={installing}>
-            Check for updates
+            {t('settings.checkForUpdates')}
           </Button>
           {foundUpdate && (
             <Button variant="primary" onClick={handleInstallUpdate} loading={installing}>
-              Install & restart
+              {t('settings.installAndRestart')}
             </Button>
           )}
         </div>
         {updateMsg && <p className="muted">{updateMsg}</p>}
 
-        <SectionLabel>About</SectionLabel>
+        <SectionLabel>{t('settings.about')}</SectionLabel>
         <p className="settings-credits">
-          Unofficial fan tool — not affiliated with Battlestate Games. Quest, map &
-          POI data by tarkov.dev · map rendering by Leaflet (BSD-2) · icons by
-          Phosphor (MIT).
+          {t('settings.credits')}
         </p>
       </div>
     </Modal>

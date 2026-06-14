@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import type { TarkovTask } from "../api/types";
 import type { DerivedQuestState } from "../quests/derive";
 
@@ -29,8 +30,11 @@ export default function QuestSidebar({
   pinned,
   onTogglePin,
 }: QuestSidebarProps): React.JSX.Element {
+  const { t } = useTranslation();
   const [lockedOpen, setLockedOpen] = useState(false);
-  const [anyOpen, setAnyOpen] = useState(false);
+  // "Any Location" quests are broadly useful (kill/collect tasks not tied to one
+  // map), so the group opens expanded by default — locked stays collapsed.
+  const [anyOpen, setAnyOpen] = useState(true);
   const objectiveRowRefs = useRef<Map<string, HTMLLIElement>>(new Map());
   const taskRowRefs = useRef<Map<string, HTMLLIElement>>(new Map());
 
@@ -112,12 +116,12 @@ export default function QuestSidebar({
         <div
           className={`quest-head${canPinTask ? " clickable" : ""}`}
           onClick={() => canPinTask && onTogglePin('task', task.id)}
-          title={canPinTask ? (taskPinned ? "Click to unpin" : "Click to pin") : undefined}
+          title={canPinTask ? (taskPinned ? t('quests.clickToUnpin') : t('quests.clickToPin')) : undefined}
         >
           <strong>{task.name}</strong>
           {task.trader && <span className="trader"> — {task.trader.name}</span>}
-          {noPoi && <span className="no-poi"> (no specific POI)</span>}
-          {taskPinned && <span className="pin-tag">pinned</span>}
+          {noPoi && <span className="no-poi"> {t('quests.noSpecificPoi')}</span>}
+          {taskPinned && <span className="pin-tag">{t('quests.pinned')}</span>}
         </div>
         {task.objectives && task.objectives.length > 0 && (
           <ul className="objectives">
@@ -140,10 +144,10 @@ export default function QuestSidebar({
                     e.stopPropagation();
                     onTogglePin('objective', obj.id);
                   }}
-                  title={hasPos ? (objPinned ? "Click to unpin" : "Click to pin") : undefined}
+                  title={hasPos ? (objPinned ? t('quests.clickToUnpin') : t('quests.clickToPin')) : undefined}
                 >
                   {obj.description ?? obj.type}
-                  {objPinned && <span className="pin-tag">pinned</span>}
+                  {objPinned && <span className="pin-tag">{t('quests.pinned')}</span>}
                 </li>
               );
             })}
@@ -156,7 +160,7 @@ export default function QuestSidebar({
   return (
     <div className="quest-sidebar">
       {tasks.length === 0 ? (
-        <p className="muted">No active quests on this map.</p>
+        <p className="muted">{t('quests.noActiveQuestsOnMap')}</p>
       ) : (
         <ul className="quest-list">{tasks.map(renderTask)}</ul>
       )}
@@ -168,7 +172,7 @@ export default function QuestSidebar({
             className="locked-toggle"
             onClick={() => setAnyOpen((v) => !v)}
           >
-            {anyOpen ? "Hide" : "Show"} Any Location ({anyLocation.length})
+            {anyOpen ? t('common.hide') : t('common.show')} {t('quests.anyLocation')} ({anyLocation.length})
           </button>
           {anyOpen && (
             <ul className="quest-list">{anyLocation.map(renderTask)}</ul>
@@ -183,7 +187,7 @@ export default function QuestSidebar({
             className="locked-toggle"
             onClick={() => setLockedOpen((v) => !v)}
           >
-            {lockedOpen ? "Hide" : "Show"} locked ({lockedForMap.length})
+            {lockedOpen ? t('common.hide') : t('common.show')} {t('quests.locked')} ({lockedForMap.length})
           </button>
           {lockedOpen && (
             <ul className="locked-list">

@@ -6,8 +6,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Marker } from "react-leaflet";
 import L from "leaflet";
-import { getGameToLatLng, getMapDef } from "./MapView";
-import { useSquad, type MemberPosition } from "../squad/SquadContext";
+import { getGameToLatLng, getMapDef } from "./mapDefs";
+import { useSquad } from "../squad/useSquad";
+import type { MemberPosition } from "../squad/SquadContext";
 import { hexForColorId, type SquadMember } from "../../shared/squadProtocol";
 
 // Staleness is CONTINUOUS: the pointer's opacity eases down as the position
@@ -29,6 +30,7 @@ function makeIcon(name: string, hex: string): L.DivIcon {
     className: "tc-squadmate-marker",
     html:
       `<div class="tc-squadmate" style="--c:${hex}">` +
+      `<div class="tc-squadmate-ping"></div>` +
       `<div class="tc-squadmate-arrow">` +
       `<svg viewBox="0 0 24 24"><path d="M12 2.2 20.8 21.2 12 16.4 3.2 21.2Z"/></svg>` +
       `</div>` +
@@ -65,11 +67,34 @@ function SquadmateMarker({
     if (arrow) arrow.style.transform = `rotate(${pos.payload.rotation + mapRotation}deg)`;
   }, [pos.payload.rotation, mapRotation, icon]);
 
-  // Continuous staleness fade on the live element (re-evaluated on each tick
-  // and on every fresh position). CSS turns --staleness into opacity.
+  // Staleness fade + fresh-update pulse on the live element. A FRESH position
+  // (pos.ts changed) snaps the pointer back to solid INSTANTLY — the slow ease is
+  // kept only for AGING (tick-driven), so a real update reads as alive at once
+  // instead of crawling back to full over 2.5s — and fires a one-shot pulse.
+  const prevTsRef = useRef(0);
   useEffect(() => {
     const root = markerRef.current?.getElement()?.querySelector<HTMLElement>(".tc-squadmate");
-    if (root) root.style.setProperty("--staleness", String(stalenessOf(now - pos.ts)));
+    if (!root) return;
+    const staleness = String(stalenessOf(now - pos.ts));
+    const fresh = pos.ts !== prevTsRef.current;
+    prevTsRef.current = pos.ts;
+    if (!fresh) {
+      root.style.setProperty("--staleness", staleness);
+      return;
+    }
+    // Fresh position: kill the ease for this one commit so it snaps to solid,
+    // then restore it for the subsequent aging fade.
+    root.style.transition = "none";
+    root.style.setProperty("--staleness", staleness);
+    void root.offsetWidth; // commit the snap before re-enabling the transition
+    root.style.transition = "";
+    // One-shot pulse (reuses @keyframes tc-ping) — restart it via reflow.
+    const ping = root.querySelector<HTMLElement>(".tc-squadmate-ping");
+    if (ping) {
+      ping.classList.remove("is-pinging");
+      void ping.offsetWidth;
+      ping.classList.add("is-pinging");
+    }
   }, [now, pos.ts, icon]);
 
   return (

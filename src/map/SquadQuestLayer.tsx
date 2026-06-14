@@ -8,8 +8,8 @@ import { Marker, Tooltip } from "react-leaflet";
 import L from "leaflet";
 import type { DerivedQuestState } from "../quests/derive";
 import type { TaskObjective } from "../api/types";
-import { getGameToLatLng } from "./MapView";
-import { useSquad } from "../squad/SquadContext";
+import { getGameToLatLng } from "./mapDefs";
+import { useSquad } from "../squad/useSquad";
 import { hexForColorId } from "../../shared/squadProtocol";
 import { QUEST_GLYPH_SVG } from "../poi/registry";
 

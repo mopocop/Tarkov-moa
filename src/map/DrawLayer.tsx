@@ -16,8 +16,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
-import { getGameToLatLng, getLatLngToGame } from "./MapView";
-import { useSquad } from "../squad/SquadContext";
+import { getGameToLatLng, getLatLngToGame } from "./mapDefs";
+import { useSquad } from "../squad/useSquad";
 import { hexForColorId, type DrawPayload } from "../../shared/squadProtocol";
 
 export type DrawTool = "pen" | null;
@@ -32,12 +32,6 @@ const MAX_POINTS = 4000; // hard cap per stroke
 // this, polylines share overlayPane with the map image and get covered by it.
 const DRAW_PANE = "tc-draw-pane";
 const DRAW_PANE_Z = "450";
-
-export function newDrawId(): string {
-  return typeof crypto !== "undefined" && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `draw-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
 
 export default function DrawLayer({
   mapId,
@@ -160,7 +154,8 @@ export default function DrawLayer({
           ));
       })}
 
-      {/* Your strokes. */}
+      {/* Your strokes — each keeps the color it was authored in (d.color), so
+          changing your ink only affects new strokes, not past ones. */}
       {ownDraws
         .filter((d) => d.mapId === mapId && d.points.length >= 2)
         .map((d) => (
@@ -169,7 +164,7 @@ export default function DrawLayer({
             positions={render(d.points)}
             interactive={false}
             pane={DRAW_PANE}
-            pathOptions={{ color, weight: 3, opacity: 0.9 }}
+            pathOptions={{ color: d.color || color, weight: 3, opacity: 0.9 }}
           />
         ))}
 

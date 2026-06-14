@@ -3,8 +3,10 @@
 // when a fresh position for that member lands.
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Eye, EyeSlash } from "@phosphor-icons/react";
-import { useSquad, type MemberPosition } from "./SquadContext";
+import { useSquad } from "./useSquad";
+import type { MemberPosition } from "./SquadContext";
 import { hexForColorId, type SquadMember } from "../../shared/squadProtocol";
 import { useRelativeTime } from "../hooks/useRelativeTime";
 import { FRESH_FLASH_MS } from "./config";
@@ -25,6 +27,7 @@ function MemberRow({
   const lastSeen = useRelativeTime(pos?.ts ?? null);
   const [flash, setFlash] = useState(false);
   const prevTs = useRef<number | undefined>(pos?.ts);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (pos?.ts && pos.ts !== prevTs.current) {
@@ -40,17 +43,17 @@ function MemberRow({
       <span className="squad-dot" style={{ background: hexForColorId(member.colorId) }} />
       <span className="squad-name">
         {member.name}
-        {isSelf && <span className="squad-you"> you</span>}
+        {isSelf && <span className="squad-you"> {t('squad.you')}</span>}
       </span>
       <span className="squad-seen">
-        {isSelf ? "" : pos ? lastSeen : "no position yet"}
+        {isSelf ? "" : pos ? lastSeen : t('squad.noPositionYet')}
       </span>
       <button
         type="button"
         className={`squad-eye${hidden ? " off" : ""}`}
         onClick={onToggleQuests}
-        title={hidden ? "Show their markers & quests" : "Hide their markers & quests"}
-        aria-label={hidden ? "Show on map" : "Hide on map"}
+        title={hidden ? t('squad.showMarkersQuests') : t('squad.hideMarkersQuests')}
+        aria-label={hidden ? t('squad.showOnMap') : t('squad.hideOnMap')}
         aria-pressed={!hidden}
       >
         {hidden ? <EyeSlash weight="bold" /> : <Eye weight="bold" />}
@@ -70,7 +73,6 @@ export default function SquadCard() {
 
   return (
     <section className="squad-section squad-roster">
-      <label className="squad-label">Squad · {squad.members.length}</label>
       {members.map((m) => (
         <MemberRow
           key={m.id}

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Polyline, Marker } from "react-leaflet";
 import L from "leaflet";
-import { getMapDef, getGameToLatLng } from "./MapView";
+import { getMapDef, getGameToLatLng } from "./mapDefs";
 import { makeGrid, gridLineCoords, cellCenterGame } from "../poi/grid";
 
 const labelIconCache = new Map<string, L.DivIcon>();

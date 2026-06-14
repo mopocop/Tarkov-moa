@@ -58,6 +58,7 @@ export class TarkovTrackerClient {
       if (cached) return cached.data;
       throw new Error(
         `Failed to fetch progress: ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
       );
     }
   }

@@ -2,6 +2,7 @@
 
 mod eft_config;
 mod eft_logs;
+mod game_lang;
 mod log_watcher;
 mod screenshots;
 
@@ -43,6 +44,7 @@ fn main() {
             eft_config::get_resolved_logs_dir,
             eft_config::set_eft_install_root,
             eft_logs::get_eft_logs_dir,
+            game_lang::get_game_language,
             log_watcher::replay_past_logs_cmd,
             screenshots::set_screenshots_dir,
         ])

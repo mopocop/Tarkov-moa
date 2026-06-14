@@ -4,7 +4,8 @@
 // how many squadmates are currently positioned there.
 
 import { Crosshair, Scroll, UsersThree } from "@phosphor-icons/react";
-import type { MapRow } from "./MapPicker";
+import { useTranslation } from 'react-i18next';
+import type { MapRow } from "./mapRows";
 
 interface MapEmptyStateProps {
   rows: MapRow[];
@@ -14,15 +15,15 @@ interface MapEmptyStateProps {
 }
 
 export default function MapEmptyState({ rows, squadCounts, onSelect }: MapEmptyStateProps) {
+  const { t } = useTranslation();
   return (
     <div className="map-empty">
       <div className="map-empty__mark">
         <Crosshair weight="duotone" />
       </div>
-      <h2 className="map-empty__title">Select deployment</h2>
+      <h2 className="map-empty__title">{t('mapEmpty.selectDeployment')}</h2>
       <p className="map-empty__sub">
-        Pick a map below — or just take an in-game screenshot and Tarkov MoA
-        jumps to where you are.
+        {t('mapEmpty.pickMapSub')}
       </p>
       <div className="map-empty__grid">
         {rows.map((r) => {
@@ -33,16 +34,16 @@ export default function MapEmptyState({ rows, squadCounts, onSelect }: MapEmptyS
               type="button"
               className="map-empty-card"
               onClick={() => onSelect(r.id)}
-              title={`Open ${r.name}`}
+              title={t('mapEmpty.openMap', { name: r.name })}
             >
               <span className="map-empty-card__name">{r.name}</span>
               <span className="map-empty-card__meta">
                 <span className={`map-empty-card__quests${r.count === 0 ? " zero" : ""}`}>
                   <Scroll weight="fill" />
-                  {r.count} {r.count === 1 ? "quest" : "quests"}
+                  {t('quests.questsWithCount', { count: r.count })}
                 </span>
                 {squadHere > 0 && (
-                  <span className="map-empty-card__squad" title={`${squadHere} squadmate${squadHere > 1 ? "s" : ""} on this map`}>
+                  <span className="map-empty-card__squad" title={t('mapEmpty.squadmateOnMap', { n: squadHere })}>
                     <UsersThree weight="fill" />
                     {squadHere}
                   </span>
@@ -53,7 +54,7 @@ export default function MapEmptyState({ rows, squadCounts, onSelect }: MapEmptyS
         })}
       </div>
       <p className="map-empty__hint">
-        Quest counts come from your live in-game progress.
+        {t('mapEmpty.questCountLive')}
       </p>
     </div>
   );

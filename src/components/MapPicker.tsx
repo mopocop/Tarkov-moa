@@ -1,42 +1,16 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { CaretDown } from "@phosphor-icons/react";
+import { useTranslation } from 'react-i18next';
 import type { DerivedQuestState } from "../quests/derive";
-import { resolveMapName } from "../quests/mapNames";
-import { SUPPORTED_MAP_NAMES } from "../map/MapView";
-import { canonicalMapId } from "../map/canonicalMap";
+import { buildMapRows, questCountOpacity } from "./mapRows";
 
-export interface MapRow {
-  id: string;
-  name: string;
-  count: number;
-}
-
-// One row per supported physical map (variant UUIDs collapse to canonical),
-// plus any quest-bearing map missing from the static list (defensive). Shared
-// by the rail's pinned picker and the deployment-board empty state.
-export function buildMapRows(
-  availableObjectivesByMap: DerivedQuestState["availableObjectivesByMap"],
-  availableTasksByMap: DerivedQuestState["availableTasksByMap"],
-): MapRow[] {
-  const mapIds = Array.from(
-    new Set(
-      [
-        ...Object.keys(SUPPORTED_MAP_NAMES),
-        ...Object.keys(availableObjectivesByMap),
-        ...Object.keys(availableTasksByMap),
-      ].map(canonicalMapId),
-    ),
+function CountBadge({ count }: { count: number }): React.JSX.Element {
+  const { t } = useTranslation();
+  return (
+    <span className="map-picker__count" style={{ opacity: questCountOpacity(count) }}>
+      {t('quests.questsWithCount', { count })}
+    </span>
   );
-
-  return mapIds
-    .map((id) => ({
-      id,
-      name:
-        SUPPORTED_MAP_NAMES[id] ??
-        resolveMapName(id, availableTasksByMap, availableObjectivesByMap),
-      count: availableTasksByMap[id]?.length ?? 0,
-    }))
-    // Maps with active quests first, then alphabetical.
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
 interface MapPickerProps {
@@ -46,34 +20,77 @@ interface MapPickerProps {
   onSelect: (mapId: string) => void;
 }
 
+// Custom dropdown (a native <select> can't right-align a colored, count-scaled
+// value per option). A trigger shows the current map; the menu lists every map
+// with its quest count pushed to the right, brass-tinted by how many.
 export default function MapPicker({
   availableObjectivesByMap,
   availableTasksByMap,
   selectedMapId,
   onSelect,
 }: MapPickerProps): React.JSX.Element {
+  const { t } = useTranslation();
   const rows = buildMapRows(availableObjectivesByMap, availableTasksByMap);
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside pointer-down or Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("pointerdown", onDown, true);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointerdown", onDown, true);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   if (rows.length === 0) {
-    return <p className="muted">No supported maps.</p>;
+    return <p className="muted">{t('mapPicker.noSupportedMaps')}</p>;
   }
 
+  const selected = rows.find((r) => r.id === selectedMapId) ?? null;
+
   return (
-    <select
-      className="map-picker-select"
-      value={selectedMapId ?? ""}
-      onChange={(e) => onSelect(e.target.value)}
-    >
-      {selectedMapId === null && (
-        <option value="" disabled>
-          Select a map…
-        </option>
+    <div className="map-picker" ref={rootRef}>
+      <button
+        type="button"
+        className="map-picker__trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="map-picker__name">{selected ? selected.name : t('mapPicker.selectMap')}</span>
+        {selected && <CountBadge count={selected.count} />}
+        <CaretDown className="map-picker__caret" weight="bold" />
+      </button>
+
+      {open && (
+        <ul className="map-picker__menu" role="listbox">
+          {rows.map((row) => (
+            <li key={row.id} role="option" aria-selected={row.id === selectedMapId}>
+              <button
+                type="button"
+                className={`map-picker__row${row.id === selectedMapId ? " selected" : ""}`}
+                onClick={() => {
+                  onSelect(row.id);
+                  setOpen(false);
+                }}
+              >
+                <span className="map-picker__name">{row.name}</span>
+                <span className="map-picker__leader" />
+                <CountBadge count={row.count} />
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
-      {rows.map((row) => (
-        <option key={row.id} value={row.id}>
-          {row.name} ({row.count} {row.count === 1 ? "quest" : "quests"})
-        </option>
-      ))}
-    </select>
+    </div>
   );
 }

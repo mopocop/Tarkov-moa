@@ -9,11 +9,16 @@ import './index.css'
 import './squad/squad.css'
 import App from './App.tsx'
 import { SquadProvider } from './squad/SquadContext'
+import { setupI18n } from './i18n'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <SquadProvider>
-      <App />
-    </SquadProvider>
-  </StrictMode>,
-)
+// Resolve the language (user choice → EFT game language → system → English)
+// and init i18next before first render so the UI never flashes the wrong locale.
+void setupI18n().finally(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <SquadProvider>
+        <App />
+      </SquadProvider>
+    </StrictMode>,
+  )
+})

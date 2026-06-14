@@ -1,4 +1,5 @@
 import { PATCH_NOTES } from '../patchNotes';
+import { useTranslation } from 'react-i18next';
 import { Modal, Button } from '../ui';
 
 interface PatchNotesModalProps {
@@ -11,12 +12,13 @@ interface PatchNotesModalProps {
  * there each release.
  */
 export default function PatchNotesModal({ onClose }: PatchNotesModalProps): React.JSX.Element {
+  const { t } = useTranslation();
   return (
     <Modal
-      title="Patch notes"
+      title={t('patchNotes.title')}
       onClose={onClose}
       size="md"
-      footer={<Button variant="primary" onClick={onClose}>Got it</Button>}
+      footer={<Button variant="primary" onClick={onClose}>{t('common.gotIt')}</Button>}
     >
       {PATCH_NOTES.map((note) => (
         <section className="patchnote" key={note.version}>

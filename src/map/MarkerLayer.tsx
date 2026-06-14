@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { Marker } from "react-leaflet";
 import L from "leaflet";
 import type { TarkovTask, TaskObjective } from "../api/types";
-import { getGameToLatLng } from "./MapView";
+import { getGameToLatLng } from "./mapDefs";
 import {
   classifyMarker,
   GROUND_FLOOR_ID,

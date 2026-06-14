@@ -160,28 +160,93 @@ button:disabled {
 .map-empty-card__squad { display: inline-flex; align-items: center; gap: 5px; color: var(--live); }
 .map-empty__hint { margin: var(--sp-2) 0 0; font-size: var(--fs-micro); color: var(--text-faint); }
 
-/* ------- Map picker ------- */
+/* ------- Map picker (custom dropdown) ------- */
 
-.map-picker-select {
+.map-picker { position: relative; width: 100%; }
+
+.map-picker__trigger {
   width: 100%;
-  /* Extra right padding so the chevron isn't crammed against the border. */
-  padding: 8px 32px 8px 10px;
-  background-color: var(--bg-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-2);
   color: var(--text-strong);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   font-size: var(--fs-body);
   cursor: pointer;
-  /* Replace the native chevron with our own, positioned with breathing room. */
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23707a8a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
+  text-align: left;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.map-picker__trigger:hover { border-color: var(--border-strong); }
+.map-picker__caret {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--text-faint);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.map-picker__trigger[aria-expanded="true"] .map-picker__caret { transform: rotate(180deg); }
+
+.map-picker__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
 }
 
-.map-picker-select:hover {
-  border-color: var(--border-strong);
+/* Brass count, right-aligned, opacity set inline by quest count. */
+.map-picker__count {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.map-picker__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: var(--z-rail);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 340px;
+  overflow-y: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--edge), var(--elev-2);
+}
+.map-picker__menu li { list-style: none; }
+.map-picker__row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 7px 8px;
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: var(--fs-body);
+  cursor: pointer;
+  text-align: left;
+}
+.map-picker__row:hover { background: var(--surface-3); }
+.map-picker__row.selected { background: var(--accent-soft); }
+.map-picker__row .map-picker__name { flex: 0 1 auto; font-weight: 600; }
+/* Dotted leader line filling the gap so the count reads all the way right. */
+.map-picker__leader {
+  flex: 1;
+  margin: 0 8px;
+  height: 9px;
+  border-bottom: 1px dotted var(--border-strong);
 }
 
 /* ------- Quest sidebar ------- */
@@ -461,13 +526,16 @@ button:disabled {
 
 .tc-tools-dock {
   position: absolute;
-  bottom: 104px;
+  /* Vertically centered on the rail side — a big, easy target away from the
+     floor switcher (top) and zoom dock (bottom). */
+  top: 50%;
   right: 12px;
+  transform: translateY(-50%);
   z-index: var(--z-map-ui);
   display: flex;
   flex-direction: column;
-  padding: 3px;
-  gap: 2px;
+  padding: 4px;
+  gap: 4px;
   background: rgba(26, 28, 23, 0.92);
   backdrop-filter: blur(6px);
   border: 1px solid var(--border-strong);
@@ -475,8 +543,8 @@ button:disabled {
   box-shadow: var(--edge), var(--elev-2);
 }
 .tc-tools-dock button {
-  width: 34px;
-  height: 34px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -484,7 +552,7 @@ button:disabled {
   border: none;
   border-radius: var(--r-md);
   color: var(--text-dim);
-  font-size: 17px;
+  font-size: 24px;
   line-height: 0;
   cursor: pointer;
   padding: 0;
@@ -633,16 +701,19 @@ button:disabled {
 }
 .tc-poi-glyph svg * {
   stroke: #101208;
-  stroke-width: 34px; /* viewBox units (256 box) ≈ 2.4px at render size */
+  stroke-width: 64px; /* viewBox units (256 box) ≈ 4.5px at render size — a heavy,
+                         legible dark outline so glyphs read on busy map art */
   stroke-linejoin: round;
   stroke-linecap: round;
   paint-order: stroke fill;
 }
 /* Always-on extraction/transit name: all-caps white text, 2px dark outline,
-   floated right of the glyph so it never shifts the marker's anchor. */
+   floated right of the glyph so it never shifts the marker's anchor. The label
+   is part of the marker's hit area (pointer-events: auto) so hovering OR clicking
+   the name behaves exactly like the icon — events bubble to the Leaflet marker. */
 .tc-poi-label {
   position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
-  white-space: nowrap; pointer-events: none;
+  white-space: nowrap; pointer-events: auto; cursor: pointer;
   font-size: 12px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
   color: #ffffff;
   -webkit-text-stroke: 2px #101208;
@@ -651,6 +722,12 @@ button:disabled {
 .tc-poi-marker.tc-hl .tc-poi-glyph {
   transform: scale(1.4);
   filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+/* Custom (user-dropped) markers always wear the highlight — bigger, with a glow
+   in their own color (currentColor) — so a hand-placed pin always stands out. */
+.tc-poi-marker.tc-custom .tc-poi-glyph {
+  transform: scale(1.4);
+  filter: drop-shadow(0 0 7px currentColor);
 }
 .tc-poi-tip {
   background: var(--surface); color: var(--text); border: 1px solid var(--border);

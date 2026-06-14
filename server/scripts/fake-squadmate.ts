@@ -1,17 +1,20 @@
 // Headless fake squadmate — connects to a relay, joins a squad, and emits a
-// slowly circling position every few seconds. Lets you exercise the REAL app
-// against a "teammate" without a second PC (used by the end-to-end verification
-// in the plan's Step 19, and handy for manual testing).
+// slowly circling position. Lets you exercise the REAL app against a "teammate"
+// without a second PC (used by the end-to-end verification in the plan's Step 19,
+// and handy for manual testing).
 //
-//   npx tsx scripts/fake-squadmate.ts [wsUrl] [code] [name] [colorId] [mapId]
+//   npx tsx scripts/fake-squadmate.ts [wsUrl] [code] [name] [colorId] [mapId] [intervalMs]
 //
 // Args (use "-" to skip and take the default):
-//   wsUrl   default ws://localhost:8787
-//   code    default "-" => create a NEW squad (its code is printed on join)
-//   name    default "Bot"
-//   colorId default auto (server picks the next free color)
-//   mapId   default Customs — OVERRIDE to the tarkov.dev map id you're viewing
-//           in the app, or the bot's dot won't be on your current map.
+//   wsUrl      default ws://localhost:8787
+//   code       default "-" => create a NEW squad (its code is printed on join)
+//   name       default "Bot"
+//   colorId    default auto (server picks the next free color)
+//   mapId      default Customs — OVERRIDE to the tarkov.dev map id you're viewing
+//              in the app, or the bot's dot won't be on your current map.
+//   intervalMs default 60000 — ms between position updates. The squadmate dot
+//              fully fades to a "ghost" after ~30s idle, so the default >30s lets
+//              you WATCH it fade, then snap back to solid on the next step.
 
 import { WebSocket } from "ws";
 import {
@@ -32,6 +35,7 @@ const name = arg(4, "Bot");
 const colorPref =
   process.argv[5] && process.argv[5] !== "-" ? process.argv[5] : undefined;
 const mapId = arg(6, "56f40101d2720b2a4d8b45d6"); // Customs (override as needed)
+const stepMs = Number(arg(7, "60000")) || 60_000; // >30s so the fade is visible
 
 const clientId = `bot-${Math.random().toString(36).slice(2, 10)}`;
 const ws = new WebSocket(wsUrl);
@@ -131,6 +135,19 @@ const sendAnnotations = (): void => {
   broadcastQuests(); // re-share quest ids too (once fetched)
 };
 
+// Emit the bot's current position. Called immediately on join and whenever a
+// peer arrives so their dot shows up AT ONCE (the relay never replays anything
+// sent before someone joined), then every `stepMs` from the interval.
+const emitPosition = (): void => {
+  const x = Math.cos(t) * 40;
+  const z = Math.sin(t) * 40;
+  ws.send(
+    JSON.stringify(
+      makeEnvelope("position", selfId, { mapId, x, y: 0, z, rotation: ((t * 57) % 360) - 180 }),
+    ),
+  );
+};
+
 ws.on("message", (data) => {
   const env = decode(String(data)) as AnyEnvelope | null;
   if (!env) return;
@@ -143,25 +160,17 @@ ws.on("message", (data) => {
         `[${name}] joined squad ${env.payload.code} as color "${env.payload.colorId}" (${selfId})`,
       );
       console.log(`[${name}] >>> JOIN CODE for the app: ${env.payload.code}`);
+      console.log(
+        `[${name}] moving every ${Math.round(stepMs / 1000)}s — the dot ghosts after ~30s idle, so you'll see it fade then snap back to solid on each step`,
+      );
       sendAnnotations(); // marker + drawing (in case a peer is already here)
+      emitPosition(); // show the dot immediately — don't wait a full interval
       void fetchQuestIds(); // then share quest ids that have pins on this map
-      // Circle around the map origin, one step every 4s.
+      // Circle around the map origin, one step every `stepMs`.
       setInterval(() => {
         t += 0.3;
-        const x = Math.cos(t) * 40;
-        const z = Math.sin(t) * 40;
-        ws.send(
-          JSON.stringify(
-            makeEnvelope("position", selfId, {
-              mapId,
-              x,
-              y: 0,
-              z,
-              rotation: ((t * 57) % 360) - 180,
-            }),
-          ),
-        );
-      }, 4000);
+        emitPosition();
+      }, stepMs);
       // Heartbeat so the relay keeps us "fresh".
       setInterval(
         () => ws.send(JSON.stringify(makeEnvelope("heartbeat", selfId, {}))),
@@ -172,6 +181,7 @@ ws.on("message", (data) => {
     case "peer-join":
       console.log(`[${name}] peer joined: ${env.payload.member.name}`);
       sendAnnotations(); // re-emit so the newcomer sees the marker + drawing
+      emitPosition(); // ...and the position dot, right away
       break;
     case "peer-leave":
       console.log(`[${name}] peer left: ${env.payload.id}`);

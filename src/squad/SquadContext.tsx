@@ -4,15 +4,15 @@
 // kind into immutable state updates.
 
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
+import { useTranslation } from "react-i18next";
+import { SquadCtx } from "./useSquad";
 import { RELAY_URL } from "./config";
 import { SquadTransport, type ConnStatus } from "./transport";
 import { loadIdentity, saveIdentity, type SquadIdentity } from "./identity";
@@ -61,6 +61,8 @@ export interface SquadApi extends SquadState {
   createSquad: (name: string, colorId: string | null) => void;
   joinSquad: (code: string, name: string, colorId: string | null) => void;
   leaveSquad: () => void;
+  /** Abort an in-flight connect/reconnect (Cancel button) and reset to idle. */
+  cancelConnect: () => void;
   saveProfile: (name: string, colorId: string | null) => void;
   broadcastPosition: (p: PositionPayload) => void;
   broadcastQuests: (ids: string[]) => void;
@@ -73,8 +75,6 @@ export interface SquadApi extends SquadState {
   hiddenQuests: Record<string, boolean>;
   toggleQuestVisibility: (memberId: string) => void;
 }
-
-const Ctx = createContext<SquadApi | null>(null);
 
 // Errors that mean "this join attempt is dead" — stop trying and reset.
 const FATAL = new Set<string>([
@@ -100,13 +100,21 @@ function omit<T>(rec: Record<string, T>, key: string): Record<string, T> {
 }
 
 export function SquadProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [state, setState] = useState<SquadState>(EMPTY);
   const [identity, setIdentityState] = useState<SquadIdentity>(() => loadIdentity());
   const [hiddenQuests, setHiddenQuests] = useState<Record<string, boolean>>({});
 
   const transportRef = useRef<SquadTransport | null>(null);
+  // identityRef mirrors the latest identity for the connect/setIdentity
+  // callbacks, which read it outside render — sync it after each commit.
   const identityRef = useRef<SquadIdentity>(identity);
-  identityRef.current = identity;
+  useEffect(() => {
+    identityRef.current = identity;
+  }, [identity]);
+  // Which action is in flight, so a connect-timeout error speaks the right
+  // language: a create has no code to "check", a join does.
+  const lastConnectModeRef = useRef<"create" | "join">("join");
 
   // Our own latest broadcast state — kept so we can resync to a peer who joins
   // after us (the relay never replays anything sent before they arrived).
@@ -116,12 +124,12 @@ export function SquadProvider({ children }: { children: ReactNode }) {
   const selfDraws = useRef<Map<string, DrawPayload>>(new Map());
 
   const resyncSelf = useCallback(() => {
-    const t = transportRef.current;
-    if (!t) return;
-    if (selfPos.current) t.send("position", selfPos.current);
-    if (selfQuests.current) t.send("quests", { activeQuestIds: selfQuests.current });
-    for (const m of selfMarkers.current.values()) t.send("marker-add", m);
-    for (const d of selfDraws.current.values()) t.send("draw-add", d);
+    const transport = transportRef.current;
+    if (!transport) return;
+    if (selfPos.current) transport.send("position", selfPos.current);
+    if (selfQuests.current) transport.send("quests", { activeQuestIds: selfQuests.current });
+    for (const m of selfMarkers.current.values()) transport.send("marker-add", m);
+    for (const d of selfDraws.current.values()) transport.send("draw-add", d);
   }, []);
 
   const resetSelf = useCallback(() => {
@@ -233,13 +241,28 @@ export function SquadProvider({ children }: { children: ReactNode }) {
 
   // Create the transport once.
   useEffect(() => {
-    const t = new SquadTransport(RELAY_URL, {
-      onStatus: (status) => setState((s) => ({ ...s, status })),
+    const transport = new SquadTransport(RELAY_URL, {
+      onStatus: (status) =>
+        setState((s) => ({
+          ...s,
+          status,
+          // The transport gives up to "error" when an initial join never lands —
+          // surface a plain-language reason. Clear stale errors once we're
+          // making progress again.
+          error:
+            status === "error" && !s.error
+              ? lastConnectModeRef.current === "create"
+                ? t('errors.squadServerOffline')
+                : t('errors.squadUnreachable')
+              : status === "connecting" || status === "connected"
+                ? null
+                : s.error,
+        })),
       onMessage: handleMessage,
     });
-    transportRef.current = t;
+    transportRef.current = transport;
     return () => {
-      t.close();
+      transport.close();
       transportRef.current = null;
     };
   }, [handleMessage]);
@@ -253,6 +276,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
 
   const startConnect = useCallback(
     (code: string | null, name: string, colorId: string | null) => {
+      lastConnectModeRef.current = code === null ? "create" : "join";
       persist(name, colorId);
       resetSelf();
       setState({ ...EMPTY, status: "connecting" });
@@ -330,6 +354,7 @@ export function SquadProvider({ children }: { children: ReactNode }) {
       createSquad,
       joinSquad,
       leaveSquad,
+      cancelConnect: leaveSquad,
       saveProfile,
       broadcastPosition,
       broadcastQuests,
@@ -358,11 +383,5 @@ export function SquadProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
-}
-
-export function useSquad(): SquadApi {
-  const ctx = useContext(Ctx);
-  if (!ctx) throw new Error("useSquad must be used within <SquadProvider>");
-  return ctx;
+  return <SquadCtx.Provider value={api}>{children}</SquadCtx.Provider>;
 }

@@ -5,7 +5,7 @@
 
 import { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
-import { getGameToLatLng } from "./MapView";
+import { getGameToLatLng } from "./mapDefs";
 
 export interface LivePos {
   x: number;

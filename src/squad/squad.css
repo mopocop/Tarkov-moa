@@ -98,6 +98,20 @@
 
 .squad-hint { font-size: var(--fs-caption); color: var(--text); opacity: 0.6; margin: 6px 0 0; }
 
+/* Identity (name + color) is its own block, split from the join/create actions
+   by a full-width hairline. */
+.squad-identity { display: flex; flex-direction: column; gap: var(--sp-3); }
+.squad-divider { height: 1px; background: var(--border-strong); }
+.squad-actions { display: flex; flex-direction: column; gap: var(--sp-3); }
+/* Connecting… + Cancel sit on one line while an attempt is in flight. */
+.squad-connecting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+.squad-connecting .squad-status { margin: 0; }
+
 .squad-join-row { display: flex; gap: 8px; }
 
 .squad-code {
@@ -117,7 +131,7 @@
   color: var(--danger);
   border-radius: var(--r-sm);
   padding: 8px 10px;
-  margin-bottom: 14px;
+  margin: 0;
   font-size: var(--fs-body);
 }
 
@@ -195,15 +209,16 @@
   color: var(--text-strong);
 }
 .sqs-row:hover { border-color: var(--border); }
-.sqs-row.active { border-color: var(--up, #0ecb81); }
 .sqs-map { font-size: var(--fs-body); font-weight: 600; }
-.sqs-chips { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+.sqs-chips { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+/* Bare per-member quest count, tinted in that member's squad color (set inline).
+   No dot, no name — the color IS the identity (hover title still spells it out). */
 .sqs-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--fs-micro);
-  opacity: 0.9;
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 /* ----- Map: squadmate pointers ----- */
@@ -219,6 +234,18 @@
   opacity: calc(1 - 0.7 * var(--staleness, 0));
   transition: opacity 2.5s linear;
 }
+/* One-shot radar pulse fired on each fresh position (SquadmateLayer restarts the
+   animation via reflow). Reuses @keyframes tc-ping; ring is the member's color. */
+.tc-squadmate-ping {
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  border: 2px solid var(--c, #888);
+  opacity: 0;
+  pointer-events: none;
+}
+.tc-squadmate-ping.is-pinging { animation: tc-ping 0.9s var(--ease-out); }
+@media (prefers-reduced-motion: reduce) { .tc-squadmate-ping.is-pinging { animation: none; } }
 .tc-squadmate-arrow {
   position: absolute;
   inset: 2px;

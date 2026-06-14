@@ -2,6 +2,7 @@
 // this single 48px strip on the user's chosen screen side. Sections toggle the
 // adjacent panel; tool + utility buttons act directly. See shell.css.
 
+import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 import {
   Crosshair,
@@ -88,6 +89,7 @@ export default function Spine({
   onHowTo,
   onSettings,
 }: SpineProps) {
+  const { t } = useTranslation();
   const section = (id: RailSection, label: string, icon: ReactNode, badge?: number) => (
     <SpineButton
       label={label}
@@ -101,25 +103,25 @@ export default function Spine({
   );
 
   return (
-    <nav className="spine" aria-label="Main controls">
+    <nav className="spine" aria-label={t('rail.mainControls')}>
       <div className="spine__mark" title="Tarkov MoA">
         <Crosshair weight="duotone" />
       </div>
 
       {section(
         'quests',
-        'Quests on this map',
+        t('rail.questsOnMap'),
         <Scroll weight={activeSection === 'quests' ? 'fill' : 'regular'} />,
         questCount,
       )}
       {section(
         'intel',
-        'Map intel — extracts, spawns, loot',
+        t('rail.mapIntel'),
         <Binoculars weight={activeSection === 'intel' ? 'fill' : 'regular'} />,
       )}
       {section(
         'squad',
-        'Squad Mode',
+        t('rail.squadMode'),
         <UsersThree weight={activeSection === 'squad' ? 'fill' : 'regular'} />,
         squadCount,
       )}
@@ -128,7 +130,7 @@ export default function Spine({
 
       {updateVersion && (
         <SpineButton
-          label={updating ? 'Updating…' : `Update to v${updateVersion}`}
+          label={updating ? t('rail.updating') : t('rail.updateTo', { version: updateVersion })}
           side={side}
           className="spine__btn--update"
           disabled={updating}
@@ -138,20 +140,20 @@ export default function Spine({
         </SpineButton>
       )}
       <SpineButton
-        label={syncingLogs ? 'Syncing past logs…' : 'Sync past EFT logs (first launch)'}
+        label={syncingLogs ? t('rail.syncingPastLogs') : t('rail.syncPastEftLogs')}
         side={side}
         disabled={syncingLogs}
         onClick={onSyncLogs}
       >
         <ClockCounterClockwise weight="regular" />
       </SpineButton>
-      <SpineButton label="Send feedback" side={side} onClick={onFeedback}>
+      <SpineButton label={t('rail.feedback')} side={side} onClick={onFeedback}>
         <ChatTeardropText weight="regular" />
       </SpineButton>
-      <SpineButton label="How to use" side={side} onClick={onHowTo}>
+      <SpineButton label={t('rail.howToUse')} side={side} onClick={onHowTo}>
         <Question weight="regular" />
       </SpineButton>
-      <SpineButton label="Settings" side={side} onClick={onSettings}>
+      <SpineButton label={t('rail.settings')} side={side} onClick={onSettings}>
         <GearSix weight="regular" />
       </SpineButton>
     </nav>

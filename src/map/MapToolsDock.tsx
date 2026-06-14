@@ -3,6 +3,7 @@
 // your drawings on this map (the eraser icon — per-stroke erasing is gone).
 
 import { PencilSimple, Eraser } from "@phosphor-icons/react";
+import { useTranslation } from "react-i18next";
 import type { DrawTool } from "./DrawLayer";
 
 interface MapToolsDockProps {
@@ -21,14 +22,15 @@ export default function MapToolsDock({
   canClear,
   onClear,
 }: MapToolsDockProps) {
+  const { t } = useTranslation();
   const penOn = tool === "pen";
   return (
     <div className="tc-tools-dock">
       <button
         type="button"
-        aria-label="Draw on the map"
+        aria-label={t('rail.drawOnMap')}
         aria-pressed={penOn}
-        title={penOn ? "Stop drawing" : "Draw on the map — shared live with your squad"}
+        title={penOn ? t('map.stopDrawing') : t('map.drawOnMapShared')}
         className={penOn ? "active" : undefined}
         style={penOn ? { color } : undefined}
         onClick={() => onTool(penOn ? null : "pen")}
@@ -37,10 +39,15 @@ export default function MapToolsDock({
       </button>
       <button
         type="button"
-        aria-label="Clear your drawings on this map"
-        title="Clear your drawings on this map"
+        aria-label={t('rail.clearDrawings')}
+        title={t('rail.clearDrawings')}
         disabled={!canClear}
-        onClick={onClear}
+        onClick={() => {
+          onClear();
+          // Erasing also drops you out of pen mode — the gesture means "I'm done
+          // drawing", so panning is handed straight back.
+          if (penOn) onTool(null);
+        }}
       >
         <Eraser weight="regular" />
       </button>

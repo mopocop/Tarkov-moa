@@ -28,6 +28,11 @@ export interface JoinIntent {
 
 const HEARTBEAT_MS = 20_000;
 const MAX_BACKOFF_MS = 30_000;
+// How long an INITIAL join may spend trying before we give up and surface an
+// error. A drop AFTER we've connected reconnects forever (wifi blips), but a
+// join that never lands — bad relay, wrong code that the server never answers,
+// no fake-squadmate running — must not spin "Reconnecting…" with no way out.
+const CONNECT_DEADLINE_MS = 12_000;
 
 export class SquadTransport {
   private ws: WebSocket | null = null;
@@ -36,6 +41,12 @@ export class SquadTransport {
   private attempts = 0;
   private heartbeat: ReturnType<typeof setInterval> | null = null;
   private reconnect: ReturnType<typeof setTimeout> | null = null;
+  // Armed on connect(), cleared once we reach "connected". If it fires first the
+  // initial join is declared dead.
+  private connectDeadline: ReturnType<typeof setTimeout> | null = null;
+  // True once we've ever reached "connected" this session — gates infinite
+  // reconnect (only an established squad earns it).
+  private everConnected = false;
   private closedByUser = false;
   private readonly url: string;
   private readonly handlers: TransportHandlers;
@@ -48,8 +59,10 @@ export class SquadTransport {
   /** Begin (or restart) a connection with the given join intent. */
   connect(intent: JoinIntent): void {
     this.closedByUser = false;
+    this.everConnected = false;
     this.attempts = 0;
     this.intent = intent;
+    this.armConnectDeadline();
     this.open();
   }
 
@@ -57,6 +70,7 @@ export class SquadTransport {
   close(): void {
     this.closedByUser = true;
     this.intent = null;
+    this.clearConnectDeadline();
     if (this.reconnect) {
       clearTimeout(this.reconnect);
       this.reconnect = null;
@@ -125,6 +139,8 @@ export class SquadTransport {
       // squad (and a freshly-created squad isn't recreated on every drop).
       if (env.kind === "joined") {
         if (this.intent) this.intent = { ...this.intent, code: env.payload.code };
+        this.everConnected = true;
+        this.clearConnectDeadline();
         this.setStatus("connected");
       }
       this.handlers.onMessage?.(env);
@@ -156,6 +172,38 @@ export class SquadTransport {
     const delay = Math.min(MAX_BACKOFF_MS, 1000 * 2 ** this.attempts);
     this.attempts += 1;
     this.reconnect = setTimeout(() => this.open(), delay);
+  }
+
+  private armConnectDeadline(): void {
+    this.clearConnectDeadline();
+    this.connectDeadline = setTimeout(() => {
+      // Still not connected when the deadline fires → the join is dead. Tear
+      // everything down and surface "error" so the UI can offer Cancel/retry
+      // instead of spinning forever.
+      if (this.everConnected) return;
+      this.intent = null; // stops scheduleReconnect on the pending onclose
+      if (this.reconnect) {
+        clearTimeout(this.reconnect);
+        this.reconnect = null;
+      }
+      this.stopHeartbeat();
+      if (this.ws) {
+        try {
+          this.ws.close();
+        } catch {
+          /* ignore */
+        }
+        this.ws = null;
+      }
+      this.setStatus("error");
+    }, CONNECT_DEADLINE_MS);
+  }
+
+  private clearConnectDeadline(): void {
+    if (this.connectDeadline) {
+      clearTimeout(this.connectDeadline);
+      this.connectDeadline = null;
+    }
   }
 
   private startHeartbeat(): void {
