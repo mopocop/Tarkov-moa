@@ -1,0 +1,38 @@
+name: Bug report
+description: Something isn't working right
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the report! A little detail goes a long way.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what did the app do instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the app
+        2. Go to ...
+        3. See ...
+  - type: input
+    id: context
+    attributes:
+      label: Map / quest (if relevant)
+      placeholder: e.g. Woods, "Shooting Cans"
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Shown in Settings → App updates
+      placeholder: e.g. 0.8.0
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, console output, or notes about your setup (game folder, screenshots key).

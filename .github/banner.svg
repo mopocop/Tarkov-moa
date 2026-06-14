@@ -1,0 +1,32 @@
+<svg width="1200" height="300" viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tarkov MoA — Map of Action">
+  <defs>
+    <radialGradient id="bg" cx="22%" cy="38%" r="90%">
+      <stop offset="0%" stop-color="#1a1c17"/>
+      <stop offset="100%" stop-color="#0a0b09"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="1200" height="300" fill="url(#bg)"/>
+  <rect x="1" y="1" width="1198" height="298" fill="none" stroke="#ffffff" stroke-opacity="0.04" stroke-width="2"/>
+
+  <!-- Brass reticle (matches src-tauri/app-icon.svg geometry) -->
+  <g fill="none" stroke="#c9a86a" stroke-width="9" stroke-linecap="round">
+    <circle cx="160" cy="150" r="60"/>
+    <line x1="160" y1="50"  x2="160" y2="83"/>
+    <line x1="160" y1="217" x2="160" y2="250"/>
+    <line x1="60"  y1="150" x2="93"  y2="150"/>
+    <line x1="227" y1="150" x2="260" y2="150"/>
+  </g>
+  <circle cx="160" cy="150" r="14" fill="#c9a86a"/>
+
+  <!-- Wordmark -->
+  <text x="300" y="128" font-family="'Segoe UI', system-ui, sans-serif" font-size="66" font-weight="600" fill="#eceee8">Tarkov MoA</text>
+  <text x="302" y="166" font-family="'Segoe UI', system-ui, sans-serif" font-size="19" font-weight="600" letter-spacing="7" fill="#c9a86a">MAP OF ACTION</text>
+  <text x="302" y="214" font-family="'Segoe UI', system-ui, sans-serif" font-size="24" fill="#9ba08f">Your live quest map for Escape from Tarkov</text>
+
+  <!-- LIVE pill -->
+  <g transform="translate(1010,44)">
+    <rect x="0" y="0" width="146" height="34" rx="17" fill="#0a0b09" stroke="#2a2c24" stroke-width="1"/>
+    <circle cx="22" cy="17" r="5" fill="#3ddc97"/>
+    <text x="38" y="23" font-family="'Segoe UI', system-ui, sans-serif" font-size="15" letter-spacing="2" fill="#3ddc97">LIVE SYNC</text>
+  </g>
+</svg>
