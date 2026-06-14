@@ -11,6 +11,15 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "0.8.0",
+    date: "2026-06-14",
+    changes: [
+      "New: Tarkov MoA now speaks 6 languages — English, Português (Brasil), Русский, 日本語, 中文 and Español. It picks your in-game language automatically, or you can choose your own under Settings → Language (also on the first-run welcome screen).",
+      "Quest, map and point-of-interest names are translated too — they follow your game's language so they read exactly like they do in Tarkov.",
+      "Improved: squad mode polish and a smoother, more reliable map experience under the hood.",
+    ],
+  },
+  {
     version: "0.7.0",
     date: "2026-06-01",
     changes: [
