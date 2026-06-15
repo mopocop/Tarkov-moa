@@ -11,7 +11,7 @@
 services:
   # --- Tailscale node "tarkovmoa": userspace networking + Funnel ingress -------
   tailscale:
-    image: tailscale/tailscale:v1.78.1
+    image: tailscale/tailscale:v1.92.5
     hostname: tarkovmoa                  # → tarkovmoa.<tailnet>.ts.net
     environment:
       TS_AUTHKEY: ${TS_AUTHKEY:?set TS_AUTHKEY in .env}
