@@ -37,8 +37,8 @@
     "clearDrawings": "Clear your drawings on this map",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
-    "replayedLogs": "Replayed {{count}} log file. Quest list updating…",
-    "replayedLogs_plural": "Replayed {{count}} log files. Quest list updating…",
+    "replayedLogs_one": "Replayed {{count}} log file. Quest list updating…",
+    "replayedLogs_other": "Replayed {{count}} log files. Quest list updating…",
     "whatsNew": "What's new in this version",
     "questsOnMap": "Quests on this map",
     "mapIntel": "Map intel — extracts, spawns, loot",
@@ -115,8 +115,8 @@
     "squadCode": "Squad code",
     "copySquadCode": "Copy squad code",
     "copied": "Copied!",
-    "sharedObjective": "Shared objective",
-    "sharedObjective_plural": "Shared objectives",
+    "sharedObjective_one": "Shared objective",
+    "sharedObjective_other": "Shared objectives",
     "sharedHint": "Two or more of you have these active — their pins pulse on the map. Push together.",
     "leaveSquad": "Leave squad"
   },
@@ -135,8 +135,8 @@
     "pinned": "pinned",
     "clickToPin": "Click to pin",
     "clickToUnpin": "Click to unpin",
-    "questsWithCount": "{{count}} quest",
-    "questsWithCount_plural": "{{count}} quests",
+    "questsWithCount_one": "{{count}} quest",
+    "questsWithCount_other": "{{count}} quests",
     "squadQuestsByMap": "Squad quests by map",
     "showMap": "Show {{name}}"
   },
@@ -145,8 +145,8 @@
     "pickMapSub": "Pick a map below — or just take an in-game screenshot and Tarkov MoA jumps to where you are.",
     "openMap": "Open {{name}}",
     "questCountLive": "Quest counts come from your live in-game progress.",
-    "squadmateOnMap": "{{n}} squadmate on this map",
-    "squadmateOnMap_plural": "{{n}} squadmates on this map"
+    "squadmateOnMap_one": "{{count}} squadmate on this map",
+    "squadmateOnMap_other": "{{count}} squadmates on this map"
   },
   "mapPicker": {
     "selectMap": "Select a map…",
@@ -237,5 +237,14 @@
       "syncNow": "Sync past logs now",
       "syncHint": "First time here? This replays your old EFT logs so your quest progress is accurate immediately."
     }
+  },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo_one": "{{count}}m ago",
+    "minutesAgo_other": "{{count}}m ago",
+    "hoursAgo_one": "{{count}}h ago",
+    "hoursAgo_other": "{{count}}h ago",
+    "daysAgo_one": "{{count}}d ago",
+    "daysAgo_other": "{{count}}d ago"
   }
 }

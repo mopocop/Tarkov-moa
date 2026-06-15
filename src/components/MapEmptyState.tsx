@@ -43,7 +43,7 @@ export default function MapEmptyState({ rows, squadCounts, onSelect }: MapEmptyS
                   {t('quests.questsWithCount', { count: r.count })}
                 </span>
                 {squadHere > 0 && (
-                  <span className="map-empty-card__squad" title={t('mapEmpty.squadmateOnMap', { n: squadHere })}>
+                  <span className="map-empty-card__squad" title={t('mapEmpty.squadmateOnMap', { count: squadHere })}>
                     <UsersThree weight="fill" />
                     {squadHere}
                   </span>

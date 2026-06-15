@@ -37,8 +37,8 @@
     "clearDrawings": "Очистить ваши рисунки на этой карте",
     "zoomIn": "Приблизить",
     "zoomOut": "Отдалить",
-    "replayedLogs": "Обработан {{count}} лог-файл. Список квестов обновляется…",
-    "replayedLogs_plural": "Обработано {{count}} лог-файлов. Список квестов обновляется…",
+    "replayedLogs_one": "Обработан {{count}} лог-файл. Список квестов обновляется…",
+    "replayedLogs_other": "Обработано {{count}} лог-файлов. Список квестов обновляется…",
     "whatsNew": "Что нового в этой версии",
     "questsOnMap": "Квесты на этой карте",
     "mapIntel": "Разведка карты — выходы, точки появления, лут",
@@ -115,8 +115,8 @@
     "squadCode": "Код отряда",
     "copySquadCode": "Копировать код отряда",
     "copied": "Скопировано!",
-    "sharedObjective": "Общая цель",
-    "sharedObjective_plural": "Общие цели",
+    "sharedObjective_one": "Общая цель",
+    "sharedObjective_other": "Общие цели",
     "sharedHint": "Эти цели активны у двух и более из вас — их метки пульсируют на карте. Идите вместе.",
     "leaveSquad": "Покинуть отряд"
   },
@@ -135,8 +135,8 @@
     "pinned": "закреплено",
     "clickToPin": "Нажмите, чтобы закрепить",
     "clickToUnpin": "Нажмите, чтобы открепить",
-    "questsWithCount": "{{count}} квест",
-    "questsWithCount_plural": "{{count}} квестов",
+    "questsWithCount_one": "{{count}} квест",
+    "questsWithCount_other": "{{count}} квестов",
     "squadQuestsByMap": "Квесты отряда по картам",
     "showMap": "Показать {{name}}"
   },
@@ -145,8 +145,8 @@
     "pickMapSub": "Выберите карту ниже — или просто сделайте скриншот в игре, и Tarkov MoA перейдёт туда, где вы находитесь.",
     "openMap": "Открыть {{name}}",
     "questCountLive": "Количество квестов берётся из вашего текущего игрового прогресса.",
-    "squadmateOnMap": "{{n}} союзник на этой карте",
-    "squadmateOnMap_plural": "{{n}} союзников на этой карте"
+    "squadmateOnMap_one": "{{count}} союзник на этой карте",
+    "squadmateOnMap_other": "{{count}} союзников на этой карте"
   },
   "mapPicker": {
     "selectMap": "Выберите карту…",
@@ -237,5 +237,14 @@
       "syncNow": "Синхронизировать прошлые логи сейчас",
       "syncHint": "Впервые здесь? Это обработает ваши старые логи EFT, чтобы прогресс квестов сразу был точным."
     }
+  },
+  "time": {
+    "justNow": "только что",
+    "minutesAgo_one": "{{count}} мин назад",
+    "minutesAgo_other": "{{count}} мин назад",
+    "hoursAgo_one": "{{count}} ч назад",
+    "hoursAgo_other": "{{count}} ч назад",
+    "daysAgo_one": "{{count}} дн назад",
+    "daysAgo_other": "{{count}} дн назад"
   }
 }

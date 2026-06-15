@@ -37,8 +37,8 @@
     "clearDrawings": "Apagar seus desenhos neste mapa",
     "zoomIn": "Aproximar",
     "zoomOut": "Afastar",
-    "replayedLogs": "{{count}} arquivo de log reprocessado. Atualizando a lista de missões…",
-    "replayedLogs_plural": "{{count}} arquivos de log reprocessados. Atualizando a lista de missões…",
+    "replayedLogs_one": "{{count}} arquivo de log reprocessado. Atualizando a lista de missões…",
+    "replayedLogs_other": "{{count}} arquivos de log reprocessados. Atualizando a lista de missões…",
     "whatsNew": "Novidades desta versão",
     "questsOnMap": "Missões neste mapa",
     "mapIntel": "Intel do mapa — saídas, spawns, loot",
@@ -115,8 +115,8 @@
     "squadCode": "Código do esquadrão",
     "copySquadCode": "Copiar código do esquadrão",
     "copied": "Copiado!",
-    "sharedObjective": "Objetivo compartilhado",
-    "sharedObjective_plural": "Objetivos compartilhados",
+    "sharedObjective_one": "Objetivo compartilhado",
+    "sharedObjective_other": "Objetivos compartilhados",
     "sharedHint": "Dois ou mais de vocês têm estes ativos — os pins deles pulsam no mapa. Avancem juntos.",
     "leaveSquad": "Sair do esquadrão"
   },
@@ -135,8 +135,8 @@
     "pinned": "fixada",
     "clickToPin": "Clique para fixar",
     "clickToUnpin": "Clique para desafixar",
-    "questsWithCount": "{{count}} missão",
-    "questsWithCount_plural": "{{count}} missões",
+    "questsWithCount_one": "{{count}} missão",
+    "questsWithCount_other": "{{count}} missões",
     "squadQuestsByMap": "Missões do esquadrão por mapa",
     "showMap": "Mostrar {{name}}"
   },
@@ -145,8 +145,8 @@
     "pickMapSub": "Escolha um mapa abaixo — ou apenas tire um screenshot no jogo e o Tarkov MoA salta para onde você está.",
     "openMap": "Abrir {{name}}",
     "questCountLive": "As contagens de missões vêm do seu progresso ao vivo no jogo.",
-    "squadmateOnMap": "{{n}} colega de esquadrão neste mapa",
-    "squadmateOnMap_plural": "{{n}} colegas de esquadrão neste mapa"
+    "squadmateOnMap_one": "{{count}} colega de esquadrão neste mapa",
+    "squadmateOnMap_other": "{{count}} colegas de esquadrão neste mapa"
   },
   "mapPicker": {
     "selectMap": "Selecione um mapa…",
@@ -237,5 +237,14 @@
       "syncNow": "Sincronizar logs antigos agora",
       "syncHint": "Primeira vez aqui? Isso reprocessa seus logs antigos do EFT para que seu progresso de missões fique correto na hora."
     }
+  },
+  "time": {
+    "justNow": "agora mesmo",
+    "minutesAgo_one": "há {{count}} min",
+    "minutesAgo_other": "há {{count}} min",
+    "hoursAgo_one": "há {{count}} h",
+    "hoursAgo_other": "há {{count}} h",
+    "daysAgo_one": "há {{count}} d",
+    "daysAgo_other": "há {{count}} d"
   }
 }

@@ -37,8 +37,8 @@
     "clearDrawings": "清除你在此地图上的绘制",
     "zoomIn": "放大",
     "zoomOut": "缩小",
-    "replayedLogs": "已重新处理 {{count}} 个日志文件。任务列表更新中…",
-    "replayedLogs_plural": "已重新处理 {{count}} 个日志文件。任务列表更新中…",
+    "replayedLogs_one": "已重新处理 {{count}} 个日志文件。任务列表更新中…",
+    "replayedLogs_other": "已重新处理 {{count}} 个日志文件。任务列表更新中…",
     "whatsNew": "此版本的新功能",
     "questsOnMap": "此地图上的任务",
     "mapIntel": "地图情报 — 撤离点、刷新点、战利品",
@@ -115,8 +115,8 @@
     "squadCode": "小队代码",
     "copySquadCode": "复制小队代码",
     "copied": "已复制！",
-    "sharedObjective": "共享目标",
-    "sharedObjective_plural": "共享目标",
+    "sharedObjective_one": "共享目标",
+    "sharedObjective_other": "共享目标",
     "sharedHint": "你们中有两人或更多正在进行这些目标 — 它们的图钉会在地图上闪烁。一起推进吧。",
     "leaveSquad": "退出小队"
   },
@@ -135,8 +135,8 @@
     "pinned": "已置顶",
     "clickToPin": "点击置顶",
     "clickToUnpin": "点击取消置顶",
-    "questsWithCount": "{{count}} 个任务",
-    "questsWithCount_plural": "{{count}} 个任务",
+    "questsWithCount_one": "{{count}} 个任务",
+    "questsWithCount_other": "{{count}} 个任务",
     "squadQuestsByMap": "按地图分类的小队任务",
     "showMap": "显示 {{name}}"
   },
@@ -145,8 +145,8 @@
     "pickMapSub": "在下方选择地图 — 或者直接在游戏内截图，Tarkov MoA 会跳转到你所在的位置。",
     "openMap": "打开 {{name}}",
     "questCountLive": "任务数量来自你游戏内的实时进度。",
-    "squadmateOnMap": "此地图上有 {{n}} 名队友",
-    "squadmateOnMap_plural": "此地图上有 {{n}} 名队友"
+    "squadmateOnMap_one": "此地图上有 {{count}} 名队友",
+    "squadmateOnMap_other": "此地图上有 {{count}} 名队友"
   },
   "mapPicker": {
     "selectMap": "选择地图…",
@@ -237,5 +237,14 @@
       "syncNow": "立即同步历史日志",
       "syncHint": "第一次来？这会重新处理你以前的 EFT 日志，让你的任务进度立即准确。"
     }
+  },
+  "time": {
+    "justNow": "刚刚",
+    "minutesAgo_one": "{{count}} 分钟前",
+    "minutesAgo_other": "{{count}} 分钟前",
+    "hoursAgo_one": "{{count}} 小时前",
+    "hoursAgo_other": "{{count}} 小时前",
+    "daysAgo_one": "{{count}} 天前",
+    "daysAgo_other": "{{count}} 天前"
   }
 }
