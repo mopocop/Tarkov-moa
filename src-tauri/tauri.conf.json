@@ -25,7 +25,7 @@
       "endpoints": [
         "https://github.com/mopocop/Tarkov-moa/releases/latest/download/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEYyOTg4RDk0RUVFNjVEMUYKUldRZlhlYnVsSTJZOHZ5ejhNL0JEZXhuZVp6VWcyZFVIWnBwdDFVUWd2WmU3MWRmYi9LLzljTjIK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNBMDEwNzRDNEMzOTMwRDYKUldUV01EbE1UQWNCT21OMWNvY1JLUE45YnhpMmxDRVp1ZTNBQnBWUmp6c2VScEdPeTdBeThwUmoK",
       "windows": {
         "installMode": "passive"
       }
