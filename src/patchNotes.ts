@@ -11,6 +11,14 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "0.8.1",
+    date: "2026-06-15",
+    changes: [
+      "New: Squad Mode is now online. Create or join a squad with a code and share your live position, markers, drawings and quests with friends anywhere — no setup, no network fiddling.",
+      "Your squad data is relayed over a secure connection; nothing is stored, and your home network is never exposed.",
+    ],
+  },
+  {
     version: "0.8.0",
     date: "2026-06-14",
     changes: [
