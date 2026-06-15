@@ -46,7 +46,7 @@ services:
       - tailscale
     environment:
       PORT: "8787"
-      STATS_TOKEN: ${STATS_TOKEN:?set STATS_TOKEN in .env}
+      STATS_TOKEN: ${STATS_TOKEN:-}
       FEEDBACK_FILE: /data/feedback.jsonl
     volumes:
       - relay-data:/data
