@@ -126,7 +126,11 @@ export function handleFeedback(req: IncomingMessage, res: ServerResponse): void 
     return;
   }
 
-  // Cloudflare Tunnel puts the real client IP in CF-Connecting-IP.
+  // Real client IP if we're ever fronted by Cloudflare (CF-Connecting-IP).
+  // Behind Tailscale Funnel there is NO client-IP header (Funnel is anonymous
+  // ingress), so this falls back to the funnel's localhost socket — i.e. all
+  // public feedback shares ONE token bucket. That's intentional: a coarse
+  // global write cap is an acceptable trade for a rare, low-value endpoint.
   const ip =
     (typeof req.headers["cf-connecting-ip"] === "string" && req.headers["cf-connecting-ip"]) ||
     req.socket.remoteAddress ||

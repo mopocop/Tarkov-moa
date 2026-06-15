@@ -51,6 +51,11 @@ const RATE_PER_SEC = 15;
 const RATE_BURST = 40;
 const NAME_MAX = 24;
 
+// Hard ceiling on concurrent sockets. The relay is public (Tailscale Funnel), so
+// a connection flood is a memory/FD-exhaustion vector. 200 sockets is ~33 full
+// squads — far past realistic load; past it we refuse new sockets outright.
+const MAX_CONNECTIONS = 200;
+
 interface AliveWs extends WebSocket {
   isAlive?: boolean;
 }
@@ -92,6 +97,13 @@ function broadcast(room: Room, exceptId: string, frame: string): void {
 
 function wireWss(wss: WebSocketServer): void {
   wss.on("connection", (ws: WebSocket) => {
+    // Refuse new sockets once we're at the global ceiling (this socket is
+    // already counted in wss.clients, hence the > comparison).
+    if (wss.clients.size > MAX_CONNECTIONS) {
+      sendError(ws, SquadErrorCodes.RATE_LIMITED, "Server is busy — try again shortly");
+      ws.close();
+      return;
+    }
     let roomCode: string | undefined;
     let memberId: string | undefined;
     let clientId = "anon";
@@ -160,7 +172,12 @@ function wireWss(wss: WebSocketServer): void {
         const isCreate = !code;
         const room = code ? getRoom(code) : createRoom();
         if (!room) {
-          sendError(ws, SquadErrorCodes.BAD_CODE, "No squad with that code");
+          if (isCreate) {
+            // createRoom returned null → at the global room cap, not a bad code.
+            sendError(ws, SquadErrorCodes.SQUAD_FULL, "Server is at capacity — try again later");
+          } else {
+            sendError(ws, SquadErrorCodes.BAD_CODE, "No squad with that code");
+          }
           return;
         }
         const colorPref = typeof p?.colorPref === "string" ? p.colorPref : undefined;

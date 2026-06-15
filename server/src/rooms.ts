@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import {
   type SquadMember,
   MAX_SQUAD_SIZE,
@@ -7,10 +8,17 @@ import {
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const CODE_LENGTH = 8;
 
+// Hard cap on concurrent rooms. The relay holds rooms in memory only, so an
+// unbounded create-flood is an OOM vector on a public endpoint. 500 squads is
+// far beyond any realistic friend-group load; past it, creation is refused.
+export const MAX_ROOMS = 500;
+
+// Codes gate access to a room (anyone with the code can join), so they must be
+// unguessable — use a CSPRNG, not Math.random (predictable from prior outputs).
 function randomCode(): string {
   let code = "";
   for (let i = 0; i < CODE_LENGTH; i++) {
-    code += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+    code += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
   }
   return code;
 }
@@ -27,7 +35,9 @@ export type Room = {
 
 const rooms = new Map<string, Room>();
 
-export function createRoom(): Room {
+/** Create a fresh room, or null if the server is at its room cap. */
+export function createRoom(): Room | null {
+  if (rooms.size >= MAX_ROOMS) return null;
   let code: string;
   do {
     code = randomCode();

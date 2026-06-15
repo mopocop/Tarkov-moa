@@ -1,0 +1,65 @@
+# Squad relay + Tailscale Funnel — deployed on the home server (OptiPlex).
+#
+# Public URL: https://tarkovmoa.<tailnet>.ts.net  (wss:// for the squad socket).
+# The relay runs INSIDE the tailscale container's network namespace, so Funnel
+# reaches it at 127.0.0.1:8787 and nothing is published on the LAN. The home
+# server's own Tailscale identity (moahomeserver) is untouched — this is a
+# separate, dedicated node named "tarkovmoa".
+#
+# Secrets live in .env (gitignored): TS_AUTHKEY, STATS_TOKEN.
+
+services:
+  # --- Tailscale node "tarkovmoa": userspace networking + Funnel ingress -------
+  tailscale:
+    image: tailscale/tailscale:v1.78.1
+    hostname: tarkovmoa                  # → tarkovmoa.<tailnet>.ts.net
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:?set TS_AUTHKEY in .env}
+      TS_STATE_DIR: /var/lib/tailscale   # persisted → no re-auth on restart
+      TS_USERSPACE: "true"               # no TUN device / NET_ADMIN needed
+      TS_EXTRA_ARGS: --advertise-tags=tag:relay
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - ts-state:/var/lib/tailscale
+      - ./serve-config.json:/config/serve.json:ro
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    mem_limit: 128m
+    pids_limit: 200
+    healthcheck:
+      test: ["CMD", "tailscale", "status"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # --- The relay itself: shares the tailscale netns, binds 127.0.0.1:8787 ------
+  relay:
+    build:
+      context: ../..
+      dockerfile: server/deploy/Dockerfile
+    image: squad-relay:latest
+    network_mode: service:tailscale      # Funnel → 127.0.0.1:8787
+    depends_on:
+      - tailscale
+    environment:
+      PORT: "8787"
+      STATS_TOKEN: ${STATS_TOKEN:?set STATS_TOKEN in .env}
+      FEEDBACK_FILE: /data/feedback.jsonl
+    volumes:
+      - relay-data:/data
+    read_only: true                      # immutable rootfs
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    mem_limit: 192m
+    pids_limit: 100
+
+volumes:
+  ts-state:
+  relay-data:

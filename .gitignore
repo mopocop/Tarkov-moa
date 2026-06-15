@@ -15,6 +15,10 @@ dist-ssr
 # Squad relay runtime output (analytics JSON-Lines, etc.)
 server/data/
 
+# Relay deployment secrets — never commit (Tailscale auth key, stats token)
+.env
+server/deploy/.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
