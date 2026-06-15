@@ -1,10 +1,11 @@
 # Squad relay + Tailscale Funnel — deployed on the home server (OptiPlex).
 #
 # Public URL: https://tarkovmoa.<tailnet>.ts.net  (wss:// for the squad socket).
-# The relay runs INSIDE the tailscale container's network namespace, so Funnel
-# reaches it at 127.0.0.1:8787 and nothing is published on the LAN. The home
-# server's own Tailscale identity (moahomeserver) is untouched — this is a
-# separate, dedicated node named "tarkovmoa".
+# Two independent containers on a private Docker network: the Tailscale node
+# "tarkovmoa" runs Funnel and reverse-proxies to the relay at relay:8787. The
+# relay publishes NO host/LAN ports (internal-only). Decoupled lifecycles mean
+# either can restart without orphaning the other. The home server's own
+# Tailscale identity (moahomeserver) is untouched.
 #
 # Secrets live in .env (gitignored): TS_AUTHKEY, STATS_TOKEN.
 
@@ -15,13 +16,15 @@ services:
     hostname: tarkovmoa                  # → tarkovmoa.<tailnet>.ts.net
     environment:
       TS_AUTHKEY: ${TS_AUTHKEY:?set TS_AUTHKEY in .env}
-      TS_STATE_DIR: /var/lib/tailscale   # persisted → no re-auth on restart
+      TS_STATE_DIR: /var/lib/tailscale   # persisted → stable identity across restarts
       TS_USERSPACE: "true"               # no TUN device / NET_ADMIN needed
       TS_EXTRA_ARGS: --advertise-tags=tag:relay
       TS_SERVE_CONFIG: /config/serve.json
     volumes:
       - ts-state:/var/lib/tailscale
       - ./serve-config.json:/config/serve.json:ro
+    depends_on:
+      - relay
     cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
@@ -35,15 +38,14 @@ services:
       retries: 3
       start_period: 30s
 
-  # --- The relay itself: shares the tailscale netns, binds 127.0.0.1:8787 ------
+  # --- The relay: internal-only, reachable by the tailscale node as relay:8787 -
   relay:
     build:
       context: ../..
       dockerfile: server/deploy/Dockerfile
     image: squad-relay:latest
-    network_mode: service:tailscale      # Funnel → 127.0.0.1:8787
-    depends_on:
-      - tailscale
+    expose:
+      - "8787"                           # internal docker network only — no host/LAN port
     environment:
       PORT: "8787"
       STATS_TOKEN: ${STATS_TOKEN:-}
@@ -59,6 +61,12 @@ services:
     restart: unless-stopped
     mem_limit: 192m
     pids_limit: 100
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
 volumes:
   ts-state:
