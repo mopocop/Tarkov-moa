@@ -17,6 +17,7 @@
     "loadingQuestData": "Carregando dados das missões…",
     "noQuestData": "Nenhum dado de missão ainda.",
     "noQuestDataCheckConnection": "Nenhum dado de missão ainda — verifique sua conexão.",
+    "staleData": "tarkov.dev fora do ar — mostrando dados salvos {{time}}.",
     "synced": "sincronizado {{time}}",
     "filtersSavedAsDefault": "Filtros salvos como padrão.",
     "drawingsCleared": "Desenhos apagados neste mapa."

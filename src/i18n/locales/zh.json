@@ -17,6 +17,7 @@
     "loadingQuestData": "正在加载任务数据…",
     "noQuestData": "暂无任务数据。",
     "noQuestDataCheckConnection": "暂无任务数据 — 请检查网络连接。",
+    "staleData": "无法连接 tarkov.dev — 正在显示{{time}}保存的数据。",
     "synced": "已于{{time}}同步",
     "filtersSavedAsDefault": "筛选已保存为默认。",
     "drawingsCleared": "已清除此地图上的绘制。"

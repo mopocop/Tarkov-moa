@@ -115,16 +115,30 @@ async function gqlFetch<T>(query: string): Promise<T> {
   return body.data;
 }
 
-function loadCache<T>(key: string): APICache<T> | null {
+/** A cache hit, plus whether it is past CACHE_DURATION. */
+interface CacheHit<T> {
+  data: T;
+  timestamp: number;
+  stale: boolean;
+}
+
+// An expired entry is reported as stale but NEVER deleted. Deleting on read was
+// a real outage amplifier: when tarkov.dev went down (2026-08-17, GraphQL 422
+// for hours), every app that opened past the 24h mark threw away the good copy
+// it was holding, then failed to replace it, and showed an empty screen. Quest
+// data is near-static between game patches, so an old copy is worth far more
+// than nothing. The only writer is saveCache, on a successful fetch.
+function loadCache<T>(key: string): CacheHit<T> | null {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as APICache<T>;
-    if (Date.now() - parsed.timestamp >= CACHE_DURATION) {
-      localStorage.removeItem(key);
-      return null;
-    }
-    return parsed;
+    if (parsed?.data === undefined || typeof parsed.timestamp !== 'number') return null;
+    return {
+      data: parsed.data,
+      timestamp: parsed.timestamp,
+      stale: Date.now() - parsed.timestamp >= CACHE_DURATION,
+    };
   } catch {
     return null;
   }
@@ -138,52 +152,107 @@ function saveCache<T>(key: string, data: T): void {
   }
 }
 
+/**
+ * When a dataset was served from an expired cache because the network attempt
+ * failed. `servedAt` is the timestamp of the OLDEST such copy, so the UI can say
+ * how far behind the user actually is.
+ */
+export interface StaleInfo {
+  stale: boolean;
+  servedAt: number | null;
+}
+
 export class TarkovDevClient {
   private lang: ApiLang;
+  /** baseKey -> timestamp of the expired copy served for it. */
+  private servedStale = new Map<string, number>();
 
   constructor(lang: ApiLang = 'en') {
     this.lang = lang;
   }
 
-  async getTasks(force = false): Promise<TarkovTask[]> {
-    const key = cacheKey(TASKS_CACHE_KEY, this.lang);
-    if (!force) {
-      const cached = loadCache<TarkovTask[]>(key);
-      if (cached) return cached.data;
+  /** Whether any dataset on this client fell back to an expired cache. */
+  get staleInfo(): StaleInfo {
+    if (this.servedStale.size === 0) return { stale: false, servedAt: null };
+    return { stale: true, servedAt: Math.min(...this.servedStale.values()) };
+  }
+
+  /**
+   * Fresh cache → network → expired cache, in that order.
+   *
+   * The last step is the point of this function: a failed fetch degrades to
+   * whatever we still hold instead of propagating. The error only reaches the
+   * caller when there is genuinely nothing to show, which keeps "tarkov.dev is
+   * down" distinguishable from "you have never loaded this app".
+   */
+  private async load<R, T>(
+    baseKey: string,
+    query: string,
+    select: (raw: R) => T,
+    force: boolean,
+  ): Promise<T> {
+    const key = cacheKey(baseKey, this.lang);
+    const cached = loadCache<T>(key);
+
+    if (!force && cached && !cached.stale) {
+      this.servedStale.delete(baseKey);
+      return cached.data;
     }
-    const data = await gqlFetch<{ tasks: TarkovTask[] }>(tasksQuery(this.lang));
-    saveCache(key, data.tasks);
-    return data.tasks;
+
+    try {
+      const data = select(await gqlFetch<R>(query));
+      saveCache(key, data);
+      this.servedStale.delete(baseKey);
+      return data;
+    } catch (err) {
+      if (cached) {
+        const age = Math.round((Date.now() - cached.timestamp) / 3_600_000);
+        console.warn(
+          `[tarkov.dev] ${baseKey}: fetch failed, serving cache from ~${age}h ago —`,
+          err instanceof Error ? err.message : err,
+        );
+        this.servedStale.set(baseKey, cached.timestamp);
+        return cached.data;
+      }
+      throw err;
+    }
+  }
+
+  async getTasks(force = false): Promise<TarkovTask[]> {
+    return this.load<{ tasks: TarkovTask[] }, TarkovTask[]>(
+      TASKS_CACHE_KEY,
+      tasksQuery(this.lang),
+      (raw) => raw.tasks,
+      force,
+    );
   }
 
   async getMaps(force = false): Promise<TarkovMap[]> {
-    const key = cacheKey(MAPS_CACHE_KEY, this.lang);
-    if (!force) {
-      const cached = loadCache<TarkovMap[]>(key);
-      if (cached) return cached.data;
-    }
-    const data = await gqlFetch<{ maps: TarkovMap[] }>(mapsQuery(this.lang));
-    saveCache(key, data.maps);
-    return data.maps;
+    return this.load<{ maps: TarkovMap[] }, TarkovMap[]>(
+      MAPS_CACHE_KEY,
+      mapsQuery(this.lang),
+      (raw) => raw.maps,
+      force,
+    );
   }
 
   async getMapPois(force = false): Promise<MapPoiData[]> {
-    const key = cacheKey(MAP_POIS_CACHE_KEY, this.lang);
-    if (!force) {
-      const cached = loadCache<MapPoiData[]>(key);
-      if (cached) return cached.data;
-    }
-    const data = await gqlFetch<{ maps: MapPoiData[] }>(mapPoisQuery(this.lang));
-    saveCache(key, data.maps);
-    return data.maps;
+    return this.load<{ maps: MapPoiData[] }, MapPoiData[]>(
+      MAP_POIS_CACHE_KEY,
+      mapPoisQuery(this.lang),
+      (raw) => raw.maps,
+      force,
+    );
   }
 
   clearCache(): void {
-    // Clear every per-language slot for all three datasets.
+    // Clear every per-language slot for all three datasets. This is the explicit
+    // user-driven wipe (Settings → clear cache); expiry alone never deletes.
     for (const lang of ['en', 'pt', 'ru', 'ja', 'zh', 'es'] as const) {
       localStorage.removeItem(cacheKey(TASKS_CACHE_KEY, lang));
       localStorage.removeItem(cacheKey(MAPS_CACHE_KEY, lang));
       localStorage.removeItem(cacheKey(MAP_POIS_CACHE_KEY, lang));
     }
+    this.servedStale.clear();
   }
 }

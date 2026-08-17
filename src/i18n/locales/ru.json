@@ -17,6 +17,7 @@
     "loadingQuestData": "Загрузка данных квестов…",
     "noQuestData": "Пока нет данных о квестах.",
     "noQuestDataCheckConnection": "Пока нет данных о квестах — проверьте подключение.",
+    "staleData": "tarkov.dev недоступен — показаны данные, сохранённые {{time}}.",
     "synced": "синхронизировано {{time}}",
     "filtersSavedAsDefault": "Фильтры сохранены по умолчанию.",
     "drawingsCleared": "Рисунки на этой карте очищены."

@@ -17,6 +17,7 @@
     "loadingQuestData": "クエストデータを読み込み中…",
     "noQuestData": "クエストデータがまだありません。",
     "noQuestDataCheckConnection": "クエストデータがまだありません — 接続を確認してください。",
+    "staleData": "tarkov.dev に接続できません — {{time}}に保存したデータを表示中です。",
     "synced": "{{time}}に同期",
     "filtersSavedAsDefault": "フィルターを既定として保存しました。",
     "drawingsCleared": "このマップの描画を消去しました。"

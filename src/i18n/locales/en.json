@@ -17,6 +17,7 @@
     "loadingQuestData": "Loading quest data…",
     "noQuestData": "No quest data yet.",
     "noQuestDataCheckConnection": "No quest data yet — check your connection.",
+    "staleData": "tarkov.dev is unreachable — showing data saved {{time}}.",
     "synced": "synced {{time}}",
     "filtersSavedAsDefault": "Filters saved as default.",
     "drawingsCleared": "Drawings cleared on this map."

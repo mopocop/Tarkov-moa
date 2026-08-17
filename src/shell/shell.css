@@ -205,18 +205,28 @@
   background: var(--bg-sunken);
 }
 
-/* error banner floats over the map, rail-side aligned */
-.shell-error {
+/* error + warning banners float over the map, rail-side aligned */
+.shell-error,
+.shell-warn {
   position: absolute;
   top: var(--sp-3);
   left: var(--sp-3);
   right: var(--sp-3);
   z-index: var(--z-map-ui);
-  background: var(--danger-soft);
-  border: 1px solid var(--danger);
   color: var(--text);
   padding: 10px 14px;
   border-radius: var(--r-md);
   font-size: var(--fs-body);
   backdrop-filter: blur(4px);
+}
+
+.shell-error {
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+}
+
+/* Degraded, not broken: the app is usable on cached data. Amber, not red. */
+.shell-warn {
+  background: var(--warn-soft);
+  border: 1px solid var(--warn);
 }

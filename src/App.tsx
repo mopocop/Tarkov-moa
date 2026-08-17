@@ -107,6 +107,9 @@ function App() {
   // IDs they broadcast (every client already has the same list).
   const [tasks, setTasks] = useState<TarkovTask[]>([]);
   const [lastSynced, setLastSynced] = useState<number | null>(null);
+  // Set when quest data came from an expired cache because tarkov.dev was
+  // unreachable; holds the timestamp of that copy. null = data is current.
+  const [staleSince, setStaleSince] = useState<number | null>(null);
   const [selectedMapId, setSelectedMapId] = useState<string | null>(() =>
     localStorage.getItem(SELECTED_MAP_KEY),
   );
@@ -163,6 +166,7 @@ function App() {
   const [railSection, setRailSection] = useState<RailSection | null>('quests');
   const [customPois, setCustomPois] = useState<Poi[]>(() => loadCustomPois());
   const relativeSynced = useRelativeTime(lastSynced);
+  const relativeStale = useRelativeTime(staleSince);
   const squad = useSquad();
   const {
     inSquad: squadInSquad,
@@ -259,7 +263,12 @@ function App() {
         setQuestState(next);
         setTasks(tasks);
         pruneStaleSelections(next);
-        setLastSynced(Date.now());
+        // The client serves an expired cache rather than failing when
+        // tarkov.dev is unreachable. Surface that instead of pretending we
+        // just synced — the honest "last synced" is when that copy was written.
+        const { stale, servedAt } = devClient.staleInfo;
+        setStaleSince(stale ? servedAt : null);
+        setLastSynced(stale ? servedAt : Date.now());
       } catch (err) {
         setError(err instanceof Error ? err.message : t('errors.failedToLoadQuestData'));
       } finally {
@@ -813,6 +822,9 @@ function App() {
 
         <section className="map-stage map-area">
               {error && <div className="shell-error">{error}</div>}
+              {!error && relativeStale && (
+                <div className="shell-warn">{t('common.staleData', { time: relativeStale })}</div>
+              )}
               {selectedMapId && questState ? (
                 <>
                   <MapView mapId={selectedMapId} mapName={selectedMapName} activeFloorId={activeFloorId}>
