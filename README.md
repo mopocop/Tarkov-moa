@@ -19,6 +19,12 @@
 
 <p align="center"><sub>Free · Windows 10/11 · ~12&nbsp;MB · updates itself · no account, no sign-up</sub></p>
 
+<p align="center"><sub>
+<b>Status:</b> last release June 2026, built and verified against EFT 1.0.x.<br>
+Quest, map and POI data is fetched live from tarkov.dev, so it follows the game on its own. Log parsing is version-sensitive:<br>
+if a patch changes the notification format, automatic quest tracking can go quiet until the parser catches up — <a href="https://github.com/mopocop/Tarkov-moa/issues">open an issue</a> if you hit that.
+</sub></p>
+
 ---
 
 <!-- SCREENSHOTS: drop 2–3 real screenshots or a short GIF here once captured.
@@ -54,12 +60,20 @@ Short answer: **yes, it's safe, and no, it's not a cheat.**
 
 ---
 
+## How it's built
+
+A [Tauri 2](https://tauri.app) desktop app: **React + TypeScript** front end, a **Rust** core for everything that touches the filesystem, and a **Node WebSocket relay** for squad mode. Quest, map and POI data comes from the excellent [tarkov.dev](https://tarkov.dev) API.
+
+The game exposes no API, so live state is read **passively** from files the game already writes — tailing its logs for quest events, parsing screenshot filenames for player position. Nothing reads or writes game memory.
+
+The squad relay is **self-hosted behind [Tailscale Funnel](https://tailscale.com/kb/1223/funnel)** — no port forwarding, no residential IP in DNS, its own isolated tailnet identity. The container runs non-root on a read-only root filesystem with all capabilities dropped; connection, room and frame limits are enforced in code. Runbook: [`server/deploy/README.md`](server/deploy/README.md).
+
+📐 **[ARCHITECTURE.md](ARCHITECTURE.md)** — the design decisions, the trade-offs behind them, and what turned out to be impossible and why.
+
 <details>
 <summary><b>For developers — build from source &amp; contribute</b></summary>
 
 <br>
-
-Tarkov MoA is a [Tauri 2](https://tauri.app) desktop app: a React + TypeScript front-end with a small Rust backend, plus a lightweight Node WebSocket relay that powers squad mode. Quest, map and POI data comes from the excellent [tarkov.dev](https://tarkov.dev) API.
 
 ```bash
 # prerequisites: Node 20+, Rust (stable), and the Tauri prerequisites for your OS
