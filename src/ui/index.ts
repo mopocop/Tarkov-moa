@@ -1,6 +1,6 @@
 /**
  * FIELD GLASS component library — import everything UI from here.
- * Docs: docs/DESIGN-SYSTEM.md. Tokens: src/ui/tokens.css. Styles: src/ui/ui.css.
+ * Tokens: src/ui/tokens.css. Styles: src/ui/ui.css.
  */
 import './ui.css';
 

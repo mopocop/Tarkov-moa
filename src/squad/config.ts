@@ -1,7 +1,7 @@
 // Relay endpoint. Defaults to the local dev relay; override at build time with
-// VITE_SQUAD_RELAY_URL (e.g. wss://squad.<host> once deployed behind the
-// Cloudflare Tunnel — see the plan's Step 18). Read defensively so the same
-// module also works under node/tsx (where import.meta.env is absent).
+// VITE_SQUAD_RELAY_URL to point at a deployed relay (see server/deploy/README.md).
+// Read defensively so the same module also works under node/tsx, where
+// import.meta.env is absent.
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env;
 
 export const RELAY_URL: string = env?.VITE_SQUAD_RELAY_URL ?? "ws://localhost:8787";
