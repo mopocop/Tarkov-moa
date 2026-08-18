@@ -1,7 +1,7 @@
 {
   "name": "tarkov-companion",
   "private": true,
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "Quest-aware live map companion for Escape from Tarkov — Tauri 2 desktop app with a React/TypeScript front end, a Rust core, and a Node WebSocket relay for real-time squad sync.",
   "repository": {
     "type": "git",

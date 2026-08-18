@@ -11,6 +11,17 @@ export interface PatchNote {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "0.9.0",
+    date: "2026-08-18",
+    changes: [
+      "Fixed: the map no longer goes blank when tarkov.dev has a bad day. Your quests stay on screen and the app keeps working — you just get a note telling you how old the data is.",
+      "What went wrong: tarkov.dev is where every quest, map and point of interest comes from, and on 17 August it was down for hours. The old app threw its saved copy away every 24 hours BEFORE checking whether a replacement was actually available — so an outage on their side turned into an empty screen on yours, with no way back until they recovered.",
+      "Tarkov MoA now has four places to look instead of one. First the live tarkov.dev data, same as always. If that fails, your own saved copy — old data beats no data, and it is never deleted until something better replaces it. If you have no saved copy, a backup published alongside the app and refreshed daily. And if even that is unreachable, a copy built into the install itself, so a brand-new install works offline.",
+      "You only see an error if all four come up empty, which now takes a lot of things going wrong at the same time.",
+      "Improved: when you are running on saved data, the header tells you the truth about when it was last updated instead of claiming it just synced.",
+    ],
+  },
+  {
     version: "0.8.1",
     date: "2026-06-15",
     changes: [

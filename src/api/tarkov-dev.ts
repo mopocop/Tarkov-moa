@@ -1,4 +1,5 @@
 import type { APICache, TarkovMap, TarkovTask, MapPoiData } from "./types";
+import { remoteSnapshot, bundledSnapshot, type SnapshotField } from "./snapshot";
 
 const ENDPOINT = 'https://api.tarkov.dev/graphql';
 const TASKS_CACHE_KEY = 'td_tasks_cache_v4';
@@ -171,25 +172,35 @@ export class TarkovDevClient {
     this.lang = lang;
   }
 
-  /** Whether any dataset on this client fell back to an expired cache. */
+  /** Whether any dataset fell back past the live API (cache or snapshot). */
   get staleInfo(): StaleInfo {
     if (this.servedStale.size === 0) return { stale: false, servedAt: null };
     return { stale: true, servedAt: Math.min(...this.servedStale.values()) };
   }
 
   /**
-   * Fresh cache → network → expired cache, in that order.
+   * Resolution order, best source first:
    *
-   * The last step is the point of this function: a failed fetch degrades to
-   * whatever we still hold instead of propagating. The error only reaches the
-   * caller when there is genuinely nothing to show, which keeps "tarkov.dev is
-   * down" distinguishable from "you have never loaded this app".
+   *   1. a fresh local cache            — no network at all
+   *   2. the live tarkov.dev API        — the only source that can be current
+   *   3. an expired local cache         — your data, just old
+   *   4. the snapshot committed to this repo, over GitHub's CDN
+   *   5. the snapshot compiled into the binary (English, tasks/maps only)
+   *
+   * Steps 3-5 exist because tarkov.dev is the app's only upstream, and when it
+   * is down there is nothing the app can do to make it come back. What it can
+   * do is refuse to lose what it already had, and refuse to start from nothing.
+   * The error only reaches the caller when every tier is empty.
+   *
+   * Fallback data is never written to the cache: a cached fallback would look
+   * fresh for the next 24h and stop the app retrying the real API on launch.
    */
   private async load<R, T>(
     baseKey: string,
     query: string,
     select: (raw: R) => T,
     force: boolean,
+    snapshotField?: SnapshotField,
   ): Promise<T> {
     const key = cacheKey(baseKey, this.lang);
     const cached = loadCache<T>(key);
@@ -205,15 +216,31 @@ export class TarkovDevClient {
       this.servedStale.delete(baseKey);
       return data;
     } catch (err) {
+      const why = err instanceof Error ? err.message : String(err);
+
       if (cached) {
         const age = Math.round((Date.now() - cached.timestamp) / 3_600_000);
-        console.warn(
-          `[tarkov.dev] ${baseKey}: fetch failed, serving cache from ~${age}h ago —`,
-          err instanceof Error ? err.message : err,
-        );
+        console.warn(`[tarkov.dev] ${baseKey}: fetch failed, serving cache from ~${age}h ago —`, why);
         this.servedStale.set(baseKey, cached.timestamp);
         return cached.data;
       }
+
+      if (snapshotField) {
+        const remote = await remoteSnapshot<T>(this.lang, snapshotField);
+        if (remote) {
+          console.warn(`[tarkov.dev] ${baseKey}: no cache, serving the repo snapshot —`, why);
+          this.servedStale.set(baseKey, remote.generatedAt ?? Date.now());
+          return remote.data;
+        }
+
+        const local = bundledSnapshot<T>(snapshotField);
+        if (local) {
+          console.warn(`[tarkov.dev] ${baseKey}: offline, serving the bundled snapshot —`, why);
+          this.servedStale.set(baseKey, local.generatedAt ?? Date.now());
+          return local.data;
+        }
+      }
+
       throw err;
     }
   }
@@ -224,6 +251,7 @@ export class TarkovDevClient {
       tasksQuery(this.lang),
       (raw) => raw.tasks,
       force,
+      'tasks',
     );
   }
 
@@ -233,9 +261,12 @@ export class TarkovDevClient {
       mapsQuery(this.lang),
       (raw) => raw.maps,
       force,
+      'maps',
     );
   }
 
+  // No snapshot tier: POIs are the largest payload by far and the app already
+  // renders usefully without them, so they stay out of the committed snapshot.
   async getMapPois(force = false): Promise<MapPoiData[]> {
     return this.load<{ maps: MapPoiData[] }, MapPoiData[]>(
       MAP_POIS_CACHE_KEY,

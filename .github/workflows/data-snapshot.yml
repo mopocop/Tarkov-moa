@@ -1,0 +1,60 @@
+# Refreshes the committed tarkov.dev snapshot that the app falls back to when
+# the live API is unreachable. Commits only when the data actually changed —
+# quest data moves with game patches, not with the calendar, so most runs are
+# a no-op and the repo does not accumulate a daily blob.
+name: Data snapshot
+
+on:
+  schedule:
+    - cron: '17 5 * * *' # daily, off the hour to avoid the cron stampede
+  workflow_dispatch: # so a patch day can be picked up immediately
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch snapshot from tarkov.dev
+        run: node scripts/fetch-snapshot.mjs
+
+      # generatedAt changes on every run, so a naive `git diff` is always dirty.
+      # Compare everything EXCEPT that field to decide whether the data moved.
+      - name: Detect a real data change
+        id: changed
+        run: |
+          changed=false
+          for f in $(git diff --name-only -- data/snapshot); do
+            old=$(git show HEAD:"$f" 2>/dev/null | jq -S 'del(.generatedAt)' || echo null)
+            new=$(jq -S 'del(.generatedAt)' "$f")
+            if [ "$old" != "$new" ]; then changed=true; break; fi
+          done
+          # A brand-new language file is a change by definition.
+          if [ -n "$(git ls-files --others --exclude-standard -- data/snapshot)" ]; then changed=true; fi
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          echo "data changed: $changed"
+
+      - name: Commit the refreshed snapshot
+        if: steps.changed.outputs.changed == 'true'
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/snapshot
+          git commit -m 'chore(data): refresh tarkov.dev snapshot'
+          git push
+
+      - name: Nothing to do
+        if: steps.changed.outputs.changed != 'true'
+        run: |
+          git checkout -- data/snapshot || true
+          echo 'Snapshot is unchanged apart from the timestamp — not committing.'

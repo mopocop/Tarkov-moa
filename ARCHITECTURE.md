@@ -66,6 +66,39 @@ never injects anything. It only reads files the game itself produced, which is
 what lets it claim to be anti-cheat-safe without hand-waving. The cost of that
 choice is real and stated below.
 
+## Surviving the only upstream
+
+tarkov.dev is the single source for quests, maps and POIs, and there is no
+second vendor to fail over to — the data is community-curated and does not
+exist anywhere else in this shape. So the app cannot remove the dependency; it
+can only refuse to fail with it.
+
+Each dataset resolves through four sources, best first:
+
+| | Source | Covers |
+|---|---|---|
+| 1 | live tarkov.dev | the normal case |
+| 2 | the user's own cache, **even when expired** | the API is down, you had data |
+| 3 | a snapshot committed to this repo, refreshed daily by CI | the API is down, you had nothing |
+| 4 | a snapshot compiled into the binary | no network at all, first launch |
+
+Two rules make it work:
+
+- **Expiry marks, it never deletes.** The original code dropped an entry the
+  moment it passed 24h, *before* knowing whether a replacement was available.
+  When tarkov.dev returned HTTP 422 for hours on 2026-08-17, every install past
+  the mark discarded good data and then could not replace it. Only an explicit
+  user-initiated wipe deletes now.
+- **Fallback data is never cached.** Writing a snapshot into the cache would
+  make it look fresh for 24h and stop the app retrying the real API on the next
+  launch — turning a temporary outage into a sticky one.
+
+The snapshot in tier 3 is deliberately narrower than the live queries: tasks and
+map names only. POIs are the largest payload and the app degrades gracefully
+without them, so leaving them out keeps a daily-committed file small. Tier 4
+ships English only; a last-resort fallback with correct ids, positions and
+requirements but English names is a fair trade against installer size.
+
 ## Squad mode: a relay, not P2P
 
 Squad mode shares live position, custom markers, and freehand drawings between
