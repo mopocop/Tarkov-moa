@@ -1,0 +1,1936 @@
+{
+ "tasks": {
+  "data": {
+   "tasks": {
+    "657315ddab5a49b71f098853": {
+     "id": "657315ddab5a49b71f098853",
+     "name": "657315ddab5a49b71f098853 name",
+     "trader": "54cb57776803fa99248b456e",
+     "wikiLink": "https://escapefromtarkov.fandom.com/wiki/First_in_Line",
+     "minPlayerLevel": 1,
+     "taskRequirements": [],
+     "traderRequirements": [],
+     "objectives": [
+      {
+       "id": "65732ac3c67dcd96adffa3c7",
+       "description": "65732ac3c67dcd96adffa3c7",
+       "type": "visit",
+       "optional": false,
+       "zones": [
+        {
+         "id": "Sandbox_1_MedicalArea_exploration",
+         "map": "653e6760052c01c1c805532f",
+         "position": {
+          "x": 156.2,
+          "y": 25.52,
+          "z": -83.59
+         },
+         "size": {
+          "x": 25.5,
+          "y": 6,
+          "z": 14.2
+         },
+         "outline": [
+          {
+           "x": 143.45,
+           "y": 25.52,
+           "z": -90.6899948
+          },
+          {
+           "x": 168.95,
+           "y": 25.52,
+           "z": -90.6899948
+          }
+         ],
+         "top": 28.52,
+         "bottom": 22.52,
+         "terrainElevation": 25.52
+        },
+        {
+         "id": "Sandbox_1_MedicalArea_exploration",
+         "map": "65b8d6f5cdde2479cb2a3125",
+         "position": {
+          "x": 156.2,
+          "y": 25.52,
+          "z": -83.59
+         },
+         "size": {
+          "x": 25.5,
+          "y": 6,
+          "z": 14.2
+         },
+         "outline": [
+          {
+           "x": 143.45,
+           "y": 25.52,
+           "z": -90.6899948
+          },
+          {
+           "x": 168.95,
+           "y": 25.52,
+           "z": -90.6899948
+          }
+         ],
+         "top": 28.52,
+         "bottom": 22.52,
+         "terrainElevation": 25.52
+        }
+       ],
+       "maps": [
+        "653e6760052c01c1c805532f",
+        "65b8d6f5cdde2479cb2a3125"
+       ]
+      },
+      {
+       "id": "65817bf31404f3565aef9fec",
+       "description": "65817bf31404f3565aef9fec",
+       "type": "giveItem",
+       "count": 3,
+       "optional": false,
+       "items": [
+        "590c695186f7741e566b64a2",
+        "5751a89d24597722aa0e8db0",
+        "5af0548586f7743a532b7e99",
+        "544fb3f34bdc2d03748b456a",
+        "544fb37f4bdc2dee738b4567",
+        "5755383e24597772cb798966",
+        "590c657e86f77412b013051d",
+        "60098ad7c2240c0fe85c570a",
+        "590c661e86f7741e566b646a",
+        "590c678286f77426c9660122",
+        "5755356824597772cb798962",
+        "544fb45d4bdc2dee738b4568",
+        "544fb25a4bdc2dfb738b4567",
+        "5751a25924597722c463c472",
+        "5d02778e86f774203e7dedbe",
+        "5af0454c86f7746bf20992e8",
+        "60098af40accd37ef2175f27",
+        "5e831507ea0a7c419c2f9bd9",
+        "5e8488fa988a8701445df1e4",
+        "544fb3364bdc2d34748b456a",
+        "5d02797c86f774203f38e30a",
+        "5ed515c8d380ab312177c0fa",
+        "5ed515f6915ec335206e4152",
+        "5c10c8fd86f7743d7d706df3",
+        "5ed515e03a40a50460332579",
+        "5ed51652f6c34d2cc26336a1",
+        "5ed5160a87bb8443d10680b5",
+        "5ed5166ad380ab312177c100",
+        "637b60c3b7afa97bfc3d7001",
+        "5ed515ece452db0eb56fc028",
+        "637b6179104668754b72f8f5",
+        "637b6251104668754b72f8f9",
+        "5c0e530286f7747fa1419862",
+        "637b612fb7afa97bfc3d7005",
+        "5c0e531286f7747fa54205c2",
+        "5c0e531d86f7747fa23f4d42",
+        "5fca13ca637ee0341a484f46",
+        "637b620db7afa97bfc3d7009",
+        "5c0e533786f7747fa23f4d47",
+        "5c0e534186f7747fa1419867",
+        "5fca138c2a7b221b2852a5c6",
+        "5c052e6986f7746b207bc3c9",
+        "5c0530ee86f774697952d952",
+        "6389c6c7dbfd5e4b95197e68",
+        "5b4335ba86f7744d2837a264",
+        "5af0534a86f7743b6f354284",
+        "59e361e886f774176c10a2a5",
+        "59e3606886f77417674759a5",
+        "5d1b3a5d86f774252167ba22",
+        "5d1b3f2d86f774253763b735",
+        "62a0a043cf4a99369e2624a5",
+        "619cc01e0a7c3a1a2731940c"
+       ],
+       "dogTagLevel": 0,
+       "maxDurability": 100,
+       "minDurability": 0,
+       "foundInRaid": true
+      }
+     ],
+     "failConditions": [],
+     "startRewards": {
+      "traderStanding": [],
+      "items": [],
+      "offerUnlock": [],
+      "skillLevelReward": [],
+      "traderUnlock": [],
+      "craftUnlock": [],
+      "achievement": [],
+      "customization": [],
+      "traderDialogueUnlock": [],
+      "locationUnlock": []
+     },
+     "finishRewards": {
+      "traderStanding": [
+       {
+        "standing": 0.1,
+        "trader": "54cb57776803fa99248b456e"
+       }
+      ],
+      "items": [
+       {
+        "item": "5449016a4bdc2d6f028b456f",
+        "count": 80000,
+        "attributes": {}
+       }
+      ],
+      "offerUnlock": [],
+      "skillLevelReward": [],
+      "traderUnlock": [],
+      "craftUnlock": [],
+      "achievement": [],
+      "customization": [],
+      "traderDialogueUnlock": [],
+      "locationUnlock": []
+     },
+     "failureOutcome": {
+      "traderStanding": [],
+      "items": [],
+      "offerUnlock": [],
+      "skillLevelReward": [],
+      "traderUnlock": [],
+      "craftUnlock": [],
+      "achievement": [],
+      "customization": [],
+      "traderDialogueUnlock": [],
+      "locationUnlock": []
+     },
+     "restartable": false,
+     "experience": 3000,
+     "factionName": "Any",
+     "neededKeys": [],
+     "availableDelaySecondsMin": 0,
+     "availableDelaySecondsMax": 0,
+     "otherRequirements": [
+      {
+       "id": "68dfd6d220b777b168d7ef72",
+       "type": "dialogue",
+       "traders": [
+        "54cb57776803fa99248b456e"
+       ]
+      }
+     ],
+     "normalizedName": "first-in-line",
+     "kappaRequired": false,
+     "lightkeeperRequired": false,
+     "taskImageLink": "https://assets.tarkov.dev/657315ddab5a49b71f098853.webp",
+     "map": "653e6760052c01c1c805532f"
+    },
+    "657315e4a6af4ab4b50f3459": {
+     "id": "657315e4a6af4ab4b50f3459",
+     "name": "657315e4a6af4ab4b50f3459 name",
+     "trader": "5a7c2eca46aef81a7ca2145d",
+     "wikiLink": "https://escapefromtarkov.fandom.com/wiki/Saving_the_Mole",
+     "minPlayerLevel": 1,
+     "taskRequirements": [],
+     "traderRequirements": [],
+     "objectives": [
+      {
+       "id": "6575a64d3fc09bdfb38b713d",
+       "description": "6575a64d3fc09bdfb38b713d",
+       "type": "visit",
+       "optional": false,
+       "zones": [
+        {
+         "id": "Sandbox_5_Office_exploration",
+         "map": "653e6760052c01c1c805532f",
+         "position": {
+          "x": -13.48,
+          "y": 31.01,
+          "z": 51.33
+         },
+         "size": {
+          "x": 13.6,
+          "y": 3,
+          "z": 13.3
+         },
+         "outline": [
+          {
+           "x": -20.2799988,
+           "y": 31.01,
+           "z": 44.68
+          },
+          {
+           "x": -6.67999935,
+           "y": 31.01,
+           "z": 44.68
+          }
+         ],
+         "top": 32.5100021,
+         "bottom": 29.51,
+         "terrainElevation": 31.01
+        },
+        {
+         "id": "Sandbox_5_Office_exploration",
+         "map": "65b8d6f5cdde2479cb2a3125",
+         "position": {
+          "x": -13.48,
+          "y": 31.01,
+          "z": 51.33
+         },
+         "size": {
+          "x": 13.6,
+          "y": 3,
+          "z": 13.3
+         },
+         "outline": [
+          {
+           "x": -20.2799988,
+           "y": 31.01,
+           "z": 44.68
+          },
+          {
+           "x": -6.67999935,
+           "y": 31.01,
+           "z": 44.68
+          }
+         ],
+         "top": 32.5100021,
+         "bottom": 29.51,
+         "terrainElevation": 31.01
+        }
+       ],
+       "maps": [
+        "653e6760052c01c1c805532f",
+        "65b8d6f5cdde2479cb2a3125"
+       ]
+      },
+      {
+       "id": "6575a524a39d2be74e620546",
+       "description": "6575a524a39d2be74e620546",
+       "type": "visit",
+       "optional": true,
+       "zones": [
+        {
+         "id": "Sandbox_5_DeadGroup_exploration",
+         "map": "653e6760052c01c1c805532f",
+         "position": {
+          "x": -21.01,
+          "y": 24.228,
+          "z": -25.1
+         },
+         "size": {
+          "x": 16,
+          "y": 3,
+          "z": 8
+         },
+         "outline": [
+          {
+           "x": -29.01,
+           "y": 24.228,
+           "z": -29.1
+          },
+          {
+           "x": -13.01,
+           "y": 24.228,
+           "z": -29.1
+          }
+         ],
+         "top": 25.728,
+         "bottom": 22.728,
+         "terrainElevation": 24.228
+        },
+        {
+         "id": "Sandbox_5_DeadGroup_exploration",
+         "map": "65b8d6f5cdde2479cb2a3125",
+         "position": {
+          "x": -21.01,
+          "y": 24.228,
+          "z": -25.1
+         },
+         "size": {
+          "x": 16,
+          "y": 3,
+          "z": 8
+         },
+         "outline": [
+          {
+           "x": -29.01,
+           "y": 24.228,
+           "z": -29.1
+          },
+          {
+           "x": -13.01,
+           "y": 24.228,
+           "z": -29.1
+          }
+         ],
+         "top": 25.728,
+         "bottom": 22.728,
+         "terrainElevation": 24.228
+        }
+       ],
+       "maps": [
+        "653e6760052c01c1c805532f",
+        "65b8d6f5cdde2479cb2a3125"
+       ]
+      },
+      {
+       "id": "6575a62a62028c6d5cb43cb7",
+       "description": "6575a62a62028c6d5cb43cb7",
+       "type": "visit",
+       "optional": true,
+       "zones": [
+        {
+         "id": "Sandbox_5_Laborant_exploration",
+         "map": "653e6760052c01c1c805532f",
+         "position": {
+          "x": -60.45,
+          "y": 25.62,
+          "z": 27.42
+         },
+         "size": {
+          "x": 5,
+          "y": 3,
+          "z": 7
+         },
+         "outline": [
+          {
+           "x": -62.95,
+           "y": 25.62,
+           "z": 23.92
+          },
+          {
+           "x": -57.95,
+           "y": 25.62,
+           "z": 23.92
+          }
+         ],
+         "top": 27.12,
+         "bottom": 24.12,
+         "terrainElevation": 25.62
+        },
+        {
+         "id": "Sandbox_5_Laborant_exploration",
+         "map": "65b8d6f5cdde2479cb2a3125",
+         "position": {
+          "x": -60.45,
+          "y": 25.62,
+          "z": 27.42
+         },
+         "size": {
+          "x": 5,
+          "y": 3,
+          "z": 7
+         },
+         "outline": [
+          {
+           "x": -62.95,
+           "y": 25.62,
+           "z": 23.92
+          },
+          {
+           "x": -57.95,
+           "y": 25.62,
+           "z": 23.92
+          }
+         ],
+         "top": 27.12,
+         "bottom": 24.12,
+         "terrainElevation": 25.62
+        }
+       ],
+       "maps": [
+        "653e6760052c01c1c805532f",
+        "65b8d6f5cdde2479cb2a3125"
+       ]
+      },
+      {
+       "id": "65817fbbb454159976c91917",
+       "description": "65817fbbb454159976c91917",
+       "type": "findQuestItem",
+       "count": 1,
+       "optional": false,
+       "possibleLocations": [
+        {
+         "map": "653e6760052c01c1c805532f",
+         "positions": [
+          {
+           "x": -11.949866,
+           "y": 30.2254,
+           "z": 49.585052
+          },
+          {
+           "x": -12.356882,
+           "y": 30.692001,
+           "z": 49.026344
+          },
+          {
+           "x": -12.127326,
+           "y": 30.6906,
+           "z": 48.043213
+          }
+         ]
+        },
+        {
+         "map": "65b8d6f5cdde2479cb2a3125",
+         "positions": [
+          {
+           "x": -12.333414,
+           "y": 30.691,
+           "z": 49.01263
+          },
+          {
+           "x": -12.127326,
+           "y": 30.6906,
+           "z": 48.043213
+          },
+          {
+           "x": -11.949866,
+           "y": 30.2254,
+           "z": 49.585052
+          }
+         ]
+        }
+       ],
+       "maps": [
+        "653e6760052c01c1c805532f",
+        "65b8d6f5cdde2479cb2a3125"
+       ],
+       "questItem": "6575a6ca8778e96ded05a802"
+      },
+      {
+       "id": "65817fc99a039ed2e97896e4",
+       "description": "65817fc99a039ed2e97896e4",
+       "type": "giveQuestItem",
+       "count": 1,
+       "optional": false,
+       "maps": [],
+       "questItem": "6575a6ca8778e96ded05a802"
+      }
+     ],
+     "failConditions": [],
+     "startRewards": {
+      "traderStanding": [],
+      "items": [],
+      "offerUnlock": [],
+      "skillLevelReward": [],
+      "traderUnlock": [],
+      "craftUnlock": [],
+      "achievement": [],
+      "customization": [],
+      "traderDialogueUnlock": [],
+      "locationUnlock": []
+     },
+     "finishRewards": {
+      "traderStanding": [
+       {
+        "standing": 0.1,
+        "trader": "5a7c2eca46aef81a7ca2145d"
+       }
+      ],
+      "items": [
+       {
+        "item": "5449016a4bdc2d6f028b456f",
+        "count": 80000,
+        "attributes": {}
+       }
+      ],
+      "offerUnlock": [],
+      "skillLevelReward": [],
+      "traderUnlock": [],
+      "craftUnlock": [],
+      "achievement": [],
+      "customization": [],
+      "traderDialogueUnlock": [],
+      "locationUnlock": []
+     },
+     "failureOutcome": {
+      "traderStanding": [],
+      "items": [],
+      "offerUnlock": [],
+      "skillLevelReward": [],
+      "traderUnlock": [],
+      "craftUnlock": [],
+      "achievement": [],
+      "customization": [],
+      "traderDialogueUnlock": [],
+      "locationUnlock": []
+     },
+     "restartable": false,
+     "experience": 3000,
+     "factionName": "Any",
+     "neededKeys": [],
+     "availableDelaySecondsMin": 0,
+     "availableDelaySecondsMax": 0,
+     "otherRequirements": [
+      {
+       "id": "68dfd865aaf6f3c722200252",
+       "type": "dialogue",
+       "traders": [
+        "5a7c2eca46aef81a7ca2145d"
+       ]
+      }
+     ],
+     "normalizedName": "saving-the-mole",
+     "kappaRequired": false,
+     "lightkeeperRequired": false,
+     "taskImageLink": "https://assets.tarkov.dev/657315e4a6af4ab4b50f3459.webp",
+     "map": "653e6760052c01c1c805532f"
+    },
+    "59c9392986f7742f6923add2": {
+     "id": "59c9392986f7742f6923add2",
+     "name": "59c9392986f7742f6923add2 name",
+     "trader": "54cb57776803fa99248b456e",
+     "wikiLink": "https://escapefromtarkov.fandom.com/wiki/Aid_Stations",
+     "minPlayerLevel": 5,
+     "taskRequirements": [],
+     "traderRequirements": [
+      {
+       "id": "6a5672392ee61bd094c49e28",
+       "requirementType": "level",
+       "compareMethod": ">=",
+       "value": 2,
+       "trader": "54cb57776803fa99248b456e"
+      }
+     ],
+     "objectives": [
+      {
+       "id": "59c93bdb86f7742a19140434",
+       "description": "59c93bdb86f7742a19140434",
+       "type": "findItem",
+       "count": 1,
+       "optional": false,
+       "items": [
+        "593aa4be86f77457f56379f8"
+       ],
+       "dogTagLevel": 0,
+       "maxDurability": 100,
+       "minDurability": 0,
+       "foundInRaid": false,
+       "zones": [],
+       "maps": []
+      },
+      {
+       "id": "59c93c1986f7742a424eaa33",
+       "description": "59c93c1986f7742a424eaa33",
+       "type": "findItem",
+       "count": 1,
+       "optional": false,
+       "items": [
+        "591afe0186f77431bd616a11"
+       ],
+       "dogTagLevel": 0,
+       "maxDurability": 100,
+       "minDurability": 0,
+       "foundInRaid": false,
+       "zones": [],
+       "maps": []
+      }
+     ],
+     "failConditions": [],
+     "startRewards": {
+      "traderStanding": [],
+      "items": [],
+      "offerUnlock": [],
+      "skillLevelReward": [],
+      "traderUnlock": [],
+      "craftUnlock": [],
+      "achievement": [],
+      "customization": [],
+      "traderDialogueUnlock": [],
+      "locationUnlock": []
+     },
+     "finishRewards": {
+      "traderStanding": [
+       {
+        "standing": 0.25,
+        "trader": "54cb57776803fa99248b456e"
+       }
+      ],
+      "items": [
+       {
+        "item": "5449016a4bdc2d6f028b456f",
+        "count": 165000,
+        "attributes": {}
+       }
+      ],
+      "offerUnlock": [],
+      "skillLevelReward": [],
+      "traderUnlock": [],
+      "craftUnlock": [],
+      "achievement": [],
+      "customization": [],
+      "traderDialogueUnlock": [],
+      "locationUnlock": []
+     },
+     "failureOutcome": {
+      "traderStanding": [],
+      "items": [],
+      "offerUnlock": [],
+      "skillLevelReward": [],
+      "traderUnlock": [],
+      "craftUnlock": [],
+      "achievement": [],
+      "customization": [],
+      "traderDialogueUnlock": [],
+      "locationUnlock": []
+     },
+     "restartable": false,
+     "experience": 10000,
+     "factionName": "Any",
+     "neededKeys": [],
+     "availableDelaySecondsMin": 0,
+     "availableDelaySecondsMax": 0,
+     "otherRequirements": [],
+     "normalizedName": "aid-stations",
+     "kappaRequired": false,
+     "lightkeeperRequired": false,
+     "taskImageLink": "https://assets.tarkov.dev/59c9392986f7742f6923add2.webp",
+     "map": null
+    },
+    "5d25e4d586f77443e625e388": {
+     "id": "5d25e4d586f77443e625e388",
+     "name": "5d25e4d586f77443e625e388 name",
+     "trader": "5c0647fdd443bc2504c2d371",
+     "wikiLink": "https://escapefromtarkov.fandom.com/wiki/Reserve_(quest)",
+     "minPlayerLevel": 17,
+     "taskRequirements": [],
+     "traderRequirements": [
+      {
+       "id": "6a451e72045194269adecd4a",
+       "requirementType": "level",
+       "compareMethod": ">=",
+       "value": 3,
+       "trader": "5c0647fdd443bc2504c2d371"
+      }
+     ],
+     "objectives": [
+      {
+       "id": "5d8a05d086f77410b4225d10",
+       "description": "5d8a05d086f77410b4225d10",
+       "type": "visit",
+       "optional": false,
+       "zones": [
+        {
+         "id": "huntsman_029",
+         "map": "5704e5fad2720bc05b8b4567",
+         "position": {
+          "x": 78.77,
+          "y": -12.2860031,
+          "z": -117.1
+         },
+         "size": {
+          "x": 13,
+          "y": 6,
+          "z": 80
+         },
+         "outline": [
+          {
+           "x": 62.458847,
+           "y": -12.2860031,
+           "z": -154.197113
+          },
+          {
+           "x": 75.04451,
+           "y": -12.2860031,
+           "z": -157.453064
+          }
+         ],
+         "top": -9.286003,
+         "bottom": -15.2860031,
+         "terrainElevation": 96.76799
+        }
+       ],
+       "maps": [
+        "5704e5fad2720bc05b8b4567"
+       ]
+      },
+      {
+       "id": "629f1259422dff20ff234b4d",
+       "description": "629f1259422dff20ff234b4d",
+       "type": "extract",
+       "count": 1,
+       "optional": false,
+       "exitStatus": [
+        "ExpBonusSurvived",
+        "marathon Name"
+       ],
+       "maps": [
+        "5704e5fad2720bc05b8b4567"
+       ]
+      }
+     ],
+     "failConditions": [],
+     "startRewards": {
+      "traderStanding": [],
+      "items": [],
+      "offerUnlock": [],
+      "skillLevelReward": [],
+      "traderUnlock": [],
+      "craftUnlock": [],
+      "achievement": [],
+      "customization": [],
+      "traderDialogueUnlock": [],
+      "locationUnlock": []
+     },
+     "finishRewards": {
+      "traderStanding": [
+       {
+        "standing": 0.75,
+        "trader": "5c0647fdd443bc2504c2d371"
+       }
+      ],
+      "items": [
+       {
+        "item": "5449016a4bdc2d6f028b456f",
+        "count": 275000,
+        "attributes": {}
+       }
+      ],
+      "offerUnlock": [],
+      "skillLevelReward": [],
+      "traderUnlock": [],
+      "craftUnlock": [],
+      "achievement": [],
+      "customization": [],
+      "traderDialogueUnlock": [],
+      "locationUnlock": []
+     },
+     "failureOutcome": {
+      "traderStanding": [],
+      "items": [],
+      "offerUnlock": [],
+      "skillLevelReward": [],
+      "traderUnlock": [],
+      "craftUnlock": [],
+      "achievement": [],
+      "customization": [],
+      "traderDialogueUnlock": [],
+      "locationUnlock": []
+     },
+     "restartable": false,
+     "experience": 28000,
+     "factionName": "Any",
+     "neededKeys": [],
+     "availableDelaySecondsMin": 0,
+     "availableDelaySecondsMax": 0,
+     "otherRequirements": [],
+     "normalizedName": "reserve",
+     "kappaRequired": false,
+     "lightkeeperRequired": false,
+     "taskImageLink": "https://assets.tarkov.dev/5d25e4d586f77443e625e388.webp",
+     "map": "5704e5fad2720bc05b8b4567"
+    }
+   }
+  },
+  "translations": [
+   "$.data.tasks.*.name",
+   "$.data.tasks.*.objectives[*].description",
+   "$.data.tasks.*.objectives[*].exitName",
+   "$.data.tasks.*.objectives[*].exitStatus[*]",
+   "$.data.tasks.*.objectives[*].zones[*].name",
+   "$.data.tasks.*.objectives[*].targetNames[*]",
+   "$.data.tasks.*.objectives[*]..bodyParts[*]",
+   "$.data.tasks.*.objectives[*]['healthEffect','playerHealthEffect','enemyHealthEffect'].effects[*]",
+   "$.data.tasks.*['startRewards','finishRewards','failureOutcome'][*].customization[*].name",
+   "$.data.tasks.*['startRewards','finishRewards','failureOutcome'][*].customization[*].customizationTypeName",
+   "$.data.questItems.*.name",
+   "$.data.questItems.*.shortName",
+   "$.data.questItems.*.description",
+   "$.data.achievements.*.name",
+   "$.data.achievements.*.description",
+   "$.data.achievements.*.side",
+   "$.data.achievements.*.rarity",
+   "$.data.prestige[*].name",
+   "$.data.prestige[*].conditions[*].description",
+   "$.data.prestige[*].transferSettings[*].name",
+   "$.data.prestige.*.rewards.customization.*.name",
+   "$.data.prestige.*.rewards.customization.*.customizationTypeName",
+   "$.data.story.*.name",
+   "$.data.story.*.tasks.*.name",
+   "$.data.story.*.tasks.*.objectives[*].description",
+   "$.data.story.*.tasks.*.objectives[*].exitName",
+   "$.data.story.*.tasks.*.objectives[*].exitStatus[*]",
+   "$.data.story.*.tasks.*.objectives[*].zones[*].name",
+   "$.data.story.*.tasks.*.objectives[*].targetNames[*]",
+   "$.data.story.*.tasks.*.objectives[*]..bodyParts[*]",
+   "$.data.story.*.tasks.*.objectives[*]['healthEffect','playerHealthEffect','enemyHealthEffect'].effects[*]",
+   "$.data.story.*.tasks.*['startRewards','finishRewards','failureOutcome'][*].customization[*].name",
+   "$.data.story.*.tasks.*['startRewards','finishRewards','failureOutcome'][*].customization[*].customizationTypeName"
+  ]
+ },
+ "maps": {
+  "data": {
+   "maps": {
+    "653e6760052c01c1c805532f": {
+     "id": "653e6760052c01c1c805532f",
+     "name": "653e6760052c01c1c805532f Name",
+     "normalizedName": "ground-zero"
+    },
+    "65b8d6f5cdde2479cb2a3125": {
+     "id": "65b8d6f5cdde2479cb2a3125",
+     "name": "65b8d6f5cdde2479cb2a3125 Name",
+     "normalizedName": "ground-zero-21"
+    },
+    "5704e5fad2720bc05b8b4567": {
+     "id": "5704e5fad2720bc05b8b4567",
+     "name": "5704e5fad2720bc05b8b4567 Name",
+     "normalizedName": "reserve"
+    },
+    "56f40101d2720b2a4d8b45d6": {
+     "id": "56f40101d2720b2a4d8b45d6",
+     "name": "56f40101d2720b2a4d8b45d6 Name",
+     "normalizedName": "customs",
+     "extracts": [
+      {
+       "id": "d0781374be523027a2a8e1edf6fe08449c45c382",
+       "name": "EXFIL_ZB013",
+       "faction": "pmc",
+       "switch": "ae4bdfc1fc5b30100701158b56ae4d20840e0550",
+       "switches": [
+        "ae4bdfc1fc5b30100701158b56ae4d20840e0550"
+       ],
+       "position": {
+        "x": 200.9755,
+        "y": -1.1484108,
+        "z": -153.086456
+       },
+       "size": {
+        "x": 2.95613575,
+        "y": 3.265413,
+        "z": 6.582147
+       },
+       "outline": [
+        {
+         "x": 200.082642,
+         "y": -1.1484108,
+         "z": -156.58197
+        },
+        {
+         "x": 202.995148,
+         "y": -1.1484108,
+         "z": -156.0759
+        }
+       ],
+       "top": 0.484295845,
+       "bottom": -2.78111744
+      },
+      {
+       "id": "feafaf9787defedcb6b7ea3da97f342870bc8073",
+       "name": "Dorms V-Ex",
+       "faction": "pmc",
+       "switch": false,
+       "switches": [],
+       "transferItem": {
+        "item": "5449016a4bdc2d6f028b456f",
+        "count": 20000
+       },
+       "position": {
+        "x": 181.08,
+        "y": -0.71,
+        "z": 213.25
+       },
+       "size": {
+        "x": 4.97,
+        "y": 3.65,
+        "z": 5.45
+       },
+       "outline": [
+        {
+         "x": 177.484436,
+         "y": -0.71,
+         "z": 212.390961
+        },
+        {
+         "x": 177.534058,
+         "y": -0.71,
+         "z": 212.264832
+        }
+       ],
+       "top": 1.24756718,
+       "bottom": -2.66756725
+      },
+      {
+       "id": "d0781374be523027a2a8e1edf6fe08449c45c382",
+       "name": "EXFIL_ZB013",
+       "faction": "pmc",
+       "switch": "ae4bdfc1fc5b30100701158b56ae4d20840e0550",
+       "switches": [
+        "ae4bdfc1fc5b30100701158b56ae4d20840e0550"
+       ],
+       "position": {
+        "x": 200.9755,
+        "y": -1.1484108,
+        "z": -153.086456
+       },
+       "size": {
+        "x": 2.95613575,
+        "y": 3.265413,
+        "z": 6.582147
+       },
+       "outline": [
+        {
+         "x": 200.082642,
+         "y": -1.1484108,
+         "z": -156.58197
+        },
+        {
+         "x": 202.995148,
+         "y": -1.1484108,
+         "z": -156.0759
+        }
+       ],
+       "top": 0.484295845,
+       "bottom": -2.78111744
+      }
+     ],
+     "transits": [
+      {
+       "id": "9",
+       "description": "CUS_TRANSIT_9_DESC",
+       "map": "5704e5fad2720bc05b8b4567",
+       "position": {
+        "x": 651.7,
+        "y": 1.99,
+        "z": 124.6
+       },
+       "size": {
+        "x": 20.9996872,
+        "y": 2.66048527,
+        "z": 6.37203169
+       },
+       "outline": [
+        {
+         "x": 639.887634,
+         "y": 1.59042144,
+         "z": 122.774628
+        },
+        {
+         "x": 660.7902,
+         "y": 1.59042144,
+         "z": 120.757515
+        }
+       ],
+       "top": 2.920664,
+       "bottom": 0.2601788
+      }
+     ],
+     "spawns": [
+      {
+       "position": {
+        "x": 569.0529,
+        "y": 1.46199012,
+        "z": -54.5297432
+       },
+       "sides": [
+        "scav"
+       ],
+       "categories": [
+        "player",
+        "bot"
+       ],
+       "zoneName": "ZoneFactorySide"
+      },
+      {
+       "position": {
+        "x": 571.41,
+        "y": 1.49,
+        "z": -53.4799957
+       },
+       "sides": [
+        "pmc"
+       ],
+       "categories": [
+        "player"
+       ],
+       "zoneName": "0327c5d1-cc7f-432f-92dc-f95fb4719f1b"
+      }
+     ],
+     "bosses": [
+      {
+       "spawnChance": 0.6,
+       "spawnLocations": [
+        {
+         "name": "ZoneDormitory",
+         "chance": 0.33,
+         "spawnKey": "ZoneDormitory",
+         "positions": [
+          {
+           "x": 181.1043,
+           "y": -0.1127597,
+           "z": 178.053787
+          },
+          {
+           "x": 174.652283,
+           "y": -0.12775971,
+           "z": 152.706787
+          },
+          {
+           "x": 171.889282,
+           "y": 2.83300018,
+           "z": 172.208786
+          }
+         ]
+        },
+        {
+         "name": "ZoneGasStation",
+         "chance": 0.33,
+         "spawnKey": "ZoneGasStation",
+         "positions": [
+          {
+           "x": 420.47,
+           "y": 1.14899969,
+           "z": 22.5500011
+          },
+          {
+           "x": 411.6,
+           "y": 0.96478796,
+           "z": 0.100000381
+          },
+          {
+           "x": 430.815033,
+           "y": 1.88306046,
+           "z": 54.8594666
+          }
+         ]
+        },
+        {
+         "name": "ZoneScavBase",
+         "chance": 0.33,
+         "spawnKey": "ZoneScavBase",
+         "positions": [
+          {
+           "x": 286.3263,
+           "y": 1.49224031,
+           "z": -52.3192139
+          },
+          {
+           "x": 208.2033,
+           "y": 1.78224027,
+           "z": -116.860214
+          },
+          {
+           "x": 195.336288,
+           "y": 1.78624034,
+           "z": -126.129227
+          }
+         ]
+        }
+       ],
+       "escorts": [
+        {
+         "amount": [
+          {
+           "chance": 1,
+           "count": 4
+          }
+         ],
+         "mob": "followerBully"
+        }
+       ],
+       "supports": [],
+       "spawnTime": -1,
+       "spawnTimeRandom": false,
+       "spawnTrigger": null,
+       "mob": "bossBully"
+      },
+      {
+       "spawnChance": 0.2,
+       "spawnLocations": [
+        {
+         "name": "ZoneScavBase",
+         "chance": 1,
+         "spawnKey": "ZoneScavBase",
+         "positions": [
+          {
+           "x": 286.3263,
+           "y": 1.49224031,
+           "z": -52.3192139
+          },
+          {
+           "x": 208.2033,
+           "y": 1.78224027,
+           "z": -116.860214
+          },
+          {
+           "x": 195.336288,
+           "y": 1.78624034,
+           "z": -126.129227
+          }
+         ]
+        }
+       ],
+       "escorts": [
+        {
+         "amount": [
+          {
+           "chance": 1,
+           "count": 1
+          }
+         ],
+         "mob": "followerBigPipe"
+        },
+        {
+         "amount": [
+          {
+           "chance": 1,
+           "count": 1
+          }
+         ],
+         "mob": "followerBirdEye"
+        }
+       ],
+       "supports": [],
+       "spawnTime": -1,
+       "spawnTimeRandom": true,
+       "spawnTrigger": null,
+       "mob": "bossKnight"
+      }
+     ],
+     "hazards": [
+      {
+       "id": "b3537b8fbe79ff55f31157b0abde3d8199c6ed88",
+       "hazardType": "sniper",
+       "name": "ScavRole/Marksman",
+       "position": {
+        "x": 154.953033,
+        "y": 10.4799957,
+        "z": -257.847382
+       },
+       "size": {
+        "x": 55.95898,
+        "y": 20.592,
+        "z": 46.2
+       },
+       "outline": [
+        {
+         "x": 119.37793,
+         "y": 10.4799957,
+         "z": -264.979919
+        },
+        {
+         "x": 155.221268,
+         "y": 10.4799957,
+         "z": -294.129456
+        }
+       ],
+       "top": 20.776001,
+       "bottom": 0.183990479
+      },
+      {
+       "id": "6a5a4a1e1201c727f50ade0493c89ff0079a9d68",
+       "hazardType": "sniper",
+       "name": "ScavRole/Marksman",
+       "position": {
+        "x": 171.593033,
+        "y": 10.8999939,
+        "z": -284.7674
+       },
+       "size": {
+        "x": 60,
+        "y": 20.592,
+        "z": 129.4325
+       },
+       "outline": [
+        {
+         "x": 135.468185,
+         "y": 10.8999939,
+         "z": -312.590759
+        },
+        {
+         "x": 152.67363,
+         "y": 10.8999939,
+         "z": -326.25473
+        }
+       ],
+       "top": 21.196,
+       "bottom": 0.603988647
+      }
+     ],
+     "lootContainers": [
+      {
+       "lootContainer": "5909d50c86f774659e6aaebe",
+       "position": {
+        "x": 69.88612,
+        "y": 2.9385,
+        "z": -59.1464081
+       }
+      },
+      {
+       "lootContainer": "5909d50c86f774659e6aaebe",
+       "position": {
+        "x": 49.7913666,
+        "y": 1.39549971,
+        "z": -50.65628
+       }
+      }
+     ],
+     "switches": [
+      {
+       "id": "ae4bdfc1fc5b30100701158b56ae4d20840e0550",
+       "name": "switch_custom_DesignStuff_00034_reserve_electric_switcher_lever",
+       "door": null,
+       "switchType": "Open",
+       "activatedBy": false,
+       "activates": [
+        {
+         "operation": "Unlock",
+         "extract": "d0781374be523027a2a8e1edf6fe08449c45c382"
+        }
+       ],
+       "position": {
+        "x": 352.230316,
+        "y": 2.61458874,
+        "z": -40.8052826
+       },
+       "size": {
+        "x": 0.4,
+        "y": 0.356082767,
+        "z": 0.6
+       },
+       "outline": [
+        {
+         "x": 352.024261,
+         "y": 2.61458874,
+         "z": -40.82954
+        },
+        {
+         "x": 352.419647,
+         "y": 2.61458874,
+         "z": -40.89015
+        }
+       ],
+       "top": 2.914589,
+       "bottom": 2.314589
+      }
+     ]
+    }
+   },
+   "mobs": {
+    "bossKnight": {
+     "id": "bossKnight",
+     "name": "bossKnight",
+     "normalizedName": "knight",
+     "imagePortraitLink": "https://assets.tarkov.dev/knight-portrait.png",
+     "imagePosterLink": "https://assets.tarkov.dev/knight-poster.jpg",
+     "health": [
+      {
+       "id": "Chest",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/Chest",
+       "max": 220
+      },
+      {
+       "id": "Head",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/Head",
+       "max": 80
+      },
+      {
+       "id": "LeftArm",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/LeftArm",
+       "max": 150
+      },
+      {
+       "id": "LeftLeg",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/LeftLeg",
+       "max": 150
+      },
+      {
+       "id": "RightArm",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/RightArm",
+       "max": 150
+      },
+      {
+       "id": "RightLeg",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/RightLeg",
+       "max": 150
+      },
+      {
+       "id": "Stomach",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/Stomach",
+       "max": 220
+      }
+     ]
+    },
+    "bossBully": {
+     "id": "bossBully",
+     "name": "bossBully",
+     "normalizedName": "reshala",
+     "imagePortraitLink": "https://assets.tarkov.dev/reshala-portrait.webp",
+     "imagePosterLink": "https://assets.tarkov.dev/reshala-poster.webp",
+     "health": [
+      {
+       "id": "Chest",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/Chest",
+       "max": 145
+      },
+      {
+       "id": "Head",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/Head",
+       "max": 62
+      },
+      {
+       "id": "LeftArm",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/LeftArm",
+       "max": 100
+      },
+      {
+       "id": "LeftLeg",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/LeftLeg",
+       "max": 110
+      },
+      {
+       "id": "RightArm",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/RightArm",
+       "max": 100
+      },
+      {
+       "id": "RightLeg",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/RightLeg",
+       "max": 110
+      },
+      {
+       "id": "Stomach",
+       "bodyPart": "QuestCondition/Elimination/Kill/BodyPart/Stomach",
+       "max": 125
+      }
+     ]
+    }
+   },
+   "lootContainers": {
+    "5909d50c86f774659e6aaebe": {
+     "id": "5909d50c86f774659e6aaebe",
+     "name": "5909d50c86f774659e6aaebe Name",
+     "normalizedName": "toolbox"
+    }
+   }
+  }
+ },
+ "traders": {
+  "data": {
+   "traders": {
+    "54cb57776803fa99248b456e": {
+     "id": "54cb57776803fa99248b456e",
+     "name": "54cb57776803fa99248b456e Nickname",
+     "description": "54cb57776803fa99248b456e Description",
+     "normalizedName": "therapist",
+     "currency": "RUB",
+     "resetTime": "2026-08-26T21:36:01.000Z",
+     "discount": 0,
+     "levels": [
+      {
+       "id": "54cb57776803fa99248b456e-1",
+       "level": 1,
+       "requiredPlayerLevel": 0,
+       "requiredReputation": 0,
+       "requiredCommerce": 0,
+       "payRate": 0.51,
+       "insuranceRate": 0.28,
+       "repairCostMultiplier": null
+      },
+      {
+       "id": "54cb57776803fa99248b456e-2",
+       "level": 2,
+       "requiredPlayerLevel": 5,
+       "requiredReputation": 0.6,
+       "requiredCommerce": 0,
+       "payRate": 0.51,
+       "insuranceRate": 0.27,
+       "repairCostMultiplier": null
+      },
+      {
+       "id": "54cb57776803fa99248b456e-3",
+       "level": 3,
+       "requiredPlayerLevel": 18,
+       "requiredReputation": 2.1,
+       "requiredCommerce": 0,
+       "payRate": 0.51,
+       "insuranceRate": 0.26,
+       "repairCostMultiplier": null
+      },
+      {
+       "id": "54cb57776803fa99248b456e-4",
+       "level": 4,
+       "requiredPlayerLevel": 37,
+       "requiredReputation": 5.8,
+       "requiredCommerce": 0,
+       "payRate": 0.51,
+       "insuranceRate": 0.23,
+       "repairCostMultiplier": null
+      }
+     ],
+     "reputationLevels": [],
+     "imageLink": "https://assets.tarkov.dev/54cb57776803fa99248b456e.webp",
+     "buyAllowed": {
+      "category": [
+       "543be5664bdc2dd4348b4569",
+       "543be6674bdc2df1348b4569",
+       "567849dd4bdc2d150f8b456e",
+       "543be5e94bdc2df1348b4568",
+       "5448eb774bdc2d0a728b4567",
+       "5795f317245977243854e041"
+      ],
+      "items": [
+       "62a09e73af34e73a266d932a",
+       "62a09e974f842e1bd12da3f0"
+      ]
+     },
+     "buyProhibited": {
+      "category": [],
+      "items": [
+       "62e910aaf957f2915e0a5e36",
+       "64d0b40fbe2eed70e254e2d4",
+       "65ddcc9cfa85b9f17d0dfb07",
+       "65ca457b4aafb5d7fc0dcb5d",
+       "660312cc4d6cdfa6f500c703",
+       "660bbc98c38b837877075e4a",
+       "6638a5474e92f038531e210e",
+       "66bc98a01a47be227a5e956e",
+       "6655e35b6bc645cb7b059912",
+       "666879d498b97e3a8f09f1ae",
+       "6399f54b0a36db13c823ad21",
+       "66687bc89111279d600b5062",
+       "66d98233302686954b0c6f81",
+       "6707d0bdaab679420007e01a",
+       "6841b6b674a3c16f5e03d653",
+       "6841b3ab322db20d190b4b9b",
+       "6841b3463fcc417de40a6768",
+       "6841b2506c1fcc41ed0db319",
+       "67614b6b47c71ea3d40256d7",
+       "67614b542eb91250020f2b86",
+       "6759bb94b8913ff13e049669",
+       "6759e07e4ff23436160d7fed",
+       "6841b179322db20d190b4b99",
+       "6841b1ff51bf8645f7067bca",
+       "68f11224197b61ffe703b16f",
+       "68f26161b84c6e1f8a09d001",
+       "68f0f8f1a1e799f1c3027c71",
+       "68f0f8a1375a44d1ed01ea4b",
+       "68d65766916a108d7a023c98",
+       "68f25b772605ccea240dd684",
+       "68f25be683ec644ebf046787",
+       "688b3bfa1ed594eccd0c45ee",
+       "688b2e574172ca83e70cf868",
+       "688b2dba67bf6fa26c07e918",
+       "6656560053eaaa7a23349c86",
+       "5d235b4d86f7742e017bc88a",
+       "68fa8e253666e2fd5b00a626",
+       "68dfc07da7cfeed3e60204e7",
+       "67bdea8667098e658f064695",
+       "67bdf04d66ca1d79a2024637",
+       "67c033fd0610e91bea056998",
+       "67c04a6f9152fbdfa306cc66",
+       "67c04dac9320f644db06f45c",
+       "67c0345b354fca26a0008036",
+       "67c04a9bd98287be7b0923d8",
+       "68f213f8ea61d1803707cf7a",
+       "68e6394e658d876c930977b1",
+       "68cc09872bdcc15c010c2668",
+       "68d152b9915f131d4e05ee6c",
+       "68a4b745b63e97cc5a056a07",
+       "6866adbe09b973bf45094339",
+       "6866ad3853330f9b83064cf9",
+       "5d235b4d86f7742e017bc88a",
+       "6937efd50543dcc2560a2c81",
+       "6937ecd37713b904480013ac",
+       "6937eccbfd921faceb0dfecd",
+       "6937ecc3dbdccab44605fcf0",
+       "68c944200bf756126e00d801",
+       "69ce4e3430056e9ce1007c78",
+       "69dd0de23dfe95d9e70b5ebb",
+       "6a04fab776cb0efb8f05969f",
+       "68c954d8ecbf3abc9907ee9b",
+       "69d39aacf1954acdb3083285",
+       "6a3d38063357ef2b260d1891",
+       "6a4ff1e23e95f68a650fcb13"
+      ]
+     }
+    },
+    "5a7c2eca46aef81a7ca2145d": {
+     "id": "5a7c2eca46aef81a7ca2145d",
+     "name": "5a7c2eca46aef81a7ca2145d Nickname",
+     "description": "5a7c2eca46aef81a7ca2145d Description",
+     "normalizedName": "mechanic",
+     "currency": "RUB",
+     "resetTime": "2026-08-26T21:24:40.000Z",
+     "discount": 0,
+     "levels": [
+      {
+       "id": "5a7c2eca46aef81a7ca2145d-1",
+       "level": 1,
+       "requiredPlayerLevel": 1,
+       "requiredReputation": 0,
+       "requiredCommerce": 0,
+       "payRate": 0.45,
+       "insuranceRate": null,
+       "repairCostMultiplier": 4.2
+      },
+      {
+       "id": "5a7c2eca46aef81a7ca2145d-2",
+       "level": 2,
+       "requiredPlayerLevel": 12,
+       "requiredReputation": 0.6,
+       "requiredCommerce": 0,
+       "payRate": 0.45,
+       "insuranceRate": null,
+       "repairCostMultiplier": 4.15
+      },
+      {
+       "id": "5a7c2eca46aef81a7ca2145d-3",
+       "level": 3,
+       "requiredPlayerLevel": 26,
+       "requiredReputation": 2.3,
+       "requiredCommerce": 0,
+       "payRate": 0.45,
+       "insuranceRate": null,
+       "repairCostMultiplier": 4.1
+      },
+      {
+       "id": "5a7c2eca46aef81a7ca2145d-4",
+       "level": 4,
+       "requiredPlayerLevel": 40,
+       "requiredReputation": 7.6,
+       "requiredCommerce": 0,
+       "payRate": 0.45,
+       "insuranceRate": null,
+       "repairCostMultiplier": 4.05
+      }
+     ],
+     "reputationLevels": [],
+     "imageLink": "https://assets.tarkov.dev/5a7c2eca46aef81a7ca2145d.webp",
+     "buyAllowed": {
+      "category": [
+       "5422acb9af1c889c16000029",
+       "5448fe124bdc2da5018b4567",
+       "5485a8684bdc2da71d8b4567",
+       "543be5cb4bdc2deb348b4568",
+       "57864a66245977548f04a81f",
+       "57864ee62459775490116fc1",
+       "5447e0e74bdc2d3c308b4567",
+       "57864bb7245977548b3b66c2",
+       "5c164d2286f774194c5e69fa",
+       "616eb7aea207f41933308f46"
+      ],
+      "items": []
+     },
+     "buyProhibited": {
+      "category": [],
+      "items": [
+       "62e910aaf957f2915e0a5e36",
+       "64d0b40fbe2eed70e254e2d4",
+       "65ddcc9cfa85b9f17d0dfb07",
+       "65ca457b4aafb5d7fc0dcb5d",
+       "660312cc4d6cdfa6f500c703",
+       "660bbc98c38b837877075e4a",
+       "660bc341c38b837877075e4c",
+       "6638a5474e92f038531e210e",
+       "66bc98a01a47be227a5e956e",
+       "6655e35b6bc645cb7b059912",
+       "666879d498b97e3a8f09f1ae",
+       "6399f54b0a36db13c823ad21",
+       "66687bc89111279d600b5062",
+       "66d98233302686954b0c6f81",
+       "6707d0bdaab679420007e01a",
+       "6707d0804e617ec94f0e562f",
+       "67408903268737ef6908d432",
+       "6841b6b674a3c16f5e03d653",
+       "67614b6b47c71ea3d40256d7",
+       "67614b542eb91250020f2b86",
+       "6841b2506c1fcc41ed0db319",
+       "6841b3463fcc417de40a6768",
+       "6841b3ab322db20d190b4b9b",
+       "6759bb94b8913ff13e049669",
+       "6759e07e4ff23436160d7fed",
+       "6841b179322db20d190b4b99",
+       "6841b1ff51bf8645f7067bca",
+       "68f26161b84c6e1f8a09d001",
+       "68f11224197b61ffe703b16f",
+       "68f0f8f1a1e799f1c3027c71",
+       "68f0f8a1375a44d1ed01ea4b",
+       "68d65766916a108d7a023c98",
+       "68f25b772605ccea240dd684",
+       "68f25be683ec644ebf046787",
+       "688b3bfa1ed594eccd0c45ee",
+       "688b2dba67bf6fa26c07e918",
+       "688b2e574172ca83e70cf868",
+       "5d235b4d86f7742e017bc88a",
+       "6656560053eaaa7a23349c86",
+       "68fa8e253666e2fd5b00a626",
+       "68dfc07da7cfeed3e60204e7",
+       "67bdea8667098e658f064695",
+       "67c033fd0610e91bea056998",
+       "67bdf04d66ca1d79a2024637",
+       "67c04a6f9152fbdfa306cc66",
+       "67c04dac9320f644db06f45c",
+       "67c04a9bd98287be7b0923d8",
+       "67c0345b354fca26a0008036",
+       "68f213f8ea61d1803707cf7a",
+       "68e6394e658d876c930977b1",
+       "68cc09872bdcc15c010c2668",
+       "68d152b9915f131d4e05ee6c",
+       "68a4b745b63e97cc5a056a07",
+       "6866adbe09b973bf45094339",
+       "6866ad3853330f9b83064cf9",
+       "6656560053eaaa7a23349c86",
+       "6937efd50543dcc2560a2c81",
+       "6937ecd37713b904480013ac",
+       "6937eccbfd921faceb0dfecd",
+       "6937ecc3dbdccab44605fcf0",
+       "68c944200bf756126e00d801",
+       "69ce4e3430056e9ce1007c78",
+       "69dd0de23dfe95d9e70b5ebb",
+       "6a04fab776cb0efb8f05969f",
+       "68c954d8ecbf3abc9907ee9b",
+       "69d39aacf1954acdb3083285",
+       "6a317b9692cfdcddcb02a58e",
+       "6a31807f17005505b70d5827",
+       "6a3181f178450ec91c0ea1aa",
+       "6a31824878450ec91c0ea1ae",
+       "6a31828557705071410ca00e",
+       "6a3182b72fd891345e047eef",
+       "6a3182dc6cd8de21cf0a3a7d",
+       "6a31830dde69ceafd805afa0",
+       "6a3183258f113efdb7093622",
+       "6a3d38063357ef2b260d1891",
+       "6a4ff1e23e95f68a650fcb13"
+      ]
+     }
+    },
+    "5c0647fdd443bc2504c2d371": {
+     "id": "5c0647fdd443bc2504c2d371",
+     "name": "5c0647fdd443bc2504c2d371 Nickname",
+     "description": "5c0647fdd443bc2504c2d371 Description",
+     "normalizedName": "jaeger",
+     "currency": "RUB",
+     "resetTime": "2026-08-26T20:46:46.000Z",
+     "discount": 0,
+     "levels": [
+      {
+       "id": "5c0647fdd443bc2504c2d371-1",
+       "level": 1,
+       "requiredPlayerLevel": 1,
+       "requiredReputation": 0,
+       "requiredCommerce": 0,
+       "payRate": 0.48,
+       "insuranceRate": 0.45,
+       "repairCostMultiplier": null
+      },
+      {
+       "id": "5c0647fdd443bc2504c2d371-2",
+       "level": 2,
+       "requiredPlayerLevel": 9,
+       "requiredReputation": 0.6,
+       "requiredCommerce": 0,
+       "payRate": 0.48,
+       "insuranceRate": 0.43,
+       "repairCostMultiplier": null
+      },
+      {
+       "id": "5c0647fdd443bc2504c2d371-3",
+       "level": 3,
+       "requiredPlayerLevel": 17,
+       "requiredReputation": 2.1,
+       "requiredCommerce": 0,
+       "payRate": 0.48,
+       "insuranceRate": 0.41,
+       "repairCostMultiplier": null
+      },
+      {
+       "id": "5c0647fdd443bc2504c2d371-4",
+       "level": 4,
+       "requiredPlayerLevel": 33,
+       "requiredReputation": 7.3,
+       "requiredCommerce": 0,
+       "payRate": 0.48,
+       "insuranceRate": 0.39,
+       "repairCostMultiplier": null
+      }
+     ],
+     "reputationLevels": [],
+     "imageLink": "https://assets.tarkov.dev/5c0647fdd443bc2504c2d371.webp",
+     "buyAllowed": {
+      "category": [
+       "57864c8c245977548867e7f1",
+       "543be6674bdc2df1348b4569",
+       "543be5664bdc2dd4348b4569",
+       "57864ee62459775490116fc1",
+       "5447e1d04bdc2dff2f8b4567",
+       "5795f317245977243854e041",
+       "5671435f4bdc2d96058b4569",
+       "5448e53e4bdc2d60728b4567",
+       "5448e5284bdc2dcb718b4567",
+       "57864e4c24597754843f8723",
+       "57864ada245977548638de91",
+       "5447b6194bdc2d67278b4567",
+       "5447b6094bdc2dc3278b4567",
+       "5447b6254bdc2dc3278b4568",
+       "55818ae44bdc2dde698b456c",
+       "55818aeb4bdc2ddc698b456a",
+       "55818add4bdc2d5b648b456f",
+       "555ef6e44bdc2de9068b457e",
+       "55818b224bdc2dde698b456f",
+       "55818a594bdc2db9688b456a"
+      ],
+      "items": [
+       "5755383e24597772cb798966"
+      ]
+     },
+     "buyProhibited": {
+      "category": [],
+      "items": [
+       "62e910aaf957f2915e0a5e36",
+       "64d0b40fbe2eed70e254e2d4",
+       "65ddcc9cfa85b9f17d0dfb07",
+       "65ca457b4aafb5d7fc0dcb5d",
+       "660312cc4d6cdfa6f500c703",
+       "660bbc98c38b837877075e4a",
+       "660bc341c38b837877075e4c",
+       "6638a5474e92f038531e210e",
+       "66bc98a01a47be227a5e956e",
+       "6655e35b6bc645cb7b059912",
+       "666879d498b97e3a8f09f1ae",
+       "6399f54b0a36db13c823ad21",
+       "66687bc89111279d600b5062",
+       "66d98233302686954b0c6f81",
+       "6707d0804e617ec94f0e562f",
+       "67408903268737ef6908d432",
+       "6841b6b674a3c16f5e03d653",
+       "67614b542eb91250020f2b86",
+       "67614b6b47c71ea3d40256d7",
+       "6841b2506c1fcc41ed0db319",
+       "6841b3463fcc417de40a6768",
+       "6841b3ab322db20d190b4b9b",
+       "6759bb94b8913ff13e049669",
+       "6759e07e4ff23436160d7fed",
+       "6841b179322db20d190b4b99",
+       "6841b1ff51bf8645f7067bca",
+       "68f26161b84c6e1f8a09d001",
+       "68f11224197b61ffe703b16f",
+       "68f0f8f1a1e799f1c3027c71",
+       "68f0f8a1375a44d1ed01ea4b",
+       "68d65766916a108d7a023c98",
+       "68f25b772605ccea240dd684",
+       "68f25be683ec644ebf046787",
+       "688b3bfa1ed594eccd0c45ee",
+       "688b2e574172ca83e70cf868",
+       "688b2dba67bf6fa26c07e918",
+       "5d235b4d86f7742e017bc88a",
+       "6656560053eaaa7a23349c86",
+       "68fa8e253666e2fd5b00a626",
+       "68dfc07da7cfeed3e60204e7",
+       "67bdea8667098e658f064695",
+       "67c033fd0610e91bea056998",
+       "67bdf04d66ca1d79a2024637",
+       "67c04a6f9152fbdfa306cc66",
+       "67c04dac9320f644db06f45c",
+       "67c04a9bd98287be7b0923d8",
+       "67c0345b354fca26a0008036",
+       "68f213f8ea61d1803707cf7a",
+       "68e6394e658d876c930977b1",
+       "68cc09872bdcc15c010c2668",
+       "68d152b9915f131d4e05ee6c",
+       "68a4b745b63e97cc5a056a07",
+       "6866adbe09b973bf45094339",
+       "6866ad3853330f9b83064cf9",
+       "6656560053eaaa7a23349c86",
+       "6937efd50543dcc2560a2c81",
+       "6937ecd37713b904480013ac",
+       "6937eccbfd921faceb0dfecd",
+       "6937ecc3dbdccab44605fcf0",
+       "68c944200bf756126e00d801",
+       "69ce4e3430056e9ce1007c78",
+       "69dd0de23dfe95d9e70b5ebb",
+       "6a04fab776cb0efb8f05969f",
+       "68c954d8ecbf3abc9907ee9b",
+       "69d39aacf1954acdb3083285",
+       "6a317b9692cfdcddcb02a58e",
+       "6a31807f17005505b70d5827",
+       "6a3181f178450ec91c0ea1aa",
+       "6a31824878450ec91c0ea1ae",
+       "6a31828557705071410ca00e",
+       "6a3182b72fd891345e047eef",
+       "6a3182dc6cd8de21cf0a3a7d",
+       "6a31830dde69ceafd805afa0",
+       "6a3183258f113efdb7093622",
+       "6a3d38063357ef2b260d1891",
+       "6a4ff1e23e95f68a650fcb13"
+      ]
+     }
+    }
+   }
+  }
+ },
+ "locales": {
+  "tasks_en": {
+   "data": {
+    "59c9392986f7742f6923add2 name": "Aid Stations",
+    "5d25e4d586f77443e625e388 name": "Reserve",
+    "657315ddab5a49b71f098853 name": "First in Line",
+    "657315e4a6af4ab4b50f3459 name": "Saving the Mole",
+    "Any": "any target",
+    "ExpBonusSurvived": "Survived",
+    "marathon Name": "Transition",
+    "59c93bdb86f7742a19140434": "Obtain the item: Dorm room 303 key",
+    "59c93c1986f7742a424eaa33": "Obtain the item: ZB-014 key",
+    "59c93cbb86f7742a19140435": "Obtain the item: Military checkpoint key",
+    "59c93cea86f7742a08623162": "Obtain the item: Gas station storage room key",
+    "59c93d4e86f774496b698953": "Hand over the item",
+    "59c93d8086f7742a19140436": "Hand over the item",
+    "59c93d9c86f7742f6923add3": "Hand over the item",
+    "59c93dbf86f7742a424eaa34": "Hand over the item",
+    "bossBully": "Reshala",
+    "bossKnight": "Knight",
+    "followerBigPipe": "Big Pipe",
+    "followerBirdEye": "Birdeye",
+    "QuestCondition/Elimination/Kill/BodyPart/Head": "head",
+    "QuestCondition/Elimination/Kill/BodyPart/Chest": "thorax",
+    "QuestCondition/Elimination/Kill/BodyPart/LeftLeg": "left leg",
+    "QuestCondition/Elimination/Kill/BodyPart/RightLeg": "right leg",
+    "QuestCondition/Elimination/Kill/BodyPart/Stomach": "stomach",
+    "QuestCondition/Elimination/Kill/BodyPart/LeftArm": "left arm",
+    "QuestCondition/Elimination/Kill/BodyPart/RightArm": "right arm",
+    "followerBully": "Reshala Guard",
+    "5d8a05d086f77410b4225d10": "Locate the food warehouse on Reserve",
+    "629f1259422dff20ff234b4d": "Survive and extract from the location",
+    "Dorms V-Ex": "Dorms V-Ex",
+    "65732ac3c67dcd96adffa3c7": "Locate the Emercom station on Ground Zero",
+    "65817bf31404f3565aef9fec": "Hand over any found in raid medicine items",
+    "6575a64d3fc09bdfb38b713d": "Access the lab scientist's office on Ground Zero",
+    "6575a524a39d2be74e620546": "Locate the USEC group at the parking lot of the TerraGroup complex",
+    "6575a62a62028c6d5cb43cb7": "Locate the lab scientist in the TerraGroup complex",
+    "65817fbbb454159976c91917": "Locate and obtain the scientist's hard drive",
+    "65817fc99a039ed2e97896e4": "Hand over the hard drive"
+   }
+  },
+  "maps_en": {
+   "data": {
+    "bossKnight": "Knight",
+    "followerBigPipe": "Big Pipe",
+    "followerBirdEye": "Birdeye",
+    "56f40101d2720b2a4d8b45d6 Name": "Customs",
+    "bossBully": "Reshala",
+    "ZoneDormitory": "Dorms",
+    "ZoneGasStation": "New Gas Station",
+    "ZoneScavBase": "Stronghold",
+    "followerBully": "Reshala Guard",
+    "653e6760052c01c1c805532f Name": "Ground Zero",
+    "65b8d6f5cdde2479cb2a3125 Name": "Ground Zero 21+",
+    "5704e5fad2720bc05b8b4567 Name": "Reserve",
+    "5909d50c86f774659e6aaebe Name": "Toolbox",
+    "QuestCondition/Elimination/Kill/BodyPart/Chest": "thorax",
+    "QuestCondition/Elimination/Kill/BodyPart/Head": "head",
+    "QuestCondition/Elimination/Kill/BodyPart/LeftArm": "left arm",
+    "QuestCondition/Elimination/Kill/BodyPart/LeftLeg": "left leg",
+    "QuestCondition/Elimination/Kill/BodyPart/RightArm": "right arm",
+    "QuestCondition/Elimination/Kill/BodyPart/RightLeg": "right leg",
+    "QuestCondition/Elimination/Kill/BodyPart/Stomach": "stomach",
+    "ScavRole/Marksman": "Sniper",
+    "EXFIL_ZB013": "ZB-013",
+    "Dorms V-Ex": "Dorms V-Ex",
+    "CUS_TRANSIT_9_DESC": "Transit to Reserve",
+    "switch_custom_DesignStuff_00034_reserve_electric_switcher_lever": "ZB-013 Power Switch",
+    "sniper": "Sniper"
+   }
+  },
+  "traders_en": {
+   "data": {
+    "54cb57776803fa99248b456e Nickname": "Therapist",
+    "54cb57776803fa99248b456e Description": "Head of the Trauma Care Department of the Tarkov Central City Hospital.",
+    "5a7c2eca46aef81a7ca2145d Nickname": "Mechanic",
+    "5a7c2eca46aef81a7ca2145d Description": "A former chemical plant foreman, who from the very beginning of the conflict took to weapon modification, repairs, and maintenance of complex equipment and technology. He prefers clandestine solo living and operates discreetly, while placing complicated and challenging tasks above all else.",
+    "5c0647fdd443bc2504c2d371 Nickname": "Jaeger",
+    "5c0647fdd443bc2504c2d371 Description": "Before the conflict, he worked as a hunter in the Priozersk Natural Reserve under the State Hunting Service. A professional hunter and survival specialist. Even now, he still guards the reserve's hunting grounds from various aggressive individuals."
+   }
+  }
+ }
+}
