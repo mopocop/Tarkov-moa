@@ -25,6 +25,8 @@ jobs:
         with:
           node-version: 20
 
+      # Exits 0 when tarkov.dev is simply unreachable and 1 only when the
+      # failure is ours, so an upstream outage does not read as broken CI.
       - name: Fetch snapshot from tarkov.dev
         run: node scripts/fetch-snapshot.mjs
 
