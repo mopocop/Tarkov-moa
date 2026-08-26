@@ -1,119 +1,101 @@
-import type { APICache, TarkovMap, TarkovTask, MapPoiData } from "./types";
+import type { APICache, TarkovTask, MapPoiData } from "./types";
 import { remoteSnapshot, bundledSnapshot, type SnapshotField } from "./snapshot";
+import {
+  adaptTasks,
+  adaptMapPois,
+  type LocaleDoc,
+  type MapsDoc,
+  type TasksDoc,
+  type TradersDoc,
+} from "./adapt";
 
-const ENDPOINT = 'https://api.tarkov.dev/graphql';
-const TASKS_CACHE_KEY = 'td_tasks_cache_v4';
-const MAPS_CACHE_KEY = 'td_maps_cache_v3';
-const MAP_POIS_CACHE_KEY = "td_map_pois_cache_v1";
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24h — tarkov.dev data is largely static between patches.
+// tarkov.dev's GraphQL API has been returning 422 "GraphQL server unavailable"
+// since 2026-07-21 (the-hideout/tarkov-api#474 — open, unanswered, and the repo
+// has seen nothing but dependabot bumps since). This is the JSON API the
+// tarkov.dev site itself is served from: same data, same BSG ids, actively
+// updated. It answers with two documents per dataset — a language-independent
+// base, and a { key: string } dictionary per language — which src/api/adapt.ts
+// joins back into the domain types.
+const BASE_URL = 'https://json.tarkov.dev';
+const GAME_MODE = 'regular';
+const FETCH_TIMEOUT_MS = 20_000;
 
-// tarkov.dev's LanguageCode enum. We only ever pass codes from our supported
-// set, so inlining the enum literal into the query is safe (no injection risk).
-// "en" is the API default; passing it is a harmless no-op.
+// Bumped from v4/v1: the payload shape changed with the upstream, and loadCache
+// only checks that `data` exists — without a new key it would hand a v4-shaped
+// blob to a v5-shaped consumer and fail somewhere far away from here.
+const TASKS_CACHE_KEY = 'td_tasks_cache_v5';
+const MAP_POIS_CACHE_KEY = 'td_map_pois_cache_v2';
+// Wiped on clearCache so an upgrade doesn't strand dead blobs in localStorage.
+const LEGACY_CACHE_KEYS = ['td_tasks_cache_v4', 'td_maps_cache_v3', 'td_map_pois_cache_v1'];
+
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24h — data is largely static between patches.
+
 export type ApiLang = 'en' | 'pt' | 'ru' | 'ja' | 'zh' | 'es';
-const langArg = (lang: ApiLang): string => (lang === 'en' ? '' : `(lang: ${lang})`);
+const ALL_LANGS: readonly ApiLang[] = ['en', 'pt', 'ru', 'ja', 'zh', 'es'];
 
 // Caches are keyed per-language so switching languages doesn't thrash a single
 // slot and each locale's data persists independently.
 const cacheKey = (base: string, lang: ApiLang): string => `${base}_${lang}`;
 
-const tasksQuery = (lang: ApiLang): string => `
-  query GetTasks {
-    tasks${langArg(lang)} {
-      id
-      name
-      minPlayerLevel
-      wikiLink
-      map { id name }
-      trader { name }
-      taskRequirements {
-        task { id name }
-        status
-      }
-      objectives {
-        id
-        type
-        description
-        maps { id name }
-        ... on TaskObjectiveQuestItem {
-          possibleLocations {
-            map { id name }
-            positions { x y z }
-          }
-        }
-        ... on TaskObjectiveMark {
-          zones {
-            id
-            map { id name }
-            position { x y z }
-          }
-        }
-        ... on TaskObjectiveBasic {
-          zones {
-            id
-            map { id name }
-            position { x y z }
-          }
-        }
-        ... on TaskObjectiveExtract {
-          exitName
-          exitStatus
-          zoneNames
-        }
-      }
-    }
-  }
-`;
-
-const mapsQuery = (lang: ApiLang): string => `
-  query GetMaps {
-    maps${langArg(lang)} {
-      id
-      name
-      normalizedName
-    }
-  }
-`;
-
-const mapPoisQuery = (lang: ApiLang): string => `
-  query GetMapPois {
-    maps${langArg(lang)} {
-      id
-      extracts { id name faction switches { id name } transferItem { item { id name } count } position { x y z } }
-      transits { id description conditions map { id name } position { x y z } }
-      spawns { zoneName position { x y z } sides categories }
-      bosses { boss { name normalizedName } spawnChance spawnLocations { name chance } }
-      hazards { hazardType name position { x y z } }
-      lootContainers { lootContainer { id name normalizedName } position { x y z } }
-    }
-  }
-`;
-
-async function gqlFetch<T>(query: string): Promise<T> {
-  const res = await fetch(ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query }),
+async function getJson<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE_URL}/${path}`, {
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
-  if (!res.ok) {
-    throw new Error(`tarkov.dev returned HTTP ${res.status}`);
-  }
-  const body = (await res.json()) as { data?: T; errors?: Array<{ message: string }> };
-  // GraphQL can return partial data alongside errors — e.g. the maps query
-  // errors on a transit whose destination map id no longer exists, yet still
-  // returns every other field. Treat data-present-with-errors as partial
-  // success (warn + use it); only throw when there is no data at all. Without
-  // this, one stale reference would discard the entire POI dataset.
-  if (body.errors?.length) {
-    const msg = body.errors.map((e) => e.message).join('; ');
-    if (body.data) {
-      console.warn(`[tarkov.dev] GraphQL partial error (using partial data): ${msg}`);
-    } else {
-      throw new Error(`tarkov.dev GraphQL error: ${msg}`);
+  if (!res.ok) throw new Error(`tarkov.dev returned HTTP ${res.status}`);
+  return (await res.json()) as T;
+}
+
+// A 200 carrying the wrong shape must fail LOUDLY here, not quietly downstream.
+// If the adapter were handed an undefined container it would either throw a bare
+// TypeError from deep inside a join, or — worse — return an empty array that the
+// caller would happily cache for 24h as if the game had no quests. Throwing lets
+// the fallback ladder do its job and serve the cache or the snapshot instead.
+function expectContainer<T>(doc: unknown, path: string[], what: string): T {
+  let node: unknown = doc;
+  for (const key of path) {
+    if (typeof node !== 'object' || node === null) {
+      throw new Error(`tarkov.dev returned an unexpected shape for ${what}`);
     }
+    node = (node as Record<string, unknown>)[key];
   }
-  if (!body.data) throw new Error('tarkov.dev returned no data');
-  return body.data;
+  if (typeof node !== 'object' || node === null) {
+    throw new Error(`tarkov.dev returned an unexpected shape for ${what}`);
+  }
+  return node as T;
+}
+
+// The maps document is ~9.5 MB and BOTH datasets need it: tasks only for map
+// names, POIs for everything. App.tsx builds a fresh client per call, so the
+// memo lives at module scope — one download serves every client in this
+// session. In-memory only, exactly like the SVG cache in FloorVisualOverlay: a
+// reload should re-check the network. Conditional revalidation is left to the
+// webview's own HTTP cache, which already sends If-None-Match for these URLs.
+const mapsDocMemo = new Map<string, Promise<MapsDoc>>();
+const mapsLocaleMemo = new Map<ApiLang, Promise<LocaleDoc>>();
+
+function mapsDoc(): Promise<MapsDoc> {
+  let p = mapsDocMemo.get(GAME_MODE);
+  if (!p) {
+    p = getJson<MapsDoc>(`${GAME_MODE}/maps`).catch((err: unknown) => {
+      // Never memoise a rejection — the next attempt must hit the network.
+      mapsDocMemo.delete(GAME_MODE);
+      throw err;
+    });
+    mapsDocMemo.set(GAME_MODE, p);
+  }
+  return p;
+}
+
+function mapsLocale(lang: ApiLang): Promise<LocaleDoc> {
+  let p = mapsLocaleMemo.get(lang);
+  if (!p) {
+    p = getJson<LocaleDoc>(`${GAME_MODE}/maps_${lang}`).catch((err: unknown) => {
+      mapsLocaleMemo.delete(lang);
+      throw err;
+    });
+    mapsLocaleMemo.set(lang, p);
+  }
+  return p;
 }
 
 /** A cache hit, plus whether it is past CACHE_DURATION. */
@@ -182,10 +164,10 @@ export class TarkovDevClient {
    * Resolution order, best source first:
    *
    *   1. a fresh local cache            — no network at all
-   *   2. the live tarkov.dev API        — the only source that can be current
+   *   2. the live tarkov.dev JSON API   — the only source that can be current
    *   3. an expired local cache         — your data, just old
    *   4. the snapshot committed to this repo, over GitHub's CDN
-   *   5. the snapshot compiled into the binary (English, tasks/maps only)
+   *   5. the snapshot compiled into the binary
    *
    * Steps 3-5 exist because tarkov.dev is the app's only upstream, and when it
    * is down there is nothing the app can do to make it come back. What it can
@@ -195,10 +177,9 @@ export class TarkovDevClient {
    * Fallback data is never written to the cache: a cached fallback would look
    * fresh for the next 24h and stop the app retrying the real API on launch.
    */
-  private async load<R, T>(
+  private async load<T>(
     baseKey: string,
-    query: string,
-    select: (raw: R) => T,
+    fetchFresh: () => Promise<T>,
     force: boolean,
     snapshotField?: SnapshotField,
   ): Promise<T> {
@@ -211,7 +192,7 @@ export class TarkovDevClient {
     }
 
     try {
-      const data = select(await gqlFetch<R>(query));
+      const data = await fetchFresh();
       saveCache(key, data);
       this.servedStale.delete(baseKey);
       return data;
@@ -246,44 +227,60 @@ export class TarkovDevClient {
   }
 
   async getTasks(force = false): Promise<TarkovTask[]> {
-    return this.load<{ tasks: TarkovTask[] }, TarkovTask[]>(
+    return this.load<TarkovTask[]>(
       TASKS_CACHE_KEY,
-      tasksQuery(this.lang),
-      (raw) => raw.tasks,
+      async () => {
+        const [tasks, tasksLocale, maps, mapsLoc, traders, tradersLocale] = await Promise.all([
+          getJson<TasksDoc>(`${GAME_MODE}/tasks`),
+          getJson<LocaleDoc>(`${GAME_MODE}/tasks_${this.lang}`),
+          mapsDoc(),
+          mapsLocale(this.lang),
+          getJson<TradersDoc>(`${GAME_MODE}/traders`),
+          getJson<LocaleDoc>(`${GAME_MODE}/traders_${this.lang}`),
+        ]);
+        expectContainer(tasks, ['data', 'tasks'], 'tasks');
+        expectContainer(maps, ['data', 'maps'], 'maps');
+        expectContainer(traders, ['data', 'traders'], 'traders');
+        return adaptTasks({
+          tasks,
+          tasksLocale,
+          maps,
+          mapsLocale: mapsLoc,
+          traders,
+          tradersLocale,
+        });
+      },
       force,
       'tasks',
-    );
-  }
-
-  async getMaps(force = false): Promise<TarkovMap[]> {
-    return this.load<{ maps: TarkovMap[] }, TarkovMap[]>(
-      MAPS_CACHE_KEY,
-      mapsQuery(this.lang),
-      (raw) => raw.maps,
-      force,
-      'maps',
     );
   }
 
   // No snapshot tier: POIs are the largest payload by far and the app already
   // renders usefully without them, so they stay out of the committed snapshot.
   async getMapPois(force = false): Promise<MapPoiData[]> {
-    return this.load<{ maps: MapPoiData[] }, MapPoiData[]>(
+    return this.load<MapPoiData[]>(
       MAP_POIS_CACHE_KEY,
-      mapPoisQuery(this.lang),
-      (raw) => raw.maps,
+      async () => {
+        const [maps, mapsLoc] = await Promise.all([mapsDoc(), mapsLocale(this.lang)]);
+        expectContainer(maps, ['data', 'maps'], 'maps');
+        return adaptMapPois({ maps, mapsLocale: mapsLoc });
+      },
       force,
     );
   }
 
   clearCache(): void {
-    // Clear every per-language slot for all three datasets. This is the explicit
-    // user-driven wipe (Settings → clear cache); expiry alone never deletes.
-    for (const lang of ['en', 'pt', 'ru', 'ja', 'zh', 'es'] as const) {
+    // Clear every per-language slot, current and legacy. This is the explicit
+    // user-driven wipe (Settings -> clear cache); expiry alone never deletes.
+    for (const lang of ALL_LANGS) {
       localStorage.removeItem(cacheKey(TASKS_CACHE_KEY, lang));
-      localStorage.removeItem(cacheKey(MAPS_CACHE_KEY, lang));
       localStorage.removeItem(cacheKey(MAP_POIS_CACHE_KEY, lang));
+      for (const legacy of LEGACY_CACHE_KEYS) {
+        localStorage.removeItem(cacheKey(legacy, lang));
+      }
     }
+    mapsDocMemo.clear();
+    mapsLocaleMemo.clear();
     this.servedStale.clear();
   }
 }
