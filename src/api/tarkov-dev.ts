@@ -1,13 +1,7 @@
 import type { APICache, TarkovTask, MapPoiData } from "./types";
 import { remoteSnapshot, bundledSnapshot, type SnapshotField } from "./snapshot";
-import {
-  adaptTasks,
-  adaptMapPois,
-  type LocaleDoc,
-  type MapsDoc,
-  type TasksDoc,
-  type TradersDoc,
-} from "./adapt";
+import { appFetch } from "./http";
+import { adaptMapPois, type LocaleDoc, type MapsDoc } from "./adapt";
 
 // tarkov.dev's GraphQL API has been returning 422 "GraphQL server unavailable"
 // since 2026-07-21 (the-hideout/tarkov-api#474 — open, unanswered, and the repo
@@ -16,9 +10,19 @@ import {
 // updated. It answers with two documents per dataset — a language-independent
 // base, and a { key: string } dictionary per language — which src/api/adapt.ts
 // joins back into the domain types.
+//
+// Only POIs are read from here at runtime; /regular/maps answers every client.
+// Quests come from the snapshot CI builds — see getTasks for why.
 const BASE_URL = 'https://json.tarkov.dev';
 const GAME_MODE = 'regular';
-const FETCH_TIMEOUT_MS = 20_000;
+// Generous on purpose. The maps document alone is ~9.5 MB, which is over a
+// minute on a slow residential link, and when this was 20s the abort fired
+// mid-download: Tauri's HTTP plugin frees the request resource on abort, so the
+// body read that followed failed with "The resource id N is invalid" instead of
+// anything resembling a network error. A timeout still belongs here — the
+// GraphQL path had none at all — but it has to be longer than the largest
+// payload, not shorter.
+const FETCH_TIMEOUT_MS = 120_000;
 
 // Bumped from v4/v1: the payload shape changed with the upstream, and loadCache
 // only checks that `data` exists — without a new key it would hand a v4-shaped
@@ -38,10 +42,22 @@ const ALL_LANGS: readonly ApiLang[] = ['en', 'pt', 'ru', 'ja', 'zh', 'es'];
 const cacheKey = (base: string, lang: ApiLang): string => `${base}_${lang}`;
 
 async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}/${path}`, {
+  const res = await appFetch(`${BASE_URL}/${path}`, {
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
-  if (!res.ok) throw new Error(`tarkov.dev returned HTTP ${res.status}`);
+  // The path belongs in the message: this call fans out to six URLs, and a bare
+  // status tells you nothing about which one broke. The body snippet matters
+  // just as much — an edge-served error page explains itself, a bare status
+  // does not.
+  if (!res.ok) {
+    let detail = '';
+    try {
+      detail = ` :: ${(await res.text()).slice(0, 200)}`;
+    } catch {
+      /* body already consumed or unreadable */
+    }
+    throw new Error(`tarkov.dev returned HTTP ${res.status} for /${path}${detail}`);
+  }
   return (await res.json()) as T;
 }
 
@@ -164,10 +180,10 @@ export class TarkovDevClient {
    * Resolution order, best source first:
    *
    *   1. a fresh local cache            — no network at all
-   *   2. the live tarkov.dev JSON API   — the only source that can be current
+   *   2. the dataset's own source        — the live API for POIs, the committed
+   *                                        snapshot for tasks (see getTasks)
    *   3. an expired local cache         — your data, just old
-   *   4. the snapshot committed to this repo, over GitHub's CDN
-   *   5. the snapshot compiled into the binary
+   *   4. the snapshot compiled into the binary
    *
    * Steps 3-5 exist because tarkov.dev is the app's only upstream, and when it
    * is down there is nothing the app can do to make it come back. What it can
@@ -198,7 +214,6 @@ export class TarkovDevClient {
       return data;
     } catch (err) {
       const why = err instanceof Error ? err.message : String(err);
-
       if (cached) {
         const age = Math.round((Date.now() - cached.timestamp) / 3_600_000);
         console.warn(`[tarkov.dev] ${baseKey}: fetch failed, serving cache from ~${age}h ago —`, why);
@@ -206,14 +221,10 @@ export class TarkovDevClient {
         return cached.data;
       }
 
+      // Only the bundled tier remains here. The repo snapshot is no longer a
+      // fallback for tasks — it IS the primary source now — so retrying it in
+      // this catch would just fetch the same URL a second time.
       if (snapshotField) {
-        const remote = await remoteSnapshot<T>(this.lang, snapshotField);
-        if (remote) {
-          console.warn(`[tarkov.dev] ${baseKey}: no cache, serving the repo snapshot —`, why);
-          this.servedStale.set(baseKey, remote.generatedAt ?? Date.now());
-          return remote.data;
-        }
-
         const local = await bundledSnapshot<T>(this.lang, snapshotField);
         if (local) {
           console.warn(`[tarkov.dev] ${baseKey}: offline, serving the bundled snapshot —`, why);
@@ -226,30 +237,34 @@ export class TarkovDevClient {
     }
   }
 
+  /**
+   * Quests come from the committed snapshot, not from the live API.
+   *
+   * `/regular/tasks` is the one endpoint the app cannot start without, and it is
+   * the one endpoint that will not serve this app. Measured 2026-08-26: curl and
+   * PowerShell both get 200 over HTTP/1.1 and HTTP/2, with or without every
+   * header combination tried; the webview gets a response carrying no
+   * Access-Control-Allow-Origin, where its siblings /regular/maps,
+   * /regular/traders and every locale file carry it; and Tauri's HTTP plugin —
+   * a plain reqwest call from Rust, with no CORS in the picture at all — gets
+   * `404 {"error":"Not found"}` for the exact URL curl succeeds on, with no
+   * redirect. Whatever the edge rule is, it is not ours to fix and not
+   * something to depend on at launch.
+   *
+   * So the fetch moves to where it works: CI, in Node, once a day, committing
+   * the result to data/snapshot. The app reads that over GitHub's CDN. Quest
+   * data only moves with game patches — the cache below has always been 24h for
+   * exactly that reason — so a daily rebuild costs no meaningful freshness.
+   *
+   * POIs still come from the live API: /regular/maps answers everyone.
+   */
   async getTasks(force = false): Promise<TarkovTask[]> {
     return this.load<TarkovTask[]>(
       TASKS_CACHE_KEY,
       async () => {
-        const [tasks, tasksLocale, maps, mapsLoc, traders, tradersLocale] = await Promise.all([
-          getJson<TasksDoc>(`${GAME_MODE}/tasks`),
-          getJson<LocaleDoc>(`${GAME_MODE}/tasks_${this.lang}`),
-          mapsDoc(),
-          mapsLocale(this.lang),
-          getJson<TradersDoc>(`${GAME_MODE}/traders`),
-          getJson<LocaleDoc>(`${GAME_MODE}/traders_${this.lang}`),
-        ]);
-        expectContainer(tasks, ['data', 'tasks'], 'tasks');
-        expectContainer(maps, ['data', 'maps'], 'maps');
-        // Traders have no inner container — they sit directly under `data`.
-        expectContainer(traders, ['data'], 'traders');
-        return adaptTasks({
-          tasks,
-          tasksLocale,
-          maps,
-          mapsLocale: mapsLoc,
-          traders,
-          tradersLocale,
-        });
+        const snap = await remoteSnapshot<TarkovTask[]>(this.lang, 'tasks');
+        if (!snap) throw new Error('the committed snapshot is unavailable');
+        return snap.data;
       },
       force,
       'tasks',

@@ -5,8 +5,10 @@
 // Format note: the snapshot is stored the way the upstream serves it — one
 // language-independent base plus a small dictionary per language — and adapted
 // on read. Storing six fully-adapted copies instead would mean six times the
-// task payload; sharing the base keeps all six languages inside ~2.7 MB.
+// task payload; sharing the base fits all six languages in 1.38 MB, 0.37 MB
+// compressed.
 import { adaptTasks, type LocaleDoc } from './adapt';
+import { appFetch } from './http';
 import type { ApiLang } from './tarkov-dev';
 import type { TarkovTask } from './types';
 
@@ -70,7 +72,7 @@ function build<T>(base: SnapshotBase | null, locale: SnapshotLocale | null): Sna
 
 async function fetchJson<T>(url: string): Promise<T | null> {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+    const res = await appFetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!res.ok) return null;
     return (await res.json()) as T;
   } catch {
@@ -91,9 +93,9 @@ export async function remoteSnapshot<T>(
 }
 
 // Loaded with dynamic import rather than a top-level one on purpose: the base is
-// ~1.2 MB and the six locales another ~1.6 MB, and parsing all of that at boot
-// to serve a tier that almost never runs would cost every launch. Vite splits
-// these into their own chunks, so they are only read when the ladder gets here.
+// ~484 KB and the six locales another ~900 KB, and parsing that at boot to serve
+// a tier that almost never runs would cost every launch. Vite splits these into
+// their own chunks, so they are only read when the ladder gets here.
 const localeModules = import.meta.glob<{ default: SnapshotLocale }>(
   '../../data/snapshot/locale-*.json',
 );

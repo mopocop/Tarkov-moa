@@ -3,17 +3,11 @@ import { TarkovDevClient } from './tarkov-dev';
 import { bundledSnapshot } from './snapshot';
 import type { TarkovTask } from './types';
 
-// The bundled tier reads real generated files, so left alone it would answer
-// with the live snapshot and quietly rescue tests that are meant to reach the
-// bottom of the ladder. Stubbed off by default; the one test that cares about
-// it opts back in. remoteSnapshot stays real — it is driven by the fetch mock.
-vi.mock('./snapshot', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./snapshot')>();
-  return { ...actual, bundledSnapshot: vi.fn(async () => null) };
-});
-
 const TASKS_KEY = 'td_tasks_cache_v5_en';
+const POIS_KEY = 'td_map_pois_cache_v2_en';
 const DAY = 24 * 60 * 60 * 1000;
+const SNAPSHOT_HOST = 'raw.githubusercontent.com';
+const GENERATED_AT = '2026-08-26T00:00:00.000Z';
 
 const task = (id: string): TarkovTask => ({ id, name: id }) as TarkovTask;
 
@@ -25,63 +19,88 @@ function seed(ids: string[], ageMs: number): void {
   );
 }
 
-// The JSON upstream answers six documents for a task load: a base and a locale
-// dictionary for each of tasks, maps and traders. The locale maps the base's
-// placeholder ("<id> name") onto the human string, so a task seeded here as
-// `fetched` comes back through the adapter as { id: 'fetched', name: 'fetched' }.
-function docsFor(ids: string[]): Record<string, unknown> {
-  const tasks = Object.fromEntries(ids.map((id) => [id, { id, name: `${id} name` }]));
-  const locale = Object.fromEntries(ids.map((id) => [`${id} name`, id]));
+// Quests are read from the committed snapshot, which is a language-independent
+// base plus a per-language dictionary. The base carries placeholder names that
+// the dictionary resolves, so a task seeded here as `fetched` comes back through
+// the adapter as { id: 'fetched', name: 'fetched' }.
+function snapshotDocs(ids: string[]): Record<string, unknown> {
   return {
-    '/regular/tasks': { data: { tasks } },
-    '/regular/tasks_en': { data: locale },
-    '/regular/maps': { data: { maps: {} } },
-    '/regular/maps_en': { data: {} },
-    '/regular/traders': { data: {} },
-    '/regular/traders_en': { data: {} },
+    '/base.json': {
+      generatedAt: GENERATED_AT,
+      tasks: Object.fromEntries(ids.map((id) => [id, { id, name: `${id} name` }])),
+      maps: {},
+      traders: {},
+    },
+    '/locale-en.json': {
+      tasks: Object.fromEntries(ids.map((id) => [`${id} name`, id])),
+      maps: {},
+      traders: {},
+    },
   };
 }
 
-/** Answers every upstream URL with a well-formed document. */
+/** Serves the snapshot for tasks and the live API for POIs. */
 function okFetch(ids: string[]): ReturnType<typeof vi.fn> {
-  const docs = docsFor(ids);
+  const docs = snapshotDocs(ids);
+  const api: Record<string, unknown> = {
+    '/regular/maps': { data: { maps: {} } },
+    '/regular/maps_en': { data: {} },
+  };
   return vi.fn(async (url: string) => {
-    const key = Object.keys(docs).find((k) => String(url).endsWith(k));
-    if (!key) return { ok: false, status: 404, json: async () => ({}) };
-    return { ok: true, status: 200, json: async () => docs[key] };
+    const u = String(url);
+    const key = [...Object.keys(docs), ...Object.keys(api)].find((k) => u.endsWith(k));
+    if (!key) return { ok: false, status: 404, text: async () => '', json: async () => ({}) };
+    const body = docs[key] ?? api[key];
+    return { ok: true, status: 200, text: async () => JSON.stringify(body), json: async () => body };
   });
 }
 
-/** tarkov.dev's actual outage response: HTTP 422 with an errors array. */
+/** Everything unreachable — the shape a real outage takes. */
 function outageFetch(): ReturnType<typeof vi.fn> {
   return vi.fn(async () => ({
     ok: false,
-    status: 422,
-    json: async () => ({ errors: ['GraphQL server unavailable. Try again later.'] }),
+    status: 503,
+    text: async () => 'Service Unavailable',
+    json: async () => ({}),
   }));
 }
 
 /**
+ * The bundled tier reads real generated files, so left alone it would answer
+ * with the live snapshot and quietly rescue tests meant to reach the bottom of
+ * the ladder. Stubbed off by default; the tests that care opt back in.
+ */
+vi.mock('./snapshot', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./snapshot')>();
+  return { ...actual, bundledSnapshot: vi.fn(async () => null) };
+});
+
+/**
  * The maps document is memoised at module scope so one 9.5 MB download serves
  * every client in a session. That memo outlives a single test, so every test
- * starts by clearing it — otherwise a stubbed fetch from an earlier test would
- * still be answering here.
+ * clears it first — otherwise an earlier test's stub would still be answering.
  */
 function resetModuleState(): void {
   new TarkovDevClient('en').clearCache();
 }
 
-describe('TarkovDevClient cache', () => {
-  beforeEach(() => {
-    resetModuleState();
-    localStorage.clear();
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-  });
+function setup(): void {
+  resetModuleState();
+  localStorage.clear();
+  // A vi.mock factory's fn is module-scoped, so restoreAllMocks does not reset
+  // it between tests. Without this, call counts leak across cases.
+  vi.mocked(bundledSnapshot).mockClear();
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+}
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
-  });
+function teardown(): void {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+}
+
+describe('TarkovDevClient cache', () => {
+  beforeEach(setup);
+  afterEach(teardown);
 
   it('serves a fresh cache without touching the network', async () => {
     seed(['cached'], 1000);
@@ -104,8 +123,8 @@ describe('TarkovDevClient cache', () => {
   });
 
   // The regression the cache tier exists for. Before the fix, an expired entry
-  // was deleted on read, so an upstream outage turned into an empty screen with
-  // no way back until the API recovered.
+  // was deleted on read, so an outage turned into an empty screen with no way
+  // back until the source recovered.
   it('serves an EXPIRED cache when the fetch fails, and reports it as stale', async () => {
     const storedAt = Date.now() - 3 * DAY;
     seed(['old'], 3 * DAY);
@@ -137,9 +156,9 @@ describe('TarkovDevClient cache', () => {
     expect(client.staleInfo.stale).toBe(false);
   });
 
-  it('throws when the fetch fails and nothing is stored anywhere', async () => {
+  it('throws when every tier is empty', async () => {
     vi.stubGlobal('fetch', outageFetch());
-    await expect(new TarkovDevClient('en').getTasks()).rejects.toThrow(/422/);
+    await expect(new TarkovDevClient('en').getTasks()).rejects.toThrow(/snapshot is unavailable/);
   });
 
   it('force bypasses a fresh cache but still falls back to it on failure', async () => {
@@ -175,110 +194,40 @@ describe('TarkovDevClient cache', () => {
     expect(localStorage.getItem('td_maps_cache_v3_pt')).toBeNull();
     expect(localStorage.getItem('td_map_pois_cache_v1_ru')).toBeNull();
   });
-
-  // A 200 with the wrong body must not become an empty task list that gets
-  // cached for 24h as if the game had no quests.
-  it('rejects a 200 that carries an unexpected shape', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ nope: true }) })),
-    );
-
-    await expect(new TarkovDevClient('en').getTasks()).rejects.toThrow(/unexpected shape/);
-    expect(localStorage.getItem(TASKS_KEY)).toBeNull();
-  });
 });
 
-describe('TarkovDevClient snapshot fallbacks', () => {
-  beforeEach(() => {
-    resetModuleState();
-    localStorage.clear();
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-  });
+describe('TarkovDevClient task source', () => {
+  beforeEach(setup);
+  afterEach(teardown);
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
-  });
-
-  /** Fails the upstream call; answers the snapshot URL with `snapshot` (or 404). */
-  function routedFetch(snapshot: unknown | null): ReturnType<typeof vi.fn> {
-    return vi.fn(async (url: string) => {
-      if (String(url).includes('raw.githubusercontent.com')) {
-        if (snapshot === null) return { ok: false, status: 404, json: async () => ({}) };
-        return { ok: true, status: 200, json: async () => snapshot };
-      }
-      return {
-        ok: false,
-        status: 422,
-        json: async () => ({ errors: ['GraphQL server unavailable.'] }),
-      };
-    });
-  }
-
-  const GENERATED_AT = '2026-08-01T00:00:00.000Z';
-  const repoSnapshot = {
-    generatedAt: GENERATED_AT,
-    lang: 'en',
-    tasks: [task('from-snapshot')],
-    maps: [],
-  };
-
-  it('falls back to the repo snapshot when there is no cache at all', async () => {
-    vi.stubGlobal('fetch', routedFetch(repoSnapshot));
-
-    const client = new TarkovDevClient('en');
-    await expect(client.getTasks()).resolves.toEqual([task('from-snapshot')]);
-    expect(client.staleInfo.stale).toBe(true);
-    expect(client.staleInfo.servedAt).toBe(Date.parse(GENERATED_AT));
-  });
-
-  it('never caches snapshot data — the next launch must retry the real API', async () => {
-    vi.stubGlobal('fetch', routedFetch(repoSnapshot));
+  // /regular/tasks answers curl and PowerShell with 200 but answers this app's
+  // webview with a CORS-less response and its Rust client with 404. Quests are
+  // therefore built by CI and read from the repo, never fetched here.
+  it('reads quests from the committed snapshot, never from the live tasks endpoint', async () => {
+    const fetchMock = okFetch(['x']);
+    vi.stubGlobal('fetch', fetchMock);
 
     await new TarkovDevClient('en').getTasks();
-    expect(localStorage.getItem(TASKS_KEY)).toBeNull();
-  });
-
-  it('prefers an expired cache over the snapshot, and does not even request it', async () => {
-    seed(['old'], 3 * DAY);
-    const fetchMock = routedFetch(repoSnapshot);
-    vi.stubGlobal('fetch', fetchMock);
-
-    await expect(new TarkovDevClient('en').getTasks()).resolves.toEqual([task('old')]);
-    const snapshotCalls = fetchMock.mock.calls.filter((c) =>
-      String(c[0]).includes('raw.githubusercontent.com'),
-    );
-    expect(snapshotCalls).toHaveLength(0);
-  });
-
-  it('treats an empty snapshot as absent, not as a game with no quests', async () => {
-    vi.stubGlobal(
-      'fetch',
-      routedFetch({ generatedAt: null, lang: 'en', tasks: [], maps: [] }),
-    );
-    await expect(new TarkovDevClient('en').getTasks()).rejects.toThrow(/422/);
-  });
-
-  it('throws when every tier is empty', async () => {
-    vi.stubGlobal('fetch', routedFetch(null));
-    await expect(new TarkovDevClient('en').getTasks()).rejects.toThrow(/422/);
-  });
-
-  it('requests the snapshot for the active language', async () => {
-    const fetchMock = routedFetch(null);
-    vi.stubGlobal('fetch', fetchMock);
-
-    await expect(new TarkovDevClient('pt').getTasks()).rejects.toThrow();
     const urls = fetchMock.mock.calls.map((c) => String(c[0]));
-    // The snapshot is a shared base plus one dictionary per language, so the
-    // language-specific request is the locale file, not a whole-language copy.
-    expect(urls.some((u) => u.includes('/locale-pt.json'))).toBe(true);
-    expect(urls.some((u) => u.includes('/base.json'))).toBe(true);
+
+    expect(urls.some((u) => u.includes(SNAPSHOT_HOST))).toBe(true);
+    expect(urls.every((u) => !u.includes('/regular/tasks'))).toBe(true);
+    expect(urls.every((u) => !u.includes('/graphql'))).toBe(true);
   });
 
-  it('falls back to the bundled snapshot when even the repo copy is gone', async () => {
-    vi.stubGlobal('fetch', routedFetch(null));
+  it('requests the base once and the locale for the active language', async () => {
+    const fetchMock = okFetch(['x']);
+    vi.stubGlobal('fetch', fetchMock);
+
+    await new TarkovDevClient('pt').getTasks().catch(() => undefined);
+    const urls = fetchMock.mock.calls.map((c) => String(c[0]));
+
+    expect(urls.some((u) => u.endsWith('/base.json'))).toBe(true);
+    expect(urls.some((u) => u.endsWith('/locale-pt.json'))).toBe(true);
+  });
+
+  it('falls back to the bundled snapshot when the repo copy is unreachable', async () => {
+    vi.stubGlobal('fetch', outageFetch());
     vi.mocked(bundledSnapshot).mockResolvedValueOnce({
       data: [task('from-bundle')] as never,
       generatedAt: Date.parse(GENERATED_AT),
@@ -288,59 +237,64 @@ describe('TarkovDevClient snapshot fallbacks', () => {
     await expect(client.getTasks()).resolves.toEqual([task('from-bundle')]);
     expect(client.staleInfo.stale).toBe(true);
     // Never cached: a cached fallback would look fresh for 24h and stop the app
-    // retrying the real API on the next launch.
+    // retrying the real source on the next launch.
     expect(localStorage.getItem(TASKS_KEY)).toBeNull();
   });
 
   it('asks the bundled snapshot for the active language', async () => {
-    vi.stubGlobal('fetch', routedFetch(null));
+    vi.stubGlobal('fetch', outageFetch());
     await expect(new TarkovDevClient('pt').getTasks()).rejects.toThrow();
     expect(vi.mocked(bundledSnapshot)).toHaveBeenCalledWith('pt', 'tasks');
   });
 
-  it('does not reach for a snapshot for POIs — they are not snapshotted', async () => {
-    const fetchMock = routedFetch(repoSnapshot);
-    vi.stubGlobal('fetch', fetchMock);
+  it('prefers an expired cache over the bundled snapshot', async () => {
+    seed(['old'], 3 * DAY);
+    vi.stubGlobal('fetch', outageFetch());
+    vi.mocked(bundledSnapshot).mockResolvedValueOnce({
+      data: [task('from-bundle')] as never,
+      generatedAt: Date.parse(GENERATED_AT),
+    });
 
-    await expect(new TarkovDevClient('en').getMapPois()).rejects.toThrow(/422/);
-    const snapshotCalls = fetchMock.mock.calls.filter((c) =>
-      String(c[0]).includes('raw.githubusercontent.com'),
-    );
-    expect(snapshotCalls).toHaveLength(0);
+    await expect(new TarkovDevClient('en').getTasks()).resolves.toEqual([task('old')]);
   });
 });
 
-describe('TarkovDevClient upstream requests', () => {
-  beforeEach(() => {
-    resetModuleState();
-    localStorage.clear();
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-  });
+describe('TarkovDevClient POI source', () => {
+  beforeEach(setup);
+  afterEach(teardown);
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
-  });
-
-  it('asks the JSON API for the active language, not the GraphQL endpoint', async () => {
+  // POIs still come from the live API — /regular/maps answers every client.
+  it('fetches POIs from the live maps endpoint', async () => {
     const fetchMock = okFetch(['x']);
     vi.stubGlobal('fetch', fetchMock);
 
-    await new TarkovDevClient('en').getTasks();
+    await new TarkovDevClient('en').getMapPois();
     const urls = fetchMock.mock.calls.map((c) => String(c[0]));
 
-    expect(urls.every((u) => !u.includes('/graphql'))).toBe(true);
-    expect(urls).toContain('https://json.tarkov.dev/regular/tasks');
-    expect(urls).toContain('https://json.tarkov.dev/regular/tasks_en');
+    expect(urls).toContain('https://json.tarkov.dev/regular/maps');
+    expect(urls).toContain('https://json.tarkov.dev/regular/maps_en');
   });
 
-  // The maps document is the big one. Downloading it twice per session because
-  // tasks and POIs each want it would be ~19 MB for 9.5 MB of data.
+  it('does not reach for a snapshot for POIs — they are not snapshotted', async () => {
+    const fetchMock = outageFetch();
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(new TarkovDevClient('en').getMapPois()).rejects.toThrow(/503/);
+    const snapshotCalls = fetchMock.mock.calls.filter((c) =>
+      String(c[0]).includes(SNAPSHOT_HOST),
+    );
+    expect(snapshotCalls).toHaveLength(0);
+    expect(vi.mocked(bundledSnapshot)).not.toHaveBeenCalled();
+  });
+
+  // The maps document is the big one. Downloading it twice per session would be
+  // ~19 MB for 9.5 MB of data.
   it('downloads the maps document once and shares it across clients', async () => {
     const fetchMock = okFetch(['x']);
     vi.stubGlobal('fetch', fetchMock);
 
-    await new TarkovDevClient('en').getTasks();
+    await new TarkovDevClient('en').getMapPois();
+    localStorage.removeItem(POIS_KEY); // force a second resolution, not a cache read
     await new TarkovDevClient('en').getMapPois();
 
     const mapsCalls = fetchMock.mock.calls.filter((c) => String(c[0]).endsWith('/regular/maps'));
@@ -349,11 +303,11 @@ describe('TarkovDevClient upstream requests', () => {
 
   it('does not memoise a failed maps fetch — the next attempt retries the network', async () => {
     vi.stubGlobal('fetch', outageFetch());
-    await expect(new TarkovDevClient('en').getTasks()).rejects.toThrow();
+    await expect(new TarkovDevClient('en').getMapPois()).rejects.toThrow();
 
-    const fetchMock = okFetch(['recovered']);
+    const fetchMock = okFetch(['x']);
     vi.stubGlobal('fetch', fetchMock);
-    await expect(new TarkovDevClient('en').getTasks()).resolves.toEqual([task('recovered')]);
+    await expect(new TarkovDevClient('en').getMapPois()).resolves.toBeDefined();
     expect(fetchMock.mock.calls.some((c) => String(c[0]).endsWith('/regular/maps'))).toBe(true);
   });
 });
