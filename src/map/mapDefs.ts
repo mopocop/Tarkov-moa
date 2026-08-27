@@ -516,7 +516,7 @@ export const MAPS: Record<string, MapDef> = {
     floors: SHORELINE_FLOORS,
   },
   // Reserve.
-  "5704e5fad2720bac5b8b4567": {
+  "5704e5fad2720bc05b8b4567": {
     svgUrl: "https://assets.tarkov.dev/maps/svg/Reserve.svg",
     boundsRaw: [
       [289, -293],
@@ -553,7 +553,7 @@ export const MAPS: Record<string, MapDef> = {
     floors: LAB_FLOORS,
   },
   // Terminal (newer location).
-  "6925a2c38bdebd9e2302692e": {
+  "65cc8f81a9aac3e77d0cfd3e": {
     svgUrl: "https://assets.tarkov.dev/maps/svg/Terminal.svg",
     boundsRaw: [
       [463, -580],
@@ -586,10 +586,10 @@ export const SUPPORTED_MAP_NAMES: Record<string, string> = {
   "55f2d3fd4bdc2d5f408b4567": "Factory",
   "5704e4dad2720bb55b8b4567": "Lighthouse",
   "5704e554d2720bac5b8b456e": "Shoreline",
-  "5704e5fad2720bac5b8b4567": "Reserve",
+  "5704e5fad2720bc05b8b4567": "Reserve",
   "5714dc692459777137212e12": "Streets of Tarkov",
   "5b0fc42d86f7744a585f9105": "The Lab",
-  "6925a2c38bdebd9e2302692e": "Terminal",
+  "65cc8f81a9aac3e77d0cfd3e": "Terminal",
   "653e6760052c01c1c805532f": "Ground Zero",
 };
 

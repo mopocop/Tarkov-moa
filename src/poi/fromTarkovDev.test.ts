@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mapDataToPois, lootBucket } from "./fromTarkovDev";
+import { mapDataToPois, lootBucket, poisByMap } from "./fromTarkovDev";
 import type { MapPoiData } from "../api/types";
 
 describe("lootBucket", () => {
@@ -166,5 +166,61 @@ describe("mapDataToPois — loot containers", () => {
 describe("mapDataToPois — empty input", () => {
   it("returns empty array for map with no arrays", () => {
     expect(mapDataToPois({ id: "m1" })).toEqual([]);
+  });
+});
+
+describe("poisByMap — canonical indexing", () => {
+  const FACTORY = "55f2d3fd4bdc2d5f408b4567";
+  const NIGHT_FACTORY = "59fc81d786f774390775787e";
+  const GROUND_ZERO = "653e6760052c01c1c805532f";
+  const GZ_21 = "65b8d6f5cdde2479cb2a3125";
+
+  const withExtract = (id: string, extractId: string): MapPoiData => ({
+    id,
+    extracts: [
+      {
+        id: extractId,
+        name: extractId,
+        faction: "pmc",
+        position: { x: 0, y: 0, z: 0 },
+      },
+    ],
+  }) as MapPoiData;
+
+  // App selects by canonical id, so anything filed under a variant id was
+  // simply unreachable before this.
+  it("files a variant's POIs under the canonical id", () => {
+    const byMap = poisByMap([withExtract(NIGHT_FACTORY, "e-night")]);
+    expect(Object.keys(byMap)).toEqual([FACTORY]);
+    expect(byMap[FACTORY]).toHaveLength(1);
+  });
+
+  // Upstream gives the variant a fresh id for every object, so concatenating
+  // would draw each extract twice on the same map.
+  it("does not merge a variant into the canonical map", () => {
+    const byMap = poisByMap([
+      withExtract(FACTORY, "e-day"),
+      withExtract(NIGHT_FACTORY, "e-night"),
+    ]);
+    expect(byMap[FACTORY]).toHaveLength(1);
+  });
+
+  it("prefers the canonical map regardless of the order they arrive in", () => {
+    const variantFirst = poisByMap([
+      withExtract(GZ_21, "e-21"),
+      withExtract(GROUND_ZERO, "e-base"),
+    ]);
+    const canonicalFirst = poisByMap([
+      withExtract(GROUND_ZERO, "e-base"),
+      withExtract(GZ_21, "e-21"),
+    ]);
+    expect(variantFirst[GROUND_ZERO]).toEqual(canonicalFirst[GROUND_ZERO]);
+    expect(variantFirst[GROUND_ZERO]).toHaveLength(1);
+  });
+
+  it("leaves a map with no variant under its own id", () => {
+    const customs = "56f40101d2720b2a4d8b45d6";
+    const byMap = poisByMap([withExtract(customs, "e1")]);
+    expect(Object.keys(byMap)).toEqual([customs]);
   });
 });

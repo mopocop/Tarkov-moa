@@ -13,7 +13,23 @@
 //  4. No `enum`/`namespace` (the app tsconfig sets erasableSyntaxOnly). Use
 //     `as const` objects + string-literal unions instead.
 
-export const PROTOCOL_VERSION = 1;
+// Bumped to 2 in the json.tarkov.dev migration.
+//
+// Quest ids did NOT change — they are BSG's own MongoIds, which the game writes
+// into its logs and both upstreams reuse verbatim — so QuestsPayload is wire
+// compatible. Two MAP ids did change, because the app had them wrong: Reserve
+// and Terminal. PositionPayload, WireMarker and DrawPayload all carry a mapId,
+// and the receiver drops anything whose mapId does not match the map it is
+// showing (SquadmateLayer). So a 0.8.x client and a 0.9 client sharing a squad
+// would each see the other vanish on those two maps — no error, no log, just an
+// absent dot, which reads as "the app is broken".
+//
+// Normalising the old ids on receipt would not save it: an 0.8.x client still
+// cannot place a 0.9 client's Reserve position, and it is already shipped. So
+// the honest move is to make the mismatch explicit. SquadErrorCodes.
+// PROTOCOL_MISMATCH already exists and is already FATAL, which turns three
+// silent failures into one message the user can act on.
+export const PROTOCOL_VERSION = 2;
 
 // ---------------------------------------------------------------------------
 // Squad color palette — server assigns one per member (unique within a squad),

@@ -23,18 +23,22 @@ export interface DerivedQuestState {
   >;
 }
 
-// Maps whose quest pool is gated by in-game player level. Hidden from
-// availableTasksByMap / availableObjectivesByMap when the player is below
-// the threshold, so the picker and markers don't surface a map the player
-// can't actually access. Ground Zero 21+ is the only known case in EFT.
-const LEVEL_GATED_MAPS: Record<string, number> = {
-  '65b8d6f5cdde2479cb2a3125': 21, // Ground Zero 21+
-};
-
-function isMapVisible(mapId: string, playerLevel: number): boolean {
-  const gate = LEVEL_GATED_MAPS[mapId];
-  return gate === undefined || playerLevel >= gate;
-}
+// There was a level gate here that hid Ground Zero 21+ from players below level
+// 21. It was removed because the app has no way to learn the player's level:
+// nothing in the game's logs carries it, the Rust side reads only the config,
+// the log directory and the language, and no screen ever asked. setPlayerLevel
+// existed but was never called, so the level sat at its default of 1 forever and
+// the gate was permanently shut.
+//
+// The result was backwards. A low-level player was correctly spared a few quests
+// they could not take yet; a high-level player — every real user, eventually —
+// silently lost that content, with no setting to turn it back on and nothing to
+// suggest anything was missing. Squadmates were already exempt (their pins are
+// derived with the level pinned high), so a teammate's Ground Zero 21+ markers
+// rendered while the player's own never did.
+//
+// Showing a quest slightly before it is reachable is a much smaller error than
+// hiding one that is.
 
 function progressById(progress: TarkovTrackerProgress): Map<string, TaskProgress> {
   const map = new Map<string, TaskProgress>();
@@ -67,7 +71,6 @@ export function deriveQuestState(
   tasks: TarkovTask[],
 ): DerivedQuestState {
   const progressMap = progressById(progress);
-  const playerLevel = progress.playerLevel ?? 0;
 
   const available: TarkovTask[] = [];
   const anyLocation: TarkovTask[] = [];
@@ -116,7 +119,7 @@ export function deriveQuestState(
       // its variant (e.g. Ground Zero + Ground Zero 21+) lands once.
       const canonicalIds = new Set<string>();
       mapIds.forEach((id) => {
-        if (isMapVisible(id, playerLevel)) canonicalIds.add(canonicalMapId(id));
+        canonicalIds.add(canonicalMapId(id));
       });
       canonicalIds.forEach((id) => pushByMap(availableTasksByMap, id, task));
     }
@@ -129,7 +132,7 @@ export function deriveQuestState(
       if (!hasPosition) return;
       const canonicalIds = new Set<string>();
       collectObjectiveMaps(obj).forEach((mapId) => {
-        if (isMapVisible(mapId, playerLevel)) canonicalIds.add(canonicalMapId(mapId));
+        canonicalIds.add(canonicalMapId(mapId));
       });
       canonicalIds.forEach((mapId) =>
         pushByMap(availableObjectivesByMap, mapId, { task, objective: obj }),
