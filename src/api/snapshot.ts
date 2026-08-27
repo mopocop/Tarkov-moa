@@ -1,39 +1,40 @@
-// Fallback data sources for when tarkov.dev cannot be reached.
+// The last two rungs of the fallback ladder in tarkov-dev.ts: a snapshot of the
+// upstream committed to this repo, reachable either over GitHub's CDN or, when
+// there is no network at all, from inside the binary.
 //
-// Two tiers, both behind the live API and the local cache:
-//
-//   remote  — the snapshot committed to this repo, served by GitHub's CDN and
-//             refreshed daily by .github/workflows/data-snapshot.yml. Covers
-//             every supported language and survives a tarkov.dev outage without
-//             needing a new app release.
-//   bundled — the English snapshot compiled into the binary. The last resort:
-//             a fresh install with no cache and no network at all.
-//
-// Neither is written to the cache. Caching a fallback would make it look fresh
-// for the next 24h and stop the app retrying the real API on the next launch.
-
-import bundledEn from '../../data/snapshot/en.json';
+// Format note: the snapshot is stored the way the upstream serves it — one
+// language-independent base plus a small dictionary per language — and adapted
+// on read. Storing six fully-adapted copies instead would mean six times the
+// task payload; sharing the base keeps all six languages inside ~2.7 MB.
+import { adaptTasks, type LocaleDoc } from './adapt';
 import type { ApiLang } from './tarkov-dev';
-
-/** The shape scripts/fetch-snapshot.mjs writes. */
-export interface Snapshot {
-  generatedAt: string | null;
-  lang: string;
-  tasks: unknown[];
-  maps: unknown[];
-}
-
-/** Datasets a snapshot covers. POIs are deliberately not snapshotted. */
-export type SnapshotField = 'tasks' | 'maps';
-
-export interface SnapshotHit<T> {
-  data: T;
-  /** When the snapshot was generated, as epoch ms — for the "data is old" notice. */
-  generatedAt: number | null;
-}
+import type { TarkovTask } from './types';
 
 const BASE_URL = 'https://raw.githubusercontent.com/mopocop/Tarkov-moa/main/data/snapshot';
 const FETCH_TIMEOUT_MS = 8000;
+
+// `maps` was a second field here until getMaps() was removed as uncalled; the
+// snapshot only ever needs to answer for tasks now.
+export type SnapshotField = 'tasks';
+
+interface SnapshotBase {
+  generatedAt: string | null;
+  gameMode?: string;
+  tasks: Record<string, unknown>;
+  maps: Record<string, unknown>;
+  traders: Record<string, unknown>;
+}
+
+interface SnapshotLocale {
+  tasks: Record<string, string>;
+  maps: Record<string, string>;
+  traders: Record<string, string>;
+}
+
+export interface SnapshotHit<T> {
+  data: T;
+  generatedAt: number | null;
+}
 
 function parseGeneratedAt(value: string | null): number | null {
   if (!value) return null;
@@ -41,38 +42,79 @@ function parseGeneratedAt(value: string | null): number | null {
   return Number.isNaN(ms) ? null : ms;
 }
 
-function pick<T>(snap: Snapshot | null, field: SnapshotField): SnapshotHit<T> | null {
-  const rows = snap?.[field];
-  // An empty array is the placeholder that ships before the workflow's first
-  // run. Treat it as "no snapshot" rather than as "this game has no quests".
-  if (!Array.isArray(rows) || rows.length === 0) return null;
-  return { data: rows as T, generatedAt: parseGeneratedAt(snap?.generatedAt ?? null) };
+// An empty task list is the placeholder that ships before the workflow's first
+// successful run. Treat it as "no snapshot" rather than as "this game has no
+// quests" — the difference decides whether the app shows an error or an empty
+// screen it cannot explain.
+function build<T>(base: SnapshotBase | null, locale: SnapshotLocale | null): SnapshotHit<T> | null {
+  if (!base || !locale) return null;
+  const asLocale = (d: Record<string, string> | undefined): LocaleDoc => ({ data: d ?? {} });
+  let tasks: TarkovTask[];
+  try {
+    tasks = adaptTasks({
+      tasks: { data: { tasks: base.tasks } } as Parameters<typeof adaptTasks>[0]['tasks'],
+      tasksLocale: asLocale(locale.tasks),
+      maps: { data: { maps: base.maps } } as Parameters<typeof adaptTasks>[0]['maps'],
+      mapsLocale: asLocale(locale.maps),
+      traders: { data: base.traders } as Parameters<typeof adaptTasks>[0]['traders'],
+      tradersLocale: asLocale(locale.traders),
+    });
+  } catch {
+    // A malformed snapshot must not take the app down — it is the last resort,
+    // not a source of truth.
+    return null;
+  }
+  if (tasks.length === 0) return null;
+  return { data: tasks as T, generatedAt: parseGeneratedAt(base.generatedAt) };
 }
 
-/** The snapshot committed to the repo, over HTTPS. Null on any failure. */
-export async function remoteSnapshot<T>(
-  lang: ApiLang,
-  field: SnapshotField,
-): Promise<SnapshotHit<T> | null> {
+async function fetchJson<T>(url: string): Promise<T | null> {
   try {
-    // Bounded: this runs while the user is already staring at an empty screen,
-    // so a hung request is worse than no fallback.
-    const res = await fetch(`${BASE_URL}/${lang}.json`, {
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
+    const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!res.ok) return null;
-    return pick<T>((await res.json()) as Snapshot, field);
+    return (await res.json()) as T;
   } catch {
     return null;
   }
 }
 
-/**
- * The snapshot compiled into the binary. English only — shipping six languages
- * would multiply the installer for a tier that almost nobody reaches. A user
- * whose only remaining source is this one gets correct ids, positions and
- * requirements, with English names.
- */
-export function bundledSnapshot<T>(field: SnapshotField): SnapshotHit<T> | null {
-  return pick<T>(bundledEn as Snapshot, field);
+export async function remoteSnapshot<T>(
+  lang: ApiLang,
+  field: SnapshotField,
+): Promise<SnapshotHit<T> | null> {
+  if (field !== 'tasks') return null;
+  const [base, locale] = await Promise.all([
+    fetchJson<SnapshotBase>(`${BASE_URL}/base.json`),
+    fetchJson<SnapshotLocale>(`${BASE_URL}/locale-${lang}.json`),
+  ]);
+  return build<T>(base, locale);
+}
+
+// Loaded with dynamic import rather than a top-level one on purpose: the base is
+// ~1.2 MB and the six locales another ~1.6 MB, and parsing all of that at boot
+// to serve a tier that almost never runs would cost every launch. Vite splits
+// these into their own chunks, so they are only read when the ladder gets here.
+const localeModules = import.meta.glob<{ default: SnapshotLocale }>(
+  '../../data/snapshot/locale-*.json',
+);
+
+export async function bundledSnapshot<T>(
+  lang: ApiLang,
+  field: SnapshotField,
+): Promise<SnapshotHit<T> | null> {
+  if (field !== 'tasks') return null;
+  try {
+    const localeKey = Object.keys(localeModules).find((k) => k.endsWith(`locale-${lang}.json`));
+    if (!localeKey) return null;
+    const [baseMod, localeMod] = await Promise.all([
+      import('../../data/snapshot/base.json'),
+      localeModules[localeKey](),
+    ]);
+    const base = (baseMod as { default: SnapshotBase }).default;
+    return build<T>(base, localeMod.default);
+  } catch {
+    // The files are generated by CI; a build that predates the first successful
+    // run simply has no bundled tier.
+    return null;
+  }
 }

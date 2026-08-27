@@ -37,6 +37,10 @@ jobs:
         run: |
           changed=false
           for f in $(git diff --name-only -- data/snapshot); do
+            # A file removed from the working tree (the old per-language files,
+            # dropped by the new format) is a change by definition; don't run jq
+            # on a path that no longer exists.
+            if [ ! -f "$f" ]; then changed=true; break; fi
             old=$(git show HEAD:"$f" 2>/dev/null | jq -S 'del(.generatedAt)' || echo null)
             new=$(jq -S 'del(.generatedAt)' "$f")
             if [ "$old" != "$new" ]; then changed=true; break; fi

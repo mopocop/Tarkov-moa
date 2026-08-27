@@ -214,7 +214,7 @@ export class TarkovDevClient {
           return remote.data;
         }
 
-        const local = bundledSnapshot<T>(snapshotField);
+        const local = await bundledSnapshot<T>(this.lang, snapshotField);
         if (local) {
           console.warn(`[tarkov.dev] ${baseKey}: offline, serving the bundled snapshot —`, why);
           this.servedStale.set(baseKey, local.generatedAt ?? Date.now());

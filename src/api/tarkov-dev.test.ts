@@ -1,6 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TarkovDevClient } from './tarkov-dev';
+import { bundledSnapshot } from './snapshot';
 import type { TarkovTask } from './types';
+
+// The bundled tier reads real generated files, so left alone it would answer
+// with the live snapshot and quietly rescue tests that are meant to reach the
+// bottom of the ladder. Stubbed off by default; the one test that cares about
+// it opts back in. remoteSnapshot stays real — it is driven by the fetch mock.
+vi.mock('./snapshot', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./snapshot')>();
+  return { ...actual, bundledSnapshot: vi.fn(async () => null) };
+});
 
 const TASKS_KEY = 'td_tasks_cache_v5_en';
 const DAY = 24 * 60 * 60 * 1000;
@@ -261,7 +271,31 @@ describe('TarkovDevClient snapshot fallbacks', () => {
 
     await expect(new TarkovDevClient('pt').getTasks()).rejects.toThrow();
     const urls = fetchMock.mock.calls.map((c) => String(c[0]));
-    expect(urls.some((u) => u.includes('/pt.json'))).toBe(true);
+    // The snapshot is a shared base plus one dictionary per language, so the
+    // language-specific request is the locale file, not a whole-language copy.
+    expect(urls.some((u) => u.includes('/locale-pt.json'))).toBe(true);
+    expect(urls.some((u) => u.includes('/base.json'))).toBe(true);
+  });
+
+  it('falls back to the bundled snapshot when even the repo copy is gone', async () => {
+    vi.stubGlobal('fetch', routedFetch(null));
+    vi.mocked(bundledSnapshot).mockResolvedValueOnce({
+      data: [task('from-bundle')] as never,
+      generatedAt: Date.parse(GENERATED_AT),
+    });
+
+    const client = new TarkovDevClient('en');
+    await expect(client.getTasks()).resolves.toEqual([task('from-bundle')]);
+    expect(client.staleInfo.stale).toBe(true);
+    // Never cached: a cached fallback would look fresh for 24h and stop the app
+    // retrying the real API on the next launch.
+    expect(localStorage.getItem(TASKS_KEY)).toBeNull();
+  });
+
+  it('asks the bundled snapshot for the active language', async () => {
+    vi.stubGlobal('fetch', routedFetch(null));
+    await expect(new TarkovDevClient('pt').getTasks()).rejects.toThrow();
+    expect(vi.mocked(bundledSnapshot)).toHaveBeenCalledWith('pt', 'tasks');
   });
 
   it('does not reach for a snapshot for POIs — they are not snapshotted', async () => {
