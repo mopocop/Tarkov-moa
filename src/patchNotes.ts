@@ -1,6 +1,10 @@
 // Patch notes shown in the in-app "Patch notes" modal. Newest entry first.
 // To cut a release: prepend a new entry here (keep it short — a few bullets),
-// bump the version in src-tauri/tauri.conf.json, and rebuild.
+// then bump the version in ALL THREE of package.json, src-tauri/tauri.conf.json
+// and src-tauri/Cargo.toml, and rebuild. Each has drifted at least once: the
+// installer and the in-app version both come from tauri.conf.json, so a stale
+// Cargo.toml is invisible to users and shows up only as a build log compiling a
+// version you do not recognise.
 
 export interface PatchNote {
   version: string;
