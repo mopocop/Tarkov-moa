@@ -211,4 +211,43 @@ describe('deriveQuestState (accepted-based active model)', () => {
     expect(state.availableObjectivesByMap['map-customs']).toBeUndefined();
     expect(state.availableTasksByMap['map-customs']?.map((t) => t.id)).toEqual(['t-positionless']);
   });
+
+  // There used to be a gate hiding Ground Zero 21+ below player level 21. It was
+  // removed because the app can never learn the player's level — nothing in the
+  // game logs carries it and no screen ever asked — so the level sat at its
+  // default forever and the gate was permanently shut. These lock in the new
+  // behaviour: the content is visible whatever the (meaningless) level says.
+  describe('Ground Zero 21+ is no longer level gated', () => {
+    const GZ_21 = '65b8d6f5cdde2479cb2a3125';
+    const GROUND_ZERO = '653e6760052c01c1c805532f';
+
+    const gzTask: TarkovTask = {
+      id: 't-gz-21',
+      name: 'Ground Zero 21+ task',
+      map: { id: GZ_21, name: 'Ground Zero 21+' },
+      objectives: [
+        {
+          id: 'o-gz',
+          type: 'visit',
+          zones: [{ map: { id: GZ_21, name: 'Ground Zero 21+' }, position: { x: 1, y: 2, z: 3 } }],
+        },
+      ],
+    } as TarkovTask;
+
+    it('surfaces the task at level 1, collapsed onto Ground Zero', () => {
+      const state = deriveQuestState(progress(1, [{ id: 't-gz-21', accepted: true }]), [gzTask]);
+      expect(state.availableTasksByMap[GROUND_ZERO]?.map((t) => t.id)).toEqual(['t-gz-21']);
+    });
+
+    it('places its marker at level 1 too', () => {
+      const state = deriveQuestState(progress(1, [{ id: 't-gz-21', accepted: true }]), [gzTask]);
+      expect(state.availableObjectivesByMap[GROUND_ZERO]).toHaveLength(1);
+    });
+
+    it('behaves identically at a high level', () => {
+      const low = deriveQuestState(progress(1, [{ id: 't-gz-21', accepted: true }]), [gzTask]);
+      const high = deriveQuestState(progress(42, [{ id: 't-gz-21', accepted: true }]), [gzTask]);
+      expect(low.availableTasksByMap).toEqual(high.availableTasksByMap);
+    });
+  });
 });
