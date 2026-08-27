@@ -87,8 +87,8 @@ const copyPresent = (raw, keys) => {
 };
 
 const TASK_KEYS = [
-  'id', 'name', 'normalizedName', 'minPlayerLevel', 'wikiLink', 'map', 'trader',
-  'taskRequirements', 'kappaRequired', 'factionName', 'objectives',
+  'id', 'name', 'normalizedName', 'map', 'trader', 'kappaRequired', 'factionName',
+  'objectives',
 ];
 const OBJECTIVE_KEYS = [
   'id', 'type', 'description', 'maps', 'zones', 'possibleLocations', 'optional',

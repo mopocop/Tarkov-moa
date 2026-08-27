@@ -23,9 +23,6 @@ interface RawTask {
   id: string;
   name: string;
   trader?: string;
-  wikiLink?: string;
-  minPlayerLevel?: number;
-  taskRequirements?: unknown[];
   map?: string | null;
   objectives?: RawObjective[];
 }
@@ -206,12 +203,6 @@ export function adaptTasks(input: {
       const t = tradersData[raw.trader];
       const traderName = t ? tr(tradersLocale, t.name) : undefined;
       if (traderName) task.trader = { name: traderName };
-    }
-
-    if (raw.wikiLink != null) task.wikiLink = raw.wikiLink;
-    if (raw.minPlayerLevel != null) task.minPlayerLevel = raw.minPlayerLevel;
-    if (raw.taskRequirements?.length) {
-      task.taskRequirements = raw.taskRequirements as TarkovTask['taskRequirements'];
     }
 
     if (raw.objectives?.length) {

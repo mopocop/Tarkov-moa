@@ -71,16 +71,7 @@ export interface TarkovTask {
   name: string;
   map?: MapRef;
   trader?: { name: string };
-  wikiLink?: string;
-  minPlayerLevel?: number;
-  taskRequirements?: TaskRequirement[];
   objectives?: TaskObjective[];
-}
-
-export interface TarkovMap {
-  id: string;
-  name: string;
-  normalizedName: string;
 }
 
 export interface MapPosition {

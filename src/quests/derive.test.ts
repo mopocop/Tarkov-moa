@@ -27,20 +27,16 @@ function progress(
 const debutA: TarkovTask = {
   id: 't-debut-a',
   name: 'Debut A',
-  minPlayerLevel: 1,
 };
 
 const followUp: TarkovTask = {
   id: 't-follow',
   name: 'Follow Up',
-  minPlayerLevel: 1,
-  taskRequirements: [{ task: { id: 't-debut-a', name: 'Debut A' }, status: ['complete'] }],
 };
 
 const woodsKill: TarkovTask = {
   id: 't-woods-kill',
   name: 'Woods Kill',
-  minPlayerLevel: 1,
   map: { id: 'map-woods', name: 'Woods' },
   objectives: [
     {
@@ -57,7 +53,6 @@ const woodsKill: TarkovTask = {
 const customsFind: TarkovTask = {
   id: 't-customs-find',
   name: 'Customs Find',
-  minPlayerLevel: 1,
   objectives: [
     {
       id: 'o-2',
@@ -73,7 +68,6 @@ const customsFind: TarkovTask = {
 const positionlessKill: TarkovTask = {
   id: 't-positionless',
   name: 'Positionless',
-  minPlayerLevel: 1,
   objectives: [
     {
       id: 'o-3',
@@ -88,7 +82,6 @@ const positionlessKill: TarkovTask = {
 const handover: TarkovTask = {
   id: 't-handover',
   name: 'Shortage-like handover',
-  minPlayerLevel: 1,
   // No task.map, and objectives carry no map/zone/possibleLocation info.
   objectives: [
     { id: 'o-h', type: 'giveItem', description: 'Hand over 3 salewa kits' },
