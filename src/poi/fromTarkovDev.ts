@@ -13,6 +13,7 @@
 //    and labeled generically, with the map's boss roster + chances in the note.
 //  - Loot containers are numerous → we bucket them by name so a type sub-filter
 //    (medbag/safe/computer/ammo/…) can thin the set.
+import { canonicalMapId } from "../map/canonicalMap";
 import type { Poi } from "./types";
 import type {
   MapPoiData,
@@ -263,10 +264,25 @@ export function mapDataToPois(map: MapPoiData): Poi[] {
   return out;
 }
 
-// Index all maps' POIs by mapId — convenient for App to slice the current map.
+// Index all maps' POIs by CANONICAL mapId — convenient for App to slice the
+// current map.
+//
+// Indexing by the raw id was a silent bug: App selects by canonical id, so
+// anything stored under a variant id (Night Factory, Ground Zero 21+, Ground
+// Zero Tutorial) was unreachable and those maps simply had no POIs.
+//
+// Variants are NOT merged in. Upstream reports them as the same physical map
+// with a fresh id on every object — Factory and Night Factory each have 9
+// extracts and 167 loot containers with zero ids in common — so concatenating
+// would draw every extract and container twice. The canonical map's own copy
+// wins; a variant only fills the slot when the canonical map is absent.
 export function poisByMap(maps: MapPoiData[]): Record<string, Poi[]> {
   const byMap: Record<string, Poi[]> = {};
-  for (const m of maps) byMap[m.id] = mapDataToPois(m);
+  for (const m of maps) {
+    const canonical = canonicalMapId(m.id);
+    if (byMap[canonical] && m.id !== canonical) continue;
+    byMap[canonical] = mapDataToPois(m);
+  }
   return byMap;
 }
 
