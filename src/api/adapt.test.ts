@@ -188,7 +188,7 @@ describe('adaptMapPois — edge cases', () => {
       tasksLocale: { data: { 't1 name': 'Test' } },
       maps: partialMaps,
       mapsLocale: { data: {} },
-      traders: { data: { traders: {} } },
+      traders: { data: {} },
       tradersLocale: { data: {} },
     });
     expect(result).toHaveLength(1);
@@ -209,7 +209,7 @@ describe('adaptMapPois — edge cases', () => {
       tasksLocale: { data: { 't1 name': 'Test' } },
       maps: { data: { maps: {} } },
       mapsLocale: { data: {} },
-      traders: { data: { traders: {} } },
+      traders: { data: {} },
       tradersLocale: { data: {} },
     });
     // QuestSidebar renders the trader span behind a `task.trader &&` guard, so

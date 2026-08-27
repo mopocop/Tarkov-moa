@@ -146,9 +146,9 @@ export interface MapsDoc {
   };
 }
 
-export interface TradersDoc {
-  data: { traders: Record<string, RawTrader> };
-}
+// Unlike tasks and maps, the traders document has NO inner container: the
+// traders sit directly under `data`, keyed by id.
+export interface TradersDoc { data: Record<string, RawTrader>; }
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -186,7 +186,7 @@ export function adaptTasks(input: {
   const { tasks, tasksLocale, maps, mapsLocale, traders, tradersLocale } = input;
   const tasksData = tasks.data.tasks;
   const mapsData = maps.data.maps;
-  const tradersData = traders.data.traders;
+  const tradersData = traders.data;
 
   return Object.values(tasksData).map((raw) => {
     const task: TarkovTask = {

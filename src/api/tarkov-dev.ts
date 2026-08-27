@@ -240,7 +240,8 @@ export class TarkovDevClient {
         ]);
         expectContainer(tasks, ['data', 'tasks'], 'tasks');
         expectContainer(maps, ['data', 'maps'], 'maps');
-        expectContainer(traders, ['data', 'traders'], 'traders');
+        // Traders have no inner container — they sit directly under `data`.
+        expectContainer(traders, ['data'], 'traders');
         return adaptTasks({
           tasks,
           tasksLocale,

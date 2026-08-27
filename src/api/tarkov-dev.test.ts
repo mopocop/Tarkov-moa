@@ -27,7 +27,7 @@ function docsFor(ids: string[]): Record<string, unknown> {
     '/regular/tasks_en': { data: locale },
     '/regular/maps': { data: { maps: {} } },
     '/regular/maps_en': { data: {} },
-    '/regular/traders': { data: { traders: {} } },
+    '/regular/traders': { data: {} },
     '/regular/traders_en': { data: {} },
   };
 }
