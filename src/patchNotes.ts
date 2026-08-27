@@ -12,13 +12,16 @@ export interface PatchNote {
 export const PATCH_NOTES: PatchNote[] = [
   {
     version: "0.9.0",
-    date: "2026-08-18",
+    date: "2026-08-26",
     changes: [
-      "Fixed: the map no longer goes blank when tarkov.dev has a bad day. Your quests stay on screen and the app keeps working — you just get a note telling you how old the data is.",
-      "What went wrong: tarkov.dev is where every quest, map and point of interest comes from, and on 17 August it was down for hours. The old app threw its saved copy away every 24 hours BEFORE checking whether a replacement was actually available — so an outage on their side turned into an empty screen on yours, with no way back until they recovered.",
-      "Tarkov MoA now has four places to look instead of one. First the live tarkov.dev data, same as always. If that fails, your own saved copy — old data beats no data, and it is never deleted until something better replaces it. If you have no saved copy, a backup published alongside the app and refreshed daily. And if even that is unreachable, a copy built into the install itself, so a brand-new install works offline.",
-      "You only see an error if all four come up empty, which now takes a lot of things going wrong at the same time.",
-      "Improved: when you are running on saved data, the header tells you the truth about when it was last updated instead of claiming it just synced.",
+      "Fixed: quests load again. If the app has been showing you an empty screen and a red error bar, this update is the fix.",
+      "What went wrong: every quest, map and point of interest came from one place — tarkov.dev's API — and that API stopped answering on 21 July and has not come back. One source, no backup, so when it went down the app went down with it.",
+      "Quest data now comes from a copy rebuilt every day and published alongside the app, with another copy built into the install itself. Quests only change when the game patches, so a daily rebuild loses you nothing — and it means the app no longer depends on any single server being awake at the moment you open it. Map intel (extracts, spawns, loot) is still fetched live.",
+      "There are now four places to look instead of one, and you only see an error if all four come up empty. When you are on saved data the header tells you how old it is instead of claiming it just synced.",
+      "Fixed: Reserve now shows quest markers. It never did — the app had one wrong character in that map's internal ID, so every Reserve objective was filed against a map the app did not recognise. 22 quests were affected.",
+      "Fixed: Night Factory, Ground Zero 21+ and the Ground Zero tutorial had no map intel at all. Their extracts, spawns and loot containers now show up like every other map.",
+      "Fixed: Ground Zero 21+ quests were hidden from you. The app was gating them on your player level but had no way to ever learn your level, so the gate stayed shut permanently — while your squadmates' markers for the same quests showed up fine.",
+      "Squad Mode: everyone in a squad needs 0.9.0. Two of the map IDs changed in this release, and a 0.8.x client and a 0.9.0 client would silently stop seeing each other on those maps. You will now get a clear version-mismatch message instead of a teammate who appears connected but invisible.",
     ],
   },
   {
