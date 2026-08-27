@@ -5,7 +5,7 @@
 // Format note: the snapshot is stored the way the upstream serves it — one
 // language-independent base plus a small dictionary per language — and adapted
 // on read. Storing six fully-adapted copies instead would mean six times the
-// task payload; sharing the base fits all six languages in 1.38 MB, 0.37 MB
+// task payload; sharing the base fits all six languages in 1.32 MB, 0.36 MB
 // compressed.
 import { adaptTasks, type LocaleDoc } from './adapt';
 import { appFetch } from './http';
@@ -93,7 +93,7 @@ export async function remoteSnapshot<T>(
 }
 
 // Loaded with dynamic import rather than a top-level one on purpose: the base is
-// ~484 KB and the six locales another ~900 KB, and parsing that at boot to serve
+// ~420 KB and the six locales another ~900 KB, and parsing that at boot to serve
 // a tier that almost never runs would cost every launch. Vite splits these into
 // their own chunks, so they are only read when the ladder gets here.
 const localeModules = import.meta.glob<{ default: SnapshotLocale }>(
