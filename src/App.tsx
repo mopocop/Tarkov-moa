@@ -63,6 +63,7 @@ import {
   poiToWireMarker,
 } from './poi/customPoi';
 import { hexForColorId, type DrawPayload } from '../shared/squadProtocol';
+import { TOKEN_HEX } from './ui/tokens';
 import SquadQuestLayer from './map/SquadQuestLayer';
 import SquadQuestSummary from './components/SquadQuestSummary';
 import { deriveMemberQuestState } from './squad/squadQuests';
@@ -181,7 +182,7 @@ function App() {
   // Picking a color in the Squad tab persists it immediately, so this updates
   // your map ink live (no more grey-forever).
   const myColorId = squad.selfColorId ?? squad.identity.colorId;
-  const myDrawHex = myColorId ? hexForColorId(myColorId) : '#c9a86a';
+  const myDrawHex = myColorId ? hexForColorId(myColorId) : TOKEN_HEX.accent;
   // Refs let the stable marker/draw callbacks read fresh state without being
   // recreated — MapClickPlacer and DrawLayer bind their map handlers once.
   // These refs are read only inside those (async) event handlers, never during

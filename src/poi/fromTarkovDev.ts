@@ -4,9 +4,9 @@
 //
 // Data realities baked in (verified against the live tarkov.dev schema + data):
 //  - Extracts carry coords + faction + switches + transferItem → we classify
-//    visual variants (car / switch-gated / item-required / plain) and color by
-//    faction. Live per-raid availability is NOT knowable, so we show all and
-//    let the faction filter hide Scav-only exits.
+//    visual variants (car / switch-gated / item-required / plain); color comes
+//    from the faction facet at render time. Live per-raid availability is NOT
+//    knowable, so we show all and let the faction filter hide Scav-only exits.
 //  - Bosses have NO coordinates of their own; their spawnLocations are display
 //    names ("Dorms", "Stronghold") that do NOT match the internal spawn
 //    zoneName codes. So boss markers are placed at boss-category SPAWN coords
@@ -35,12 +35,8 @@ function pos(p: MapPosition): { x: number; y: number; z: number } {
 }
 
 // ---- Extracts -------------------------------------------------------------
-// Marker color by faction; glyph by special-requirement variant.
-const FACTION_COLOR: Record<string, string> = {
-  pmc: "#22c55e", // green
-  shared: "#3b82f6", // blue (co-op / shared)
-  scav: "#f59e0b", // amber
-};
+// Glyph by special-requirement variant. Color is not set here: the render
+// layer colors every tarkov.dev POI by facet (registry.colorForFacet).
 
 function extractToPoi(mapId: string, e: MapExtractRaw): Poi | null {
   if (!hasPos(e.position)) return null;
@@ -74,7 +70,6 @@ function extractToPoi(mapId: string, e: MapExtractRaw): Poi | null {
     position: pos(e.position),
     label: e.name ?? "Extract",
     note: notes.join(" · "),
-    color: FACTION_COLOR[faction] ?? FACTION_COLOR.shared,
     source: "tarkov-dev",
     meta: { faction, requiresSwitch, requiresItem, isCar, glyph },
   };
