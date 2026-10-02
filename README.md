@@ -20,8 +20,8 @@
 <p align="center"><sub>Free · Windows 10/11 · ~12&nbsp;MB · updates itself · no account, no sign-up</sub></p>
 
 <p align="center"><sub>
-<b>Status:</b> last release June 2026, built and verified against EFT 1.0.x.<br>
-Quest, map and POI data is fetched live from tarkov.dev, so it follows the game on its own. Log parsing is version-sensitive:<br>
+<b>Status:</b> latest release v0.9.0 (August 2026), built and verified against EFT 1.0.x.<br>
+Quest data comes from a tarkov.dev snapshot this repo refreshes daily and map POIs are fetched live, so both follow game patches without a new release. Log parsing is version-sensitive:<br>
 if a patch changes the notification format, automatic quest tracking can go quiet until the parser catches up — <a href="https://github.com/mopocop/Tarkov-moa/issues">open an issue</a> if you hit that.
 </sub></p>
 
@@ -70,6 +70,8 @@ The squad relay is **self-hosted behind [Tailscale Funnel](https://tailscale.com
 
 📐 **[ARCHITECTURE.md](ARCHITECTURE.md)** — the design decisions, the trade-offs behind them, and what turned out to be impossible and why.
 
+🎨 **[Design direction](docs/DESIGN-DIRECTION.md)** — the visual concept ("Field Glass": premium military optics), palette, type and motion, and why each was chosen. **[Design system](docs/DESIGN-SYSTEM.md)** — tokens, the 17 components in `src/ui/`, and the rules that keep the UI consistent.
+
 <details>
 <summary><b>For developers — build from source &amp; contribute</b></summary>
 
@@ -96,6 +98,7 @@ npm run bot -- ws://localhost:8787 - Pestily green <mapId> 60000   # optional: a
 | Path | What's there |
 |------|--------------|
 | `src/` | React UI — map, rail, onboarding, squad, settings, i18n |
+| `src/ui/` | Design system — tokens + components ([docs](docs/DESIGN-SYSTEM.md)) |
 | `src/i18n/` | Internationalization setup + locale files (`locales/*.json`) |
 | `src-tauri/` | Rust backend (log parsing, game-folder detection, updater) |
 | `server/` | Node WebSocket relay for squad mode |
