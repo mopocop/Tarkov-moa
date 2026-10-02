@@ -34,3 +34,22 @@ jobs:
         working-directory: server
       - run: npx vitest run
         working-directory: server
+
+  core:
+    name: Rust core — test
+    # The app ships for Windows only (winreg, EFT install paths), so the core
+    # is tested on the platform it runs on.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      # generate_context!() embeds frontendDist at compile time. The tests do
+      # not exercise the UI, so a stub is enough and skips a full Vite build.
+      - name: Stub the frontend bundle
+        shell: bash
+        run: mkdir -p dist && echo '<!doctype html>' > dist/index.html
+      - run: cargo test --locked   # REQUIRED — a stale Cargo.lock fails here
+        working-directory: src-tauri
