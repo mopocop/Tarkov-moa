@@ -47,7 +47,9 @@
     "updating": "更新中…",
     "updateTo": "更新到 v{{version}}",
     "syncingPastLogs": "正在同步历史日志…",
-    "syncPastEftLogs": "同步历史 EFT 日志（首次启动）"
+    "syncPastEftLogs": "同步历史 EFT 日志（首次启动）",
+    "resizePanel": "调整面板宽度",
+    "resizePanelHint": "拖动以调整宽度 · 双击恢复默认"
   },
   "settings": {
     "title": "设置",

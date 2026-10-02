@@ -24,7 +24,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Modal, Button, Kbd, Spinner, Toggle, Slider, Select } from "../ui";
 import { SUPPORTED_LANGS, LANG_LABELS, changeLang, type Lang } from "../i18n";
-import type { RailSide } from "../App";
+import type { RailSide } from "../app/useSettings";
 import "./onboarding.css";
 
 export const ONBOARDED_KEY = "tc_onboarded_v1";

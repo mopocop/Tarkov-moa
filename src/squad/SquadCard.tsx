@@ -41,10 +41,10 @@ function MemberRow({
   return (
     <div className={`squad-member${flash ? " flash" : ""}`}>
       <span className="squad-dot" style={{ background: hexForColorId(member.colorId) }} />
-      <span className="squad-name">
+      <span className="squad-name" title={member.name}>
         {member.name}
-        {isSelf && <span className="squad-you"> {t('squad.you')}</span>}
       </span>
+      {isSelf && <span className="squad-you">{t('squad.you')}</span>}
       <span className="squad-seen">
         {isSelf ? "" : pos ? lastSeen : t('squad.noPositionYet')}
       </span>

@@ -42,25 +42,24 @@ export function facetKeyOf(poi: Poi): string {
 export interface FacetMeta {
   key: string;
   label: string;
-  color: string;
   defaultOn: boolean;
 }
 
 // Static facets (everything except dynamic per-bucket loot facets).
 // defaultOn set (Moacir, 2026-05-30): only PMC extractions + My markers start on
 // (quests render separately and are always on). Everything else defaults off.
-// Colors here are unused for display now — colorForFacet() drives swatches/markers.
+// Color is not stored here — registry.colorForFacet() drives swatches and markers.
 const STATIC_FACETS: FacetMeta[] = [
-  { key: "extract:pmc", label: "PMC", color: "#22c55e", defaultOn: true },
-  { key: "extract:scav", label: "Scav", color: "#f59e0b", defaultOn: false },
-  { key: "spawn:pmc", label: "PMC", color: "#eab308", defaultOn: false },
-  { key: "spawn:scav", label: "Scav", color: "#ca8a04", defaultOn: false },
-  { key: "spawn:sniper", label: "Sniper Scav", color: "#dc2626", defaultOn: false },
-  { key: "boss", label: "Boss", color: "#a855f7", defaultOn: false },
-  { key: "cultist", label: "Cultist", color: "#7c3aed", defaultOn: false },
-  { key: "transit", label: "Transit", color: "#06b6d4", defaultOn: false },
-  { key: "hazard", label: "Hazards", color: "#f97316", defaultOn: false },
-  { key: "custom", label: "My markers", color: "#ec4899", defaultOn: true },
+  { key: "extract:pmc", label: "PMC", defaultOn: true },
+  { key: "extract:scav", label: "Scav", defaultOn: false },
+  { key: "spawn:pmc", label: "PMC", defaultOn: false },
+  { key: "spawn:scav", label: "Scav", defaultOn: false },
+  { key: "spawn:sniper", label: "Sniper Scav", defaultOn: false },
+  { key: "boss", label: "Boss", defaultOn: false },
+  { key: "cultist", label: "Cultist", defaultOn: false },
+  { key: "transit", label: "Transit", defaultOn: false },
+  { key: "hazard", label: "Hazards", defaultOn: false },
+  { key: "custom", label: "My markers", defaultOn: true },
 ];
 
 const STATIC_FACET_BY_KEY: Record<string, FacetMeta> = Object.fromEntries(
@@ -87,7 +86,6 @@ function lootFacetMeta(bucket: string): FacetMeta {
   return {
     key,
     label: LOOT_BUCKET_LABELS[bucket] ?? bucket,
-    color: colorForFacet(key),
     defaultOn: false,
   };
 }
@@ -124,7 +122,7 @@ export interface FacetView {
   key: string;
   label: string;
   color: string;
-  icon: string; // FontAwesome class for the swatch
+  icon: string; // inline SVG markup for the swatch (registry.svgForFacet)
   count: number;
   defaultOn: boolean;
 }
@@ -167,7 +165,7 @@ export function buildFacetGroups(pois: Poi[]): FacetGroupView[] {
       label: "Loot containers",
       facets: lootKeys.map((key) => {
         const m = lootFacetMeta(key.slice("loot:".length));
-        return { key, label: m.label, color: m.color, icon: svgForFacet(key), count: counts.get(key) ?? 0, defaultOn: m.defaultOn };
+        return { key, label: m.label, color: colorForFacet(key), icon: svgForFacet(key), count: counts.get(key) ?? 0, defaultOn: m.defaultOn };
       }),
     });
   }

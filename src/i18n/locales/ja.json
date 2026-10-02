@@ -47,7 +47,9 @@
     "updating": "更新中…",
     "updateTo": "v{{version}}に更新",
     "syncingPastLogs": "過去のログを同期中…",
-    "syncPastEftLogs": "過去のEFTログを同期（初回起動）"
+    "syncPastEftLogs": "過去のEFTログを同期（初回起動）",
+    "resizePanel": "パネルの幅を変更",
+    "resizePanelHint": "ドラッグで幅を変更 · ダブルクリックで元に戻す"
   },
   "settings": {
     "title": "設定",

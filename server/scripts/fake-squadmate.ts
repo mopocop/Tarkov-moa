@@ -16,6 +16,7 @@
 //              fully fades to a "ghost" after ~30s idle, so the default >30s lets
 //              you WATCH it fade, then snap back to solid on the next step.
 
+import { readFile } from "node:fs/promises";
 import { WebSocket } from "ws";
 import {
   makeEnvelope,
@@ -56,31 +57,28 @@ let t = 0;
 const markerId = `bot-marker-${clientId}`;
 const drawId = `bot-draw-${clientId}`;
 
-// ---- Shared quests: fetch the real task list and share IDs that resolve to
-// objective pins on this map, so the app renders them in the bot's color. ----
+// ---- Shared quests: read the real task list and share IDs that resolve to
+// objective pins on this map, so the app renders them in the bot's color.
+// Source is the snapshot CI commits daily (data/snapshot/base.json), the same
+// one the app reads quests from; tarkov.dev's GraphQL API is gone. ----
 let questIds: string[] = [];
 
 interface BotTask {
   id: string;
   objectives?: Array<{
-    zones?: Array<{ map?: { id: string }; position?: unknown }>;
-    possibleLocations?: Array<{ map?: { id: string }; positions?: unknown[] }>;
+    zones?: Array<{ map?: string; position?: unknown }>;
+    possibleLocations?: Array<{ map?: string; positions?: unknown[] }>;
   }>;
 }
 
-const TASKS_QUERY = `
-  query { tasks { id objectives {
-    ... on TaskObjectiveQuestItem { possibleLocations { map { id } positions { x } } }
-    ... on TaskObjectiveMark { zones { map { id } position { x } } }
-    ... on TaskObjectiveBasic { zones { map { id } position { x } } }
-  } } }`;
+const SNAPSHOT = new URL("../../data/snapshot/base.json", import.meta.url);
 
 const hasPositionalObjectiveOnMap = (task: BotTask): boolean =>
   (task.objectives ?? []).some(
     (o) =>
-      (o.zones ?? []).some((z) => z.map?.id === mapId && z.position) ||
+      (o.zones ?? []).some((z) => z.map === mapId && z.position) ||
       (o.possibleLocations ?? []).some(
-        (l) => l.map?.id === mapId && (l.positions?.length ?? 0) > 0,
+        (l) => l.map === mapId && (l.positions?.length ?? 0) > 0,
       ),
   );
 
@@ -92,20 +90,17 @@ const broadcastQuests = (): void => {
 
 async function fetchQuestIds(): Promise<void> {
   try {
-    const res = await fetch("https://api.tarkov.dev/graphql", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: TASKS_QUERY }),
-    });
-    const body = (await res.json()) as { data?: { tasks: BotTask[] } };
-    questIds = (body.data?.tasks ?? [])
+    const snapshot = JSON.parse(await readFile(SNAPSHOT, "utf8")) as {
+      tasks: Record<string, BotTask>;
+    };
+    questIds = Object.values(snapshot.tasks)
       .filter(hasPositionalObjectiveOnMap)
       .slice(0, 6)
       .map((task) => task.id);
     console.log(`[${name}] sharing ${questIds.length} quests with pins on this map`);
     broadcastQuests();
   } catch (e) {
-    console.error(`[${name}] quest fetch failed:`, (e as Error).message);
+    console.error(`[${name}] quest load failed:`, (e as Error).message);
   }
 }
 

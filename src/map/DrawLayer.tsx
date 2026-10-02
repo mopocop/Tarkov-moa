@@ -19,6 +19,7 @@ import L from "leaflet";
 import { getGameToLatLng, getLatLngToGame } from "./mapDefs";
 import { useSquad } from "../squad/useSquad";
 import { hexForColorId, type DrawPayload } from "../../shared/squadProtocol";
+import { TOKEN_HEX } from "../ui/tokens";
 
 export type DrawTool = "pen" | null;
 
@@ -141,7 +142,7 @@ export default function DrawLayer({
       {Object.entries(squad.draws).flatMap(([memberId, list]) => {
         if (memberId === squad.selfId) return [];
         const member = squad.members.find((mm) => mm.id === memberId);
-        const hex = member ? hexForColorId(member.colorId) : "#9CA3AF";
+        const hex = member ? hexForColorId(member.colorId) : TOKEN_HEX.textDim;
         return list
           .filter((d) => d.mapId === mapId && d.points.length >= 2)
           .map((d) => (

@@ -8,7 +8,9 @@ function CountBadge({ count }: { count: number }): React.JSX.Element {
   const { t } = useTranslation();
   return (
     <span className="map-picker__count" style={{ opacity: questCountOpacity(count) }}>
-      {t('quests.questsWithCount', { count })}
+      {/* A narrow rail shows the bare number (see the @container rule). */}
+      <span className="map-picker__count-full">{t('quests.questsWithCount', { count })}</span>
+      <span className="map-picker__count-short" aria-hidden="true">{count}</span>
     </span>
   );
 }

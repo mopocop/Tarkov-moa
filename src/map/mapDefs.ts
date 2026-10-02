@@ -6,7 +6,7 @@ import type { MapFloor } from "./floorClassify";
 import { normalizeBounds } from "./floorClassify";
 import { canonicalMapId } from "./canonicalMap";
 
-interface MapDef {
+export interface MapDef {
   svgUrl: string;
   // tarkov-dev maps.json bounds: each corner is [gameX, gameZ]. We swap to
   // [gameZ, gameX] = Leaflet [lat, lng] (matching the marker convention) before

@@ -47,7 +47,9 @@
     "updating": "Updating…",
     "updateTo": "Update to v{{version}}",
     "syncingPastLogs": "Syncing past logs…",
-    "syncPastEftLogs": "Sync past EFT logs (first launch)"
+    "syncPastEftLogs": "Sync past EFT logs (first launch)",
+    "resizePanel": "Resize panel",
+    "resizePanelHint": "Drag to resize · double-click to reset"
   },
   "settings": {
     "title": "Settings",
