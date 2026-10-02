@@ -38,6 +38,11 @@
   --info: #6cb6ff;
   --info-soft: rgba(108, 182, 255, 0.14);
 
+  /* ---- Color: on-map ink (drawn over third-party map art, so contrast is
+     maximal on purpose, not tuned to the chrome palette) ------------------- */
+  --map-ink: #101208;    /* marker + label outlines (warm near-black) */
+  --map-label: #ffffff;  /* names floated on the map */
+
   /* ---- Typography ---------------------------------------------------------- */
   --font-ui: 'Inter Variable', 'Inter', 'Segoe UI', system-ui, sans-serif;
   --font-display: 'Barlow Condensed', 'Inter Variable', system-ui, sans-serif;
@@ -91,19 +96,4 @@
   --z-modal: 1000;
   --z-toast: 1100;
   --z-tooltip: 1200;
-
-  /* ==== Legacy aliases (Binance-era names; remove after full migration) ======== */
-  --bg-2: var(--bg-sunken);
-  --surface: var(--surface-1);
-  --accent-active: var(--accent-pressed);
-  --text-muted: var(--text-dim);
-  --text-strong: var(--text);
-  --up: var(--live);
-  --down: var(--danger);
-  --sp-xxs: var(--sp-1);
-  --sp-xs: var(--sp-2);
-  --sp-sm: var(--sp-3);
-  --sp-md: var(--sp-4);
-  --sp-lg: var(--sp-5);
-  --sp-xl: var(--sp-6);
 }

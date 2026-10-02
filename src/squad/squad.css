@@ -147,13 +147,13 @@
   gap: 10px;
   padding: 7px 9px;
   border-radius: var(--r-sm);
-  background: var(--bg-2);
+  background: var(--bg-sunken);
   border: 1px solid transparent;
 }
 .squad-member.flash { animation: squad-flash 1.5s ease-out; }
 @keyframes squad-flash {
   0% {
-    border-color: var(--text-strong, #fff);
+    border-color: var(--text);
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
   }
   100% {
@@ -168,7 +168,7 @@
   flex: 0 0 auto;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
 }
-.squad-name { flex: 1; color: var(--text-strong); font-size: var(--fs-body); }
+.squad-name { flex: 1; color: var(--text); font-size: var(--fs-body); }
 .squad-you { font-size: var(--fs-micro); opacity: 0.55; font-weight: 600; }
 .squad-seen { font-size: var(--fs-micro); opacity: 0.6; }
 
@@ -179,7 +179,7 @@
 .squad-eye {
   background: none;
   border: none;
-  color: var(--text, #ddd);
+  color: var(--text);
   opacity: 0.7;
   cursor: pointer;
   padding: 2px 4px;
@@ -201,12 +201,12 @@
   flex-direction: column;
   gap: 3px;
   text-align: left;
-  background: var(--bg-2);
+  background: var(--bg-sunken);
   border: 1px solid transparent;
   border-radius: var(--r-sm);
   padding: 5px 8px;
   cursor: pointer;
-  color: var(--text-strong);
+  color: var(--text);
 }
 .sqs-row:hover { border-color: var(--border); }
 .sqs-map { font-size: var(--fs-body); font-weight: 600; }
@@ -240,7 +240,7 @@
   position: absolute;
   inset: 2px;
   border-radius: 50%;
-  border: 2px solid var(--c, #888);
+  border: 2px solid var(--c, var(--text-dim));
   opacity: 0;
   pointer-events: none;
 }
@@ -256,8 +256,8 @@
 }
 .tc-squadmate-arrow svg { width: 100%; height: 100%; display: block; }
 .tc-squadmate-arrow path {
-  fill: var(--c, #888);
-  stroke: #0a0b09;
+  fill: var(--c, var(--text-dim));
+  stroke: var(--bg-sunken);
   stroke-width: 1.6;
   stroke-linejoin: round;
 }
@@ -269,8 +269,8 @@
   white-space: nowrap;
   font-size: 11px;
   font-weight: 700;
-  color: #fff;
-  text-shadow: 0 0 3px #000, 0 0 3px #000;
+  color: var(--map-label);
+  text-shadow: 0 0 3px var(--map-ink), 0 0 3px var(--map-ink);
   background: rgba(0, 0, 0, 0.45);
   padding: 0 4px;
   border-radius: 3px;

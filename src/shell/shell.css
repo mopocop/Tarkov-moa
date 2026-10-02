@@ -175,7 +175,7 @@
 .rail-panel__footer .mono { font-family: var(--font-mono); }
 .rail-panel__footer-spacer { flex: 1; }
 .rail-panel__version {
-  background: var(--bg-2);
+  background: var(--bg-sunken);
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   padding: 2px 9px;

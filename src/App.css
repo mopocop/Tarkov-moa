@@ -20,7 +20,7 @@ h1 {
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.3px;
-  color: var(--text-strong);
+  color: var(--text);
 }
 
 h2, h3 {
@@ -74,7 +74,7 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  color: var(--text-dim);
   font-style: italic;
 }
 
@@ -170,8 +170,8 @@ button:disabled {
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  background: var(--bg-2);
-  color: var(--text-strong);
+  background: var(--bg-sunken);
+  color: var(--text);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   font-size: var(--fs-body);
@@ -269,7 +269,7 @@ button:disabled {
   cursor: default;
   border: 1px solid transparent;
   margin-bottom: 4px;
-  background: var(--bg-2);
+  background: var(--bg-sunken);
 }
 
 .quest-row.hovered {
@@ -301,16 +301,16 @@ button:disabled {
 
 .quest-head {
   font-size: var(--fs-body);
-  color: var(--text-strong);
+  color: var(--text);
 }
 
 .trader {
-  color: var(--text-muted);
+  color: var(--text-dim);
   font-weight: normal;
 }
 
 .no-poi {
-  color: var(--text-muted);
+  color: var(--text-dim);
   font-style: italic;
   font-size: var(--fs-caption);
 }
@@ -319,7 +319,7 @@ button:disabled {
   list-style: disc;
   padding-left: 18px;
   margin: 4px 0 0 0;
-  color: var(--text-muted);
+  color: var(--text-dim);
   font-size: var(--fs-caption);
 }
 
@@ -331,19 +331,19 @@ button:disabled {
 }
 
 .objective-row.no-pos {
-  color: var(--text-muted);
+  color: var(--text-dim);
 }
 
 .objective-row:not(.no-pos):hover,
 .objective-row.hovered {
   background: var(--surface-2);
-  color: var(--text-strong);
+  color: var(--text);
   cursor: pointer;
 }
 
 .objective-row.pinned {
   background: var(--accent-soft);
-  color: var(--text-strong);
+  color: var(--text);
 }
 
 /* ------- Locked section ------- */
@@ -359,7 +359,7 @@ button:disabled {
   text-align: left;
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: var(--text-dim);
   font-size: var(--fs-caption);
   padding: 6px 8px;
 }
@@ -379,13 +379,13 @@ button:disabled {
 .locked-row {
   padding: 6px 10px;
   font-size: var(--fs-caption);
-  color: var(--text-muted);
+  color: var(--text-dim);
 }
 
 /* ------- Misc ------- */
 
 .muted {
-  color: var(--text-muted);
+  color: var(--text-dim);
   font-style: italic;
   font-size: var(--fs-body);
   padding: 4px 0;
@@ -583,7 +583,7 @@ button:disabled {
 .tc-player-arrow svg { width: 100%; height: 100%; display: block; }
 .tc-player-arrow path {
   fill: var(--live);
-  stroke: #0a0b09;
+  stroke: var(--bg-sunken);
   stroke-width: 1.6;
   stroke-linejoin: round;
 }
@@ -662,8 +662,8 @@ button:disabled {
   gap: 10px;
   margin-bottom: 8px;
 }
-.patchnote-head h3 { margin: 0; color: var(--text-strong); }
-.patchnote-date { font-size: 0.8rem; color: var(--text-muted); }
+.patchnote-head h3 { margin: 0; color: var(--text); }
+.patchnote-date { font-size: 0.8rem; color: var(--text-dim); }
 .patchnote-list {
   margin: 0;
   padding-left: 18px;
@@ -675,17 +675,17 @@ button:disabled {
 .patchnote-thanks {
   margin: 12px 0 0 0;
   padding: 8px 12px;
-  background: var(--bg-2);
+  background: var(--bg-sunken);
   border-radius: var(--r-sm);
   font-size: 0.88rem;
-  color: var(--text-strong);
+  color: var(--text);
 }
 
 /* ===== POIs / filter panel / grid / custom markers ===== */
 .tc-poi-marker { background: transparent; border: none; overflow: visible; }
 /* Marker = a colored Phosphor SVG glyph with a dark outline (Moacir's spec).
    The fill color is set inline per facet (SVG inherits via currentColor); the
-   outline is the DS ink (#101208) drawn behind the fill via paint-order with
+   outline is the map ink (--map-ink) drawn behind the fill via paint-order with
    ROUNDED joins — the soft joints the old font-glyph text-stroke couldn't do. */
 .tc-poi-glyph {
   position: relative;
@@ -700,7 +700,7 @@ button:disabled {
   overflow: visible; /* the stroke outline extends past the viewBox */
 }
 .tc-poi-glyph svg * {
-  stroke: #101208;
+  stroke: var(--map-ink);
   stroke-width: 64px; /* viewBox units (256 box) ≈ 4.5px at render size — a heavy,
                          legible dark outline so glyphs read on busy map art */
   stroke-linejoin: round;
@@ -715,8 +715,8 @@ button:disabled {
   position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
   white-space: nowrap; pointer-events: auto; cursor: pointer;
   font-size: 12px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
-  color: #ffffff;
-  -webkit-text-stroke: 2px #101208;
+  color: var(--map-label);
+  -webkit-text-stroke: 2px var(--map-ink);
   paint-order: stroke fill;
 }
 .tc-poi-marker.tc-hl .tc-poi-glyph {
@@ -730,10 +730,10 @@ button:disabled {
   filter: drop-shadow(0 0 7px currentColor);
 }
 .tc-poi-tip {
-  background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  background: var(--surface-1); color: var(--text); border: 1px solid var(--border);
   border-radius: var(--r-sm); padding: 4px 8px; font-size: 12px; opacity: 1 !important;
 }
-.tc-poi-tip small { color: var(--text-muted); }
+.tc-poi-tip small { color: var(--text-dim); }
 
 /* Faceted POI filter panel (lives inside the rail panel) */
 .poi-panel { font-size: var(--fs-caption); color: var(--text); }
@@ -741,7 +741,7 @@ button:disabled {
 .poi-bulk-actions { display: flex; gap: 6px; margin-bottom: 6px; }
 .poi-bulk-actions button {
   flex: 1; font-size: var(--fs-micro); padding: 5px 6px; border-radius: var(--r-sm);
-  border: 1px solid transparent; background: transparent; color: var(--text-muted);
+  border: 1px solid transparent; background: transparent; color: var(--text-dim);
   cursor: pointer;
 }
 .poi-bulk-actions button:hover { background: var(--surface-2); color: var(--text); }
@@ -750,13 +750,13 @@ button:disabled {
   display: flex; align-items: center; gap: 6px; padding: 7px 0;
   cursor: pointer; user-select: none;
 }
-.poi-facet-group-header:hover .poi-facet-group-title { color: var(--text-strong); }
-.poi-facet-caret { color: var(--text-muted); font-size: 10px; width: 10px; flex: 0 0 auto; }
+.poi-facet-group-header:hover .poi-facet-group-title { color: var(--text); }
+.poi-facet-caret { color: var(--text-dim); font-size: 10px; width: 10px; flex: 0 0 auto; }
 .poi-facet-group-title { font-weight: 600; color: var(--text); }
 .poi-group-bulk {
   margin-left: auto; font-size: var(--fs-micro); min-width: 24px; padding: 2px 9px;
   border-radius: var(--r-pill); border: 1px solid transparent; background: transparent;
-  color: var(--text-muted); cursor: pointer; font-weight: 600;
+  color: var(--text-dim); cursor: pointer; font-weight: 600;
 }
 .poi-group-bulk:hover { background: var(--surface-2); color: var(--text); }
 .poi-facet-rows { padding: 0 0 6px 16px; display: flex; flex-direction: column; gap: 1px; }
@@ -764,7 +764,7 @@ button:disabled {
   display: flex; align-items: center; gap: 8px; padding: 3px 6px;
   border-radius: var(--r-sm); cursor: pointer;
 }
-.poi-facet-row:hover { background: var(--bg-2); }
+.poi-facet-row:hover { background: var(--bg-sunken); }
 .poi-facet-row input { margin: 0; flex: 0 0 auto; accent-color: var(--accent); }
 .poi-facet-label { flex: 1; }
 .poi-swatch {
@@ -776,12 +776,12 @@ button:disabled {
    the on-map marker so the legend and the map read the same. */
 .poi-swatch svg { width: 12px; height: 12px; display: block; overflow: visible; }
 .poi-swatch svg * {
-  stroke: #101208;
+  stroke: var(--map-ink);
   stroke-width: 18px;
   stroke-linejoin: round;
   paint-order: stroke fill;
 }
-.poi-filter-count { margin-left: auto; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.poi-filter-count { margin-left: auto; color: var(--text-dim); font-variant-numeric: tabular-nums; }
 
 /* Map options (reference-grid toggle + placement hint) */
 .poi-map-options { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
@@ -795,12 +795,12 @@ button:disabled {
 .poi-save-default:hover:not(:disabled) { background: var(--accent-soft); }
 .poi-toggle-btn {
   width: 100%; font-size: var(--fs-caption); padding: 8px 8px; border-radius: var(--r-md);
-  border: 1px solid var(--border); background: var(--bg-2); color: var(--text);
+  border: 1px solid var(--border); background: var(--bg-sunken); color: var(--text);
   cursor: pointer; font-weight: 600;
 }
 .poi-toggle-btn:hover { background: var(--surface-2); }
 .poi-toggle-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
-.poi-hint { margin: 8px 0 0; font-size: var(--fs-micro); color: var(--text-muted); line-height: 1.4; }
+.poi-hint { margin: 8px 0 0; font-size: var(--fs-micro); color: var(--text-dim); line-height: 1.4; }
 
 /* ===== Feedback modal ===== */
 .fb-body { display: flex; flex-direction: column; gap: var(--sp-3); }
