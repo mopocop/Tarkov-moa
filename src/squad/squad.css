@@ -114,8 +114,11 @@
 
 .squad-join-row { display: flex; gap: 8px; }
 
+
 .squad-code {
   flex: 1;
+  min-width: 0;
+  white-space: nowrap; /* a code split across lines can't be read back */
   font-size: 24px;
   letter-spacing: 0.28em;
   font-family: var(--font-mono);
@@ -168,9 +171,17 @@
   flex: 0 0 auto;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
 }
-.squad-name { flex: 1; color: var(--text); font-size: var(--fs-body); }
-.squad-you { font-size: var(--fs-micro); opacity: 0.55; font-weight: 600; }
-.squad-seen { font-size: var(--fs-micro); opacity: 0.6; }
+.squad-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-size: var(--fs-body);
+}
+.squad-you { flex: 0 0 auto; margin-left: -4px; font-size: var(--fs-micro); opacity: 0.55; font-weight: 600; }
+.squad-seen { flex: 0 0 auto; white-space: nowrap; font-size: var(--fs-micro); opacity: 0.6; }
 
 .squad-footer-row { display: flex; align-items: center; justify-content: space-between; }
 .squad-leave { color: var(--danger); }
@@ -209,7 +220,7 @@
   color: var(--text);
 }
 .sqs-row:hover { border-color: var(--border); }
-.sqs-map { font-size: var(--fs-body); font-weight: 600; }
+.sqs-map { font-size: var(--fs-body); font-weight: 600; overflow-wrap: anywhere; }
 .sqs-chips { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 /* Bare per-member quest count, tinted in that member's squad color (set inline).
    No dot, no name — the color IS the identity (hover title still spells it out). */
@@ -278,4 +289,28 @@
 
 @media (prefers-reduced-motion: reduce) {
   .squad-conn-connected .squad-conn-dot { animation: none; }
+}
+
+/* Narrow rail: shrink the code so it and the copy button share one line, and
+   tighten the cards' gutters. */
+@container rail (max-width: 280px) {
+  .squad-code-card,
+  .squad-shared-callout { padding: var(--sp-2) var(--sp-3); }
+  .squad-code { font-size: 16px; letter-spacing: 0.1em; }
+  .squad-code-row .ui-iconbtn { width: 34px; height: 34px; font-size: 17px; }
+  /* Roster rows go two-line: last-seen drops under the name so the name
+     keeps the width. */
+  .squad-member {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    column-gap: 8px;
+    row-gap: 1px;
+    padding: 6px 7px;
+  }
+  .squad-dot { grid-column: 1; grid-row: 1; }
+  .squad-name { grid-column: 2; grid-row: 1; }
+  .squad-you { grid-column: 3; grid-row: 1; margin-left: 0; }
+  .squad-eye { grid-column: 4; grid-row: 1 / span 2; }
+  .squad-seen { grid-column: 2 / 4; grid-row: 2; }
+  .squad-seen:empty { display: none; }
 }

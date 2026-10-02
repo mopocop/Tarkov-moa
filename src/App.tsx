@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { ArrowsClockwise } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import './App.css';
@@ -14,6 +14,7 @@ import MapEmptyState from './components/MapEmptyState';
 import QuestSidebar from './components/QuestSidebar';
 import { Toast, IconButton, Spinner } from './ui';
 import Spine, { type RailSection } from './shell/Spine';
+import RailResizer from './shell/RailResizer';
 import { useRelativeTime } from './hooks/useRelativeTime';
 import SettingsModal from './components/SettingsModal';
 import Onboarding, { ONBOARDED_KEY } from './onboarding/Onboarding';
@@ -33,6 +34,7 @@ import FollowCamera from './map/FollowCamera';
 import SquadQuestLayer from './map/SquadQuestLayer';
 import SquadQuestSummary from './components/SquadQuestSummary';
 import { useSettings } from './app/useSettings';
+import { useRailWidth } from './app/useRailWidth';
 import { useQuestSelection } from './app/useQuestSelection';
 import { useQuestData } from './app/useQuestData';
 import { useSelectedMap } from './app/useSelectedMap';
@@ -67,6 +69,7 @@ function App() {
 
   const squad = useSquad();
   const settings = useSettings();
+  const railWidth = useRailWidth();
   const selection = useQuestSelection();
   const quests = useQuestData({
     onDerived: selection.pruneStaleSelections,
@@ -150,7 +153,16 @@ function App() {
         />
 
         {railSection && (
-          <aside className="rail-panel">
+          <aside
+            className="rail-panel"
+            style={{ '--rail-w': `${railWidth.width}px` } as CSSProperties}
+          >
+            <RailResizer
+              side={settings.railSide}
+              width={railWidth.width}
+              onResize={railWidth.setWidth}
+              onReset={railWidth.reset}
+            />
             {/* The map is the top-level selection — it's universal across every
                 section, so it sits ABOVE the section title, divided from it. */}
             {questState && (

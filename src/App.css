@@ -249,6 +249,20 @@ button:disabled {
   border-bottom: 1px dotted var(--border-strong);
 }
 
+/* Narrow rail: the map name wins the space; counts drop to the bare number. */
+.map-picker__count-short { display: none; }
+@container rail (max-width: 280px) {
+  /* Visually hidden, still read by screen readers ("78 quests", not "78"). */
+  .map-picker__count-full {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
+  .map-picker__count-short { display: inline; }
+  .map-picker__trigger { gap: 6px; padding: 8px; }
+  .map-picker__leader { margin: 0 4px; }
+  .map-picker__row { padding: 7px 6px; }
+}
+
 /* ------- Quest sidebar ------- */
 
 .quest-sidebar {
@@ -755,6 +769,7 @@ button:disabled {
 .poi-facet-group-title { font-weight: 600; color: var(--text); }
 .poi-group-bulk {
   margin-left: auto; font-size: var(--fs-micro); min-width: 24px; padding: 2px 9px;
+  flex: 0 0 auto; white-space: nowrap;
   border-radius: var(--r-pill); border: 1px solid transparent; background: transparent;
   color: var(--text-dim); cursor: pointer; font-weight: 600;
 }

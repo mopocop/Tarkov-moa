@@ -117,7 +117,11 @@
 
 /* ------------------------------------------------------------------ panel -- */
 .rail-panel {
-  flex: 0 0 356px;
+  /* --rail-w is set inline from useRailWidth (dragged via .rail-resizer). */
+  flex: 0 0 var(--rail-w, 356px);
+  position: relative;
+  /* Panel contents adapt to the panel's own width, not the window's. */
+  container: rail / inline-size;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -161,6 +165,9 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* Long single words (Russian quest names, item names) break instead of
+     pushing past the panel edge when the panel is dragged narrow. */
+  overflow-wrap: break-word;
   padding: 0 var(--sp-4) var(--sp-4);
 }
 .rail-panel__footer {
@@ -186,6 +193,48 @@
     border-color var(--dur-fast) var(--ease-out);
 }
 .rail-panel__version:hover { color: var(--accent); border-color: var(--border-strong); }
+
+/* --------------------------------------------------------------- resizer -- */
+/* Sits on the panel's map-facing edge, straddling the border. Invisible until
+   hovered/focused, then a brass line marks the grab zone. */
+.rail-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -4px;
+  width: 8px;
+  z-index: var(--z-rail);
+  cursor: col-resize;
+  touch-action: none;
+}
+.shell--right .rail-resizer { right: auto; left: -4px; }
+.rail-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: transparent;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.rail-resizer:hover::after,
+.rail-resizer:focus-visible::after,
+.is-resizing-rail .rail-resizer::after { background: var(--accent); }
+.rail-resizer:focus-visible { outline: none; }
+
+/* While dragging: keep the resize cursor everywhere and stop text selection
+   and map/marker hover from reacting under the pointer. */
+.is-resizing-rail { cursor: col-resize; user-select: none; }
+.is-resizing-rail .map-stage { pointer-events: none; }
+
+/* Narrow panel: tighten the gutters so content keeps its room. */
+@container rail (max-width: 280px) {
+  .rail-panel__map { padding: var(--sp-2) var(--sp-3); }
+  .rail-panel__header { padding: var(--sp-2) var(--sp-3) var(--sp-2); }
+  .rail-panel__body { padding: 0 var(--sp-3) var(--sp-3); }
+  .rail-panel__footer { padding: var(--sp-2) var(--sp-3); flex-wrap: wrap; row-gap: 2px; }
+}
 
 /* Floor switcher + zoom/tools docks cluster on the rail side. */
 .shell--left .floor-switcher { left: 12px; right: auto; }

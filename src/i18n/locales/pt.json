@@ -47,7 +47,9 @@
     "updating": "Atualizando…",
     "updateTo": "Atualizar para v{{version}}",
     "syncingPastLogs": "Sincronizando logs antigos…",
-    "syncPastEftLogs": "Sincronizar logs antigos do EFT (primeira execução)"
+    "syncPastEftLogs": "Sincronizar logs antigos do EFT (primeira execução)",
+    "resizePanel": "Redimensionar painel",
+    "resizePanelHint": "Arraste para redimensionar · clique duplo para restaurar"
   },
   "settings": {
     "title": "Configurações",

@@ -8,6 +8,7 @@
 
 import type { DerivedQuestState } from "../quests/derive";
 import { SUPPORTED_MAP_NAMES } from "../map/mapDefs";
+import { resolveMapName } from "../quests/mapNames";
 import { useSquad } from "../squad/useSquad";
 import { hexForColorId } from "../../shared/squadProtocol";
 import { useTranslation } from 'react-i18next';
@@ -28,11 +29,22 @@ export default function SquadQuestSummary({
   if (!squad.inSquad) return null;
 
   // Pair each member with their derived quest state (self uses the local one).
-  const participants = squad.members.map((m) => ({
-    member: m,
-    byMap: (m.id === squad.selfId ? selfQuestState : questStates[m.id])
-      ?.availableTasksByMap,
-  }));
+  const participants = squad.members.map((m) => {
+    const state = m.id === squad.selfId ? selfQuestState : questStates[m.id];
+    return { member: m, state, byMap: state?.availableTasksByMap };
+  });
+
+  // Maps missing from the static list (newer maps) take their name from the
+  // quest data, as the map picker does, instead of showing a raw id.
+  const nameFor = (id: string): string => {
+    if (SUPPORTED_MAP_NAMES[id]) return SUPPORTED_MAP_NAMES[id];
+    for (const { state } of participants) {
+      if (!state) continue;
+      const n = resolveMapName(id, state.availableTasksByMap, state.availableObjectivesByMap);
+      if (n !== "Unknown map") return n;
+    }
+    return id;
+  };
 
   // Union of every map any participant has quests on.
   const mapIds = new Set<string>();
@@ -52,7 +64,7 @@ export default function SquadQuestSummary({
         }))
         .filter((c) => c.count > 0);
       const total = chips.reduce((s, c) => s + c.count, 0);
-      return { id, name: SUPPORTED_MAP_NAMES[id] ?? id, chips, total };
+      return { id, name: nameFor(id), chips, total };
     })
     .filter((r) => r.total > 0)
     .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));

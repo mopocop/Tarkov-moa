@@ -64,6 +64,26 @@ function ZoomDragRescue(): null {
   return null;
 }
 
+// Leaflet only re-measures on window resize. The stage also changes width when
+// the rail panel opens, closes or is dragged, so watch the container itself —
+// otherwise the map keeps its old size and leaves a blank strip.
+function ResizeWatcher(): null {
+  const map = useMap();
+  useEffect(() => {
+    let frame = 0;
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => map.invalidateSize({ pan: false }));
+    });
+    ro.observe(map.getContainer());
+    return () => {
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+    };
+  }, [map]);
+  return null;
+}
+
 interface MapViewProps {
   mapId: string;
   mapName: string;
@@ -145,6 +165,7 @@ export default function MapView({
       )}
       <ZoomDock />
       <ZoomDragRescue />
+      <ResizeWatcher />
       {children}
     </MapContainer>
   );
