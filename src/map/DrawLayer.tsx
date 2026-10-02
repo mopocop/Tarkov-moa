@@ -26,6 +26,7 @@ type Pt = { x: number; z: number };
 
 const MIN_SCREEN_STEP = 4; // px between sampled points
 const MAX_POINTS = 4000; // hard cap per stroke
+const STROKE_WEIGHT = 9; // px — 3 was too thin, 15 too heavy
 
 // Dedicated pane so strokes paint ABOVE the map's SVG image (overlayPane z=400,
 // where the map graphic lives) but BELOW markers (markerPane z=600). Without
@@ -149,7 +150,7 @@ export default function DrawLayer({
               positions={render(d.points)}
               interactive={false}
               pane={DRAW_PANE}
-              pathOptions={{ color: hex, weight: 3, opacity: 0.85 }}
+              pathOptions={{ color: hex, weight: STROKE_WEIGHT, opacity: 0.85 }}
             />
           ));
       })}
@@ -164,7 +165,7 @@ export default function DrawLayer({
             positions={render(d.points)}
             interactive={false}
             pane={DRAW_PANE}
-            pathOptions={{ color: d.color || color, weight: 3, opacity: 0.9 }}
+            pathOptions={{ color: d.color || color, weight: STROKE_WEIGHT, opacity: 0.9 }}
           />
         ))}
 
@@ -174,7 +175,7 @@ export default function DrawLayer({
           positions={render(draft)}
           interactive={false}
           pane={DRAW_PANE}
-          pathOptions={{ color, weight: 3, opacity: 0.6, dashArray: "5 5" }}
+          pathOptions={{ color, weight: STROKE_WEIGHT, opacity: 0.6, dashArray: "15 15" }}
         />
       )}
     </>
