@@ -97,3 +97,16 @@
   --z-toast: 1100;
   --z-tooltip: 1200;
 }
+
+/* Reduced motion: every duration token collapses to 0, so transitions and the
+   token-timed entrances (modal, toast, rail panel, onboarding) land instantly.
+   Looping ambient signals are stopped next to where they are defined. One-shot
+   feedback that carries information (a squadmate's ping, the spinner) stays. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+    --dur-grand: 0ms;
+  }
+}

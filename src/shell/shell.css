@@ -230,3 +230,7 @@
   background: var(--warn-soft);
   border: 1px solid var(--warn);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .spine__btn--update::after { animation: none; }
+}
