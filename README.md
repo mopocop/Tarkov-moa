@@ -98,6 +98,7 @@ npm run bot -- ws://localhost:8787 - Pestily green <mapId> 60000   # optional: a
 | Path | What's there |
 |------|--------------|
 | `src/` | React UI — map, rail, onboarding, squad, settings, i18n |
+| `src/app/` | App state, one hook per concern; `App.tsx` only composes them and lays out the shell |
 | `src/ui/` | Design system — tokens + components ([docs](docs/DESIGN-SYSTEM.md)) |
 | `src/i18n/` | Internationalization setup + locale files (`locales/*.json`) |
 | `src-tauri/` | Rust backend (log parsing, game-folder detection, updater) |
